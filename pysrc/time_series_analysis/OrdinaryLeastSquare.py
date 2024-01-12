@@ -1,0 +1,2 @@
+class OrdinaryLeastSquare:
+    pass

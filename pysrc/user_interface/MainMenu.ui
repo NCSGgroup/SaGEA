@@ -1,0 +1,1618 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>955</width>
+    <height>759</height>
+   </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>750</width>
+    <height>500</height>
+   </size>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QGridLayout" name="gridLayout">
+    <item row="1" column="1">
+     <widget class="Line" name="line">
+      <property name="orientation">
+       <enum>Qt::Vertical</enum>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="0" colspan="4">
+     <widget class="QWidget" name="widget_SGEATitle" native="true">
+      <property name="minimumSize">
+       <size>
+        <width>0</width>
+        <height>50</height>
+       </size>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <item>
+        <widget class="QLabel" name="label_SGEATitle">
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>50</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>24</pointsize>
+          </font>
+         </property>
+         <property name="text">
+          <string>Welcome to SGEA Toolbox</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item row="1" column="0">
+     <widget class="QFrame" name="frame_Level1Menu">
+      <property name="maximumSize">
+       <size>
+        <width>150</width>
+        <height>16777215</height>
+       </size>
+      </property>
+      <property name="frameShape">
+       <enum>QFrame::StyledPanel</enum>
+      </property>
+      <property name="frameShadow">
+       <enum>QFrame::Raised</enum>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout">
+       <item>
+        <spacer name="verticalSpacer_3">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeType">
+          <enum>QSizePolicy::Minimum</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <widget class="QRadioButton" name="radioButton_DataCollecting">
+         <property name="text">
+          <string>Data Collecting</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="verticalSpacer_1">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeType">
+          <enum>QSizePolicy::Minimum</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <widget class="QRadioButton" name="radioButton_PostProcessing">
+         <property name="text">
+          <string>Postprocessing</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="verticalSpacer_2">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeType">
+          <enum>QSizePolicy::Minimum</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <widget class="QRadioButton" name="radioButton_ErrorAssessment">
+         <property name="text">
+          <string>Error Assessment</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="verticalSpacer_4">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeType">
+          <enum>QSizePolicy::Expanding</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item row="1" column="2">
+     <widget class="QStackedWidget" name="stackedWidget">
+      <property name="currentIndex">
+       <number>1</number>
+      </property>
+      <widget class="QWidget" name="page_dat_collecting"/>
+      <widget class="QWidget" name="page_postprocessing">
+       <layout class="QVBoxLayout" name="verticalLayout_4">
+        <item>
+         <widget class="QWidget" name="widget_Level2Menu" native="true">
+          <layout class="QGridLayout" name="gridLayout_3">
+           <item row="2" column="0">
+            <spacer name="horizontalSpacer">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item row="2" column="2">
+            <widget class="QPushButton" name="pushButton_3">
+             <property name="text">
+              <string>Run</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="0" colspan="5">
+            <layout class="QGridLayout" name="gridLayout_2">
+             <item row="0" column="0">
+              <widget class="QRadioButton" name="radioButton">
+               <property name="text">
+                <string>Configure from json</string>
+               </property>
+               <property name="checked">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="2">
+              <widget class="QPushButton" name="pushButton">
+               <property name="text">
+                <string>...</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QLineEdit" name="lineEdit">
+               <property name="text">
+                <string>D:\Users\ShuhaoLiu\PycharmProjects\sgea\setting\post_processing\PostProcessing.json</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QRadioButton" name="radioButton_2">
+               <property name="text">
+                <string>Configure Manually</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item row="2" column="1">
+            <widget class="QPushButton" name="pushButton_2">
+             <property name="text">
+              <string>Export Configuration </string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0" colspan="5">
+            <widget class="QScrollArea" name="scrollArea">
+             <property name="widgetResizable">
+              <bool>true</bool>
+             </property>
+             <widget class="QWidget" name="scrollAreaWidgetContents">
+              <property name="geometry">
+               <rect>
+                <x>0</x>
+                <y>0</y>
+                <width>1014</width>
+                <height>502</height>
+               </rect>
+              </property>
+              <layout class="QGridLayout" name="gridLayout_4">
+               <item row="2" column="1">
+                <widget class="QGroupBox" name="groupBox_4">
+                 <property name="title">
+                  <string>De-stripping</string>
+                 </property>
+                 <layout class="QGridLayout" name="gridLayout_8">
+                  <item row="0" column="0">
+                   <widget class="QCheckBox" name="checkBox_4">
+                    <property name="text">
+                     <string>Apply</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="3" colspan="2">
+                   <widget class="QComboBox" name="comboBox_11">
+                    <item>
+                     <property name="text">
+                      <string>PnMm</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>Sliding Window: Stable</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>Sliding Window: Wahr 2004</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>Sliding Window: Duan 2009</string>
+                     </property>
+                    </item>
+                   </widget>
+                  </item>
+                  <item row="1" column="0" colspan="2">
+                   <layout class="QHBoxLayout" name="horizontalLayout_7">
+                    <item>
+                     <widget class="QLabel" name="label_7">
+                      <property name="text">
+                       <string>Poly Degree</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QLineEdit" name="lineEdit_5">
+                      <property name="maximumSize">
+                       <size>
+                        <width>50</width>
+                        <height>16777215</height>
+                       </size>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                  <item row="3" column="0">
+                   <layout class="QHBoxLayout" name="horizontalLayout_2">
+                    <item>
+                     <widget class="QLabel" name="label_11">
+                      <property name="layoutDirection">
+                       <enum>Qt::LeftToRight</enum>
+                      </property>
+                      <property name="text">
+                       <string>A</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QLineEdit" name="lineEdit_8">
+                      <property name="maximumSize">
+                       <size>
+                        <width>50</width>
+                        <height>16777215</height>
+                       </size>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                  <item row="3" column="3">
+                   <layout class="QHBoxLayout" name="horizontalLayout_4">
+                    <item>
+                     <widget class="QLabel" name="label_13">
+                      <property name="text">
+                       <string>Mu</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QLineEdit" name="lineEdit_11">
+                      <property name="maximumSize">
+                       <size>
+                        <width>50</width>
+                        <height>16777215</height>
+                       </size>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                  <item row="3" column="4">
+                   <layout class="QHBoxLayout" name="horizontalLayout_5">
+                    <item>
+                     <widget class="QLabel" name="label_14">
+                      <property name="text">
+                       <string>Gamma</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QLineEdit" name="lineEdit_10">
+                      <property name="maximumSize">
+                       <size>
+                        <width>50</width>
+                        <height>16777215</height>
+                       </size>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                  <item row="2" column="0" colspan="2">
+                   <layout class="QHBoxLayout" name="horizontalLayout_8">
+                    <item>
+                     <widget class="QLabel" name="label_10">
+                      <property name="text">
+                       <string>Minimum Window Width</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QLineEdit" name="lineEdit_7">
+                      <property name="maximumSize">
+                       <size>
+                        <width>50</width>
+                        <height>16777215</height>
+                       </size>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                  <item row="1" column="3" colspan="2">
+                   <layout class="QHBoxLayout" name="horizontalLayout_6">
+                    <item>
+                     <widget class="QLabel" name="label_9">
+                      <property name="text">
+                       <string>Beginning Order</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QLineEdit" name="lineEdit_6">
+                      <property name="maximumSize">
+                       <size>
+                        <width>50</width>
+                        <height>16777215</height>
+                       </size>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                  <item row="3" column="1">
+                   <layout class="QHBoxLayout" name="horizontalLayout_3">
+                    <item>
+                     <widget class="QLabel" name="label_12">
+                      <property name="layoutDirection">
+                       <enum>Qt::LeftToRight</enum>
+                      </property>
+                      <property name="text">
+                       <string>K</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QLineEdit" name="lineEdit_9">
+                      <property name="maximumSize">
+                       <size>
+                        <width>50</width>
+                        <height>16777215</height>
+                       </size>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+               <item row="1" column="0">
+                <widget class="QGroupBox" name="groupBox">
+                 <property name="title">
+                  <string>GRACE(-FO) Data Source</string>
+                 </property>
+                 <layout class="QVBoxLayout" name="verticalLayout_2">
+                  <item>
+                   <layout class="QHBoxLayout" name="horizontalLayout_11">
+                    <item>
+                     <widget class="QLabel" name="label">
+                      <property name="text">
+                       <string>Institute</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QComboBox" name="comboBox">
+                      <property name="minimumSize">
+                       <size>
+                        <width>60</width>
+                        <height>0</height>
+                       </size>
+                      </property>
+                      <property name="maximumSize">
+                       <size>
+                        <width>80</width>
+                        <height>16777215</height>
+                       </size>
+                      </property>
+                      <item>
+                       <property name="text">
+                        <string>CSR</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>GFZ</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>JPL</string>
+                       </property>
+                      </item>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QComboBox" name="comboBox_2">
+                      <property name="minimumSize">
+                       <size>
+                        <width>60</width>
+                        <height>0</height>
+                       </size>
+                      </property>
+                      <property name="maximumSize">
+                       <size>
+                        <width>80</width>
+                        <height>16777215</height>
+                       </size>
+                      </property>
+                      <item>
+                       <property name="text">
+                        <string>RL06</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>RL06.1</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>RL06.2</string>
+                       </property>
+                      </item>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QComboBox" name="comboBox_3">
+                      <property name="maximumSize">
+                       <size>
+                        <width>80</width>
+                        <height>16777215</height>
+                       </size>
+                      </property>
+                      <item>
+                       <property name="text">
+                        <string>Degree 60</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>Degree 96</string>
+                       </property>
+                      </item>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                  <item>
+                   <layout class="QHBoxLayout" name="horizontalLayout_10">
+                    <item>
+                     <widget class="QLabel" name="label_2">
+                      <property name="text">
+                       <string>Beginning</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QComboBox" name="comboBox_8">
+                      <item>
+                       <property name="text">
+                        <string>2005</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>2006</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>2007</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>2008</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>2009</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>2010</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>2011</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>2012</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>2013</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>2014</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>2015</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>2016</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>2017</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>2018</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>2019</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>2020</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>2021</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>2022</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>2023</string>
+                       </property>
+                      </item>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QComboBox" name="comboBox_9">
+                      <item>
+                       <property name="text">
+                        <string>January</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>February</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>March</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>April</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>May</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>June</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>July</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>August</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>September</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>October</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>November</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>December</string>
+                       </property>
+                      </item>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                  <item>
+                   <layout class="QHBoxLayout" name="horizontalLayout_9">
+                    <item>
+                     <widget class="QLabel" name="label_3">
+                      <property name="text">
+                       <string>Ending</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QComboBox" name="comboBox_12">
+                      <item>
+                       <property name="text">
+                        <string>2005</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>2006</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>2007</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>2008</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>2009</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>2010</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>2011</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>2012</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>2013</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>2014</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>2015</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>2016</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>2017</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>2018</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>2019</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>2020</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>2021</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>2022</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>2023</string>
+                       </property>
+                      </item>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QComboBox" name="comboBox_10">
+                      <item>
+                       <property name="text">
+                        <string>January</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>February</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>March</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>April</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>May</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>June</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>July</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>August</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>September</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>October</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>November</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>December</string>
+                       </property>
+                      </item>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+               <item row="1" column="1">
+                <widget class="QGroupBox" name="groupBox_2">
+                 <property name="title">
+                  <string>Basin</string>
+                 </property>
+                 <layout class="QVBoxLayout" name="verticalLayout_3">
+                  <item>
+                   <layout class="QHBoxLayout" name="horizontalLayout_12">
+                    <item>
+                     <widget class="QRadioButton" name="radioButton_3">
+                      <property name="text">
+                       <string>Default</string>
+                      </property>
+                      <property name="checked">
+                       <bool>true</bool>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QComboBox" name="comboBox_4">
+                      <item>
+                       <property name="text">
+                        <string>Amazon</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>Ocean</string>
+                       </property>
+                      </item>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                  <item>
+                   <layout class="QGridLayout" name="gridLayout_9">
+                    <item row="0" column="0">
+                     <widget class="QRadioButton" name="radioButton_4">
+                      <property name="text">
+                       <string>Local Shape File</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="0" column="1">
+                     <widget class="QLineEdit" name="lineEdit_4">
+                      <property name="minimumSize">
+                       <size>
+                        <width>100</width>
+                        <height>0</height>
+                       </size>
+                      </property>
+                      <property name="maximumSize">
+                       <size>
+                        <width>200</width>
+                        <height>16777215</height>
+                       </size>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="0" column="2">
+                     <widget class="QPushButton" name="pushButton_4">
+                      <property name="maximumSize">
+                       <size>
+                        <width>30</width>
+                        <height>16777215</height>
+                       </size>
+                      </property>
+                      <property name="text">
+                       <string>...</string>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                  <item>
+                   <layout class="QHBoxLayout" name="horizontalLayout_17">
+                    <item>
+                     <widget class="QLabel" name="label_20">
+                      <property name="layoutDirection">
+                       <enum>Qt::LeftToRight</enum>
+                      </property>
+                      <property name="text">
+                       <string>Spatial Resolution (degree)</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QLineEdit" name="lineEdit_15">
+                      <property name="minimumSize">
+                       <size>
+                        <width>0</width>
+                        <height>0</height>
+                       </size>
+                      </property>
+                      <property name="maximumSize">
+                       <size>
+                        <width>30</width>
+                        <height>16777215</height>
+                       </size>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+               <item row="3" column="0">
+                <widget class="QGroupBox" name="groupBox_7">
+                 <property name="title">
+                  <string>Leakage Reduction</string>
+                 </property>
+                 <layout class="QHBoxLayout" name="horizontalLayout_20">
+                  <item>
+                   <widget class="QCheckBox" name="checkBox_8">
+                    <property name="text">
+                     <string>Apply</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QComboBox" name="comboBox_16">
+                    <property name="maximumSize">
+                     <size>
+                      <width>200</width>
+                      <height>16777215</height>
+                     </size>
+                    </property>
+                    <item>
+                     <property name="text">
+                      <string>Iterative: Wahr 2006</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>Addictive</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>Multiplicative</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>Scaling</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>Gridded Scaling</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>Forward Modeling</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>Buffer Zone</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>Data Driven</string>
+                     </property>
+                    </item>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+               <item row="3" column="1">
+                <widget class="QGroupBox" name="groupBox_8">
+                 <property name="title">
+                  <string>GIA Correction</string>
+                 </property>
+                 <layout class="QGridLayout" name="gridLayout_11">
+                  <item row="0" column="0">
+                   <widget class="QCheckBox" name="checkBox_9">
+                    <property name="text">
+                     <string>Apply</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="1">
+                   <widget class="QComboBox" name="comboBox_17">
+                    <property name="maximumSize">
+                     <size>
+                      <width>200</width>
+                      <height>16777215</height>
+                     </size>
+                    </property>
+                    <item>
+                     <property name="text">
+                      <string>ICE-6G_D</string>
+                     </property>
+                    </item>
+                   </widget>
+                  </item>
+                  <item row="1" column="0" colspan="2">
+                   <widget class="QCheckBox" name="checkBox_10">
+                    <property name="text">
+                     <string>With Filtering and Leakage Reduction</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+               <item row="3" column="2">
+                <widget class="QGroupBox" name="groupBox_9">
+                 <property name="title">
+                  <string>GAX Correction</string>
+                 </property>
+                 <layout class="QGridLayout" name="gridLayout_10">
+                  <item row="0" column="0">
+                   <widget class="QCheckBox" name="checkBox_11">
+                    <property name="text">
+                     <string>Apply</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="1">
+                   <widget class="QComboBox" name="comboBox_18">
+                    <property name="maximumSize">
+                     <size>
+                      <width>200</width>
+                      <height>16777215</height>
+                     </size>
+                    </property>
+                    <item>
+                     <property name="text">
+                      <string>GAD (CSR RL06)</string>
+                     </property>
+                    </item>
+                   </widget>
+                  </item>
+                  <item row="1" column="0" colspan="2">
+                   <widget class="QCheckBox" name="checkBox_12">
+                    <property name="text">
+                     <string>With Filtering and Leakage Reduction</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+               <item row="2" column="0">
+                <widget class="QGroupBox" name="groupBox_6">
+                 <property name="title">
+                  <string>DDK Filter</string>
+                 </property>
+                 <layout class="QGridLayout" name="gridLayout_7">
+                  <item row="0" column="0">
+                   <widget class="QCheckBox" name="checkBox_7">
+                    <property name="text">
+                     <string>Apply</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="1" colspan="2">
+                   <widget class="QComboBox" name="comboBox_15">
+                    <item>
+                     <property name="text">
+                      <string>DDK1</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>DDK2</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>DDK3</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>DDK4</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>DDK5</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>DDK6</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>DDK7</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>DDK8</string>
+                     </property>
+                    </item>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+               <item row="1" column="2">
+                <widget class="QGroupBox" name="groupBox_3">
+                 <property name="title">
+                  <string>Low-Degrees Replacing</string>
+                 </property>
+                 <layout class="QGridLayout" name="gridLayout_6">
+                  <item row="7" column="1">
+                   <widget class="QComboBox" name="comboBox_7">
+                    <property name="maximumSize">
+                     <size>
+                      <width>100</width>
+                      <height>16777215</height>
+                     </size>
+                    </property>
+                    <item>
+                     <property name="text">
+                      <string>TN-14</string>
+                     </property>
+                    </item>
+                   </widget>
+                  </item>
+                  <item row="6" column="0">
+                   <widget class="QCheckBox" name="checkBox_3">
+                    <property name="text">
+                     <string>Replace C30 Coefficients</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="0" colspan="2">
+                   <widget class="Line" name="line_2">
+                    <property name="orientation">
+                     <enum>Qt::Horizontal</enum>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="4" column="0">
+                   <widget class="QLabel" name="label_5">
+                    <property name="maximumSize">
+                     <size>
+                      <width>200</width>
+                      <height>16777215</height>
+                     </size>
+                    </property>
+                    <property name="text">
+                     <string>Data Source</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="4" column="1">
+                   <widget class="QComboBox" name="comboBox_6">
+                    <property name="maximumSize">
+                     <size>
+                      <width>100</width>
+                      <height>16777215</height>
+                     </size>
+                    </property>
+                    <item>
+                     <property name="text">
+                      <string>TN-14</string>
+                     </property>
+                    </item>
+                   </widget>
+                  </item>
+                  <item row="5" column="0" colspan="2">
+                   <widget class="Line" name="line_3">
+                    <property name="orientation">
+                     <enum>Qt::Horizontal</enum>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="3" column="0">
+                   <widget class="QCheckBox" name="checkBox_2">
+                    <property name="text">
+                     <string>Replace C20 Coefficients</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="0">
+                   <widget class="QLabel" name="label_4">
+                    <property name="maximumSize">
+                     <size>
+                      <width>200</width>
+                      <height>16777215</height>
+                     </size>
+                    </property>
+                    <property name="text">
+                     <string>Data Source</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="0" colspan="2">
+                   <widget class="QCheckBox" name="checkBox">
+                    <property name="text">
+                     <string>Replace Degree-1 Coefficients</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="7" column="0">
+                   <widget class="QLabel" name="label_6">
+                    <property name="maximumSize">
+                     <size>
+                      <width>200</width>
+                      <height>16777215</height>
+                     </size>
+                    </property>
+                    <property name="text">
+                     <string>Data Source</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="1">
+                   <widget class="QComboBox" name="comboBox_5">
+                    <property name="maximumSize">
+                     <size>
+                      <width>100</width>
+                      <height>16777215</height>
+                     </size>
+                    </property>
+                    <item>
+                     <property name="text">
+                      <string>TN-13 (CSR)</string>
+                     </property>
+                    </item>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+               <item row="2" column="2">
+                <widget class="QGroupBox" name="groupBox_5">
+                 <property name="title">
+                  <string>Low-pass Filter</string>
+                 </property>
+                 <layout class="QGridLayout" name="gridLayout_5">
+                  <item row="0" column="1" colspan="3">
+                   <widget class="QComboBox" name="comboBox_14">
+                    <property name="maximumSize">
+                     <size>
+                      <width>200</width>
+                      <height>16777215</height>
+                     </size>
+                    </property>
+                    <item>
+                     <property name="text">
+                      <string>Gaussian Fillter</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>Non-isotropic Gaussian  Fillter: Han 2005</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>Fan Fillter</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>DDK Filter</string>
+                     </property>
+                    </item>
+                   </widget>
+                  </item>
+                  <item row="0" column="0">
+                   <widget class="QCheckBox" name="checkBox_6">
+                    <property name="text">
+                     <string>Apply</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="3">
+                   <layout class="QHBoxLayout" name="horizontalLayout_16">
+                    <item>
+                     <widget class="QLabel" name="label_19">
+                      <property name="layoutDirection">
+                       <enum>Qt::LeftToRight</enum>
+                      </property>
+                      <property name="text">
+                       <string>m0</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QLineEdit" name="lineEdit_14">
+                      <property name="maximumSize">
+                       <size>
+                        <width>50</width>
+                        <height>16777215</height>
+                       </size>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                  <item row="1" column="0" colspan="2">
+                   <layout class="QHBoxLayout" name="horizontalLayout_14">
+                    <item>
+                     <widget class="QLabel" name="label_15">
+                      <property name="layoutDirection">
+                       <enum>Qt::LeftToRight</enum>
+                      </property>
+                      <property name="text">
+                       <string>r1 (km)</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QLineEdit" name="lineEdit_12">
+                      <property name="maximumSize">
+                       <size>
+                        <width>50</width>
+                        <height>16777215</height>
+                       </size>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QLabel" name="label_16">
+                      <property name="layoutDirection">
+                       <enum>Qt::LeftToRight</enum>
+                      </property>
+                      <property name="text">
+                       <string/>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                  <item row="1" column="2">
+                   <layout class="QHBoxLayout" name="horizontalLayout_15">
+                    <item>
+                     <widget class="QLabel" name="label_17">
+                      <property name="layoutDirection">
+                       <enum>Qt::LeftToRight</enum>
+                      </property>
+                      <property name="text">
+                       <string>r2 (km)</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QLineEdit" name="lineEdit_13">
+                      <property name="maximumSize">
+                       <size>
+                        <width>50</width>
+                        <height>16777215</height>
+                       </size>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QLabel" name="label_18">
+                      <property name="layoutDirection">
+                       <enum>Qt::LeftToRight</enum>
+                      </property>
+                      <property name="text">
+                       <string/>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+               <item row="4" column="0">
+                <widget class="QGroupBox" name="groupBox_10">
+                 <property name="title">
+                  <string>Geometrical Correction</string>
+                 </property>
+                 <layout class="QHBoxLayout" name="horizontalLayout_19">
+                  <item>
+                   <widget class="QCheckBox" name="checkBox_13">
+                    <property name="text">
+                     <string>Apply</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QCheckBox" name="checkBox_14">
+                    <property name="text">
+                     <string>With Filtering</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+               <item row="4" column="1">
+                <widget class="QGroupBox" name="groupBox_11">
+                 <property name="title">
+                  <string>GMAM Correction</string>
+                 </property>
+                 <layout class="QHBoxLayout" name="horizontalLayout_18">
+                  <item>
+                   <widget class="QCheckBox" name="checkBox_15">
+                    <property name="text">
+                     <string>Apply</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QComboBox" name="comboBox_20">
+                    <property name="maximumSize">
+                     <size>
+                      <width>200</width>
+                      <height>16777215</height>
+                     </size>
+                    </property>
+                    <item>
+                     <property name="text">
+                      <string>GAA (GFZ RL06)</string>
+                     </property>
+                    </item>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+               <item row="4" column="2">
+                <widget class="QGroupBox" name="groupBox_12">
+                 <property name="title">
+                  <string>Seismic Correction</string>
+                 </property>
+                 <layout class="QHBoxLayout" name="horizontalLayout_13">
+                  <item>
+                   <widget class="QCheckBox" name="checkBox_17">
+                    <property name="text">
+                     <string>Apply</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QLineEdit" name="lineEdit_16">
+                    <property name="minimumSize">
+                     <size>
+                      <width>100</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="maximumSize">
+                     <size>
+                      <width>200</width>
+                      <height>16777215</height>
+                     </size>
+                    </property>
+                    <property name="text">
+                     <string>D:\Users\ShuhaoLiu\PycharmProjects\sgea\setting\auxiliary\seismic_info.json</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QPushButton" name="pushButton_5">
+                    <property name="maximumSize">
+                     <size>
+                      <width>30</width>
+                      <height>16777215</height>
+                     </size>
+                    </property>
+                    <property name="text">
+                     <string>...</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="page_error_assessment"/>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>955</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuMenu">
+    <property name="title">
+     <string>Menu</string>
+    </property>
+   </widget>
+   <widget class="QMenu" name="menuHelp">
+    <property name="title">
+     <string>Help</string>
+    </property>
+   </widget>
+   <addaction name="menuMenu"/>
+   <addaction name="menuHelp"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+ </widget>
+ <resources/>
+ <connections/>
+ <slots>
+  <slot>show_post_processing_result_window()</slot>
+ </slots>
+</ui>

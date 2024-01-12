@@ -1,0 +1,11 @@
+{
+  "server": "GFZ",
+  "satellite": "GRACE_FO",
+  "product_type": "GSM",
+  "institute": "CSR",
+  "release": "RL062",
+
+  "beginning_date": "2023-01",
+  "ending_date": "2023-12",
+  "update_mode": "on"
+}

@@ -1,0 +1,84 @@
+{
+  "begin_date": "2005-01-01",
+
+  "end_date": "2015-12-31",
+
+  "basin": "Amazon",
+
+  "GRACE_institute": [
+    "CSR",
+    "JPL",
+    "GFZ"
+  ],
+
+  "GRACE_release": [
+    "RL06"
+  ],
+
+  "lmax": [
+    "60"
+  ],
+
+  "replace_low_degree": [
+    ["degree1", "c20", "c30"],
+    ["degree1", "c20"]
+  ],
+
+  "low_degree_degree1_file_id": "TN13",
+
+  "low_degree_c20_file_id": [
+    "TN11",
+    "TN14"
+  ],
+
+  "low_degree_c30_file_id": "TN14",
+
+  "de_correlation": [
+    "PnMm"
+  ],
+
+  "de_correlation_sliding_window_type": [
+    "Wahr2006"
+  ],
+
+  "de_correlation_params": [
+    [3, 5, 5, 10, 30]
+  ],
+
+  "shc_filter": [
+    "Gaussian",
+    "Gaussian",
+    "Gaussian",
+    "Gaussian",
+    "Fan",
+    "Fan",
+    "AnisotropicGaussianHan",
+    "DDK",
+    "DDK",
+    "DDK"
+  ],
+
+  "shc_filter_params": [
+    [200],
+    [300],
+    [400],
+    [500],
+    [300, 300],
+    [400, 400],
+    [300, 500, 30],
+    [2],
+    [3],
+    [4]
+  ],
+
+  "leakage_method": [
+    "Multiplicative",
+    "Scaling",
+    "Addictive"
+  ],
+
+  "GIA_model": [
+    "ICE6GD",
+    "Caron2019"
+  ]
+}
