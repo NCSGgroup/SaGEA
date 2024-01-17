@@ -9,6 +9,8 @@ from pysrc.post_processing.Love_number.LoveNumber import LoveNumber
 
 class ConvertSHCConfig:
     def __init__(self):
+        self.ln = None
+
         self.input_field_type = FieldPhysicalQuantity.Dimensionless
         self.output_field_type = FieldPhysicalQuantity.EWH
 
@@ -20,18 +22,17 @@ class ConvertSHCConfig:
         self.output_field_type = field_type
         return self
 
+    def set_Love_number(self, ln):
+        self.ln = ln
+        return self
+
 
 class ConvertSHC:
     def __init__(self):
-        self.ln = None
         self.configuration = ConvertSHCConfig()
 
     def config(self, config: ConvertSHCConfig):
         self.configuration = config
-        return self
-
-    def set_Love_number(self, ln):
-        self.ln = ln
         return self
 
     def apply_to(self, shc: SHC):
@@ -54,7 +55,8 @@ class ConvertSHC:
         """
         return: [k1, k2, ..., kl, ...]
         """
-        assert self.ln is not None
+        assert self.configuration.ln is not None
+        ln = self.configuration.ln
 
         convert_mat = np.ones((lmax + 1,))
 
@@ -66,14 +68,14 @@ class ConvertSHC:
             pass
 
         elif self.configuration.input_field_type is FieldPhysicalQuantity.EWH:
-            ln = self.ln[:lmax + 1]
+            ln = ln[:lmax + 1]
             kl = np.array([(1 + ln[n]) / (2 * n + 1) for n in range(len(ln))]) * 3 * density_water / (
                     radius_e * density_earth)
 
             convert_mat *= kl
 
         elif self.configuration.input_field_type is FieldPhysicalQuantity.Density:
-            ln = self.ln[:lmax + 1]
+            ln = ln[:lmax + 1]
             kl = np.array([(1 + ln[n]) / (2 * n + 1) for n in range(len(ln))]) * 3 / (radius_e * density_earth)
 
             convert_mat *= kl
@@ -88,7 +90,8 @@ class ConvertSHC:
         return: [k1, k2, ..., kl, ...]
         """
 
-        assert self.ln is not None
+        assert self.configuration.ln is not None
+        ln = self.configuration.ln
 
         def _get_love_number_h_and_l():
             LN = LoveNumber()
@@ -112,14 +115,14 @@ class ConvertSHC:
             return self
 
         elif field_type is FieldPhysicalQuantity.EWH:
-            ln = self.ln[:lmax + 1]
+            ln = ln[:lmax + 1]
             kl = np.array([(2 * n + 1) / (1 + ln[n]) for n in range(len(ln))]) * radius_e * density_earth / (
                     3 * density_water)
 
             convert_mat *= kl
 
         elif field_type is FieldPhysicalQuantity.Density:
-            ln = self.ln[:lmax + 1]
+            ln = ln[:lmax + 1]
             kl = np.array([(2 * n + 1) / (1 + ln[n]) for n in range(len(ln))]) * radius_e * density_earth / 3
 
             convert_mat *= kl
@@ -134,7 +137,7 @@ class ConvertSHC:
         elif field_type is FieldPhysicalQuantity.VerticalDisplacement:
             lnh, lnl = _get_love_number_h_and_l()
 
-            ln = self.ln[:lmax + 1]
+            ln = ln[:lmax + 1]
             kl = np.array([lnh[n] / (1 + ln[n]) for n in range(len(ln))]) * radius_e
 
             convert_mat *= kl
@@ -143,7 +146,7 @@ class ConvertSHC:
                 FieldPhysicalQuantity.HorizontalDisplacementNorth, FieldPhysicalQuantity.HorizontalDisplacementEast):
             lnh, lnl = _get_love_number_h_and_l()
 
-            ln = self.ln[:lmax + 1]
+            ln = ln[:lmax + 1]
             kl = np.array([lnl[n] / (1 + ln[n]) for n in range(len(ln))]) * radius_e
 
             convert_mat *= kl
