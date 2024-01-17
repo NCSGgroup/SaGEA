@@ -35,7 +35,7 @@ class IterativeConfig:
             self.basin_map = har.synthesis(SHC(basin_clm, basin_slm)).data[0]
 
         else:
-            self.basin_map = har.synthesis(basin).data[0]
+            self.basin_map = basin
 
         self.basin_acreage = MathTool.get_acreage(self.basin_map)
 
@@ -62,15 +62,6 @@ class Iterative(Leakage):
         super().__init__()
         self.configuration = IterativeConfig()
 
-    # def config(self, *, basin, cqlm_unf, sqlm_unf, shc_filter: SHCFilter, harmonic: Harmonic):
-    #     self.basin = basin
-    #     self.cqlm_unf = cqlm_unf
-    #     self.sqlm_unf = sqlm_unf
-    #     self.filter = shc_filter
-    #     self.har = harmonic
-    #
-    #     return self
-
     def apply_to(self, grids: GRID):
         f_filtered = MathTool.global_integral(grids.data * self.configuration.basin_map)
 
@@ -79,6 +70,9 @@ class Iterative(Leakage):
         return f_filtered - leakage_c
 
     def __get_leakage(self):
+        if self.configuration.prefilter is None:
+            self.configuration.prefilter = self.configuration.filter
+
         shc_prefiltered = self.configuration.prefilter.apply_to(self.configuration.shc_unfiltered)
 
         grids_prefiltered = self.configuration.harmonic.synthesis(shc_prefiltered)
