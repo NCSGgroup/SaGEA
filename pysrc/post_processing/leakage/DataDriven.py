@@ -23,7 +23,7 @@ class DataDrivenConfig:
         self.harmonic = har
         return self
 
-    def set_basin(self, basin: SHC or pathlib.WindowsPath):
+    def set_basin(self, basin: np.ndarray or pathlib.WindowsPath):
         assert self.harmonic is not None, "set harmonic before setting basin."
 
         har = self.harmonic
@@ -31,10 +31,13 @@ class DataDrivenConfig:
         if type(basin) is pathlib.WindowsPath:
             lmax = self.harmonic.lmax
             basin_clm, basin_slm = load_SH_simple(basin, key='', lmax=lmax, lmcs_in_queue=(1, 2, 3, 4))
-            self.basin_map = har.synthesis(SHC(basin_clm, basin_slm)).data[0]
+            basin_map = har.synthesis(SHC(basin_clm, basin_slm)).data[0]
+
+            self.basin_map = basin_map
 
         else:
-            self.basin_map = har.synthesis(basin).data[0]
+            # self.basin_map = har.synthesis(basin).data[0]
+            self.basin_map = basin
 
         self.basin_acreage = MathTool.get_acreage(self.basin_map)
 
@@ -55,15 +58,6 @@ class DataDriven(Leakage):
     def __init__(self):
         super().__init__()
         self.configuration = DataDrivenConfig()
-
-    # def config(self, *, basin, cqlm_unf, sqlm_unf, shc_filter: SHCFilter, harmonic: Harmonic):
-    #     self.basin = basin
-    #     self.cqlm_unf = cqlm_unf
-    #     self.sqlm_unf = sqlm_unf
-    #     self.filter = shc_filter
-    #     self.har = harmonic
-    #
-    #     return self
 
     def apply_to(self, grids: GRID):
         f_filtered = MathTool.global_integral(grids.data * self.configuration.basin_map)
@@ -91,7 +85,7 @@ class DataDriven(Leakage):
     def __get_deviation(self):
         grids_unf = self.configuration.harmonic.synthesis(self.configuration.shc_unfiltered)
 
-        basin_acreage = MathTool.get_acreage(self.configuration.basin_map)
+        basin_acreage = self.configuration.basin_acreage
 
         basin_average = MathTool.global_integral(grids_unf.data * self.configuration.basin_map) / basin_acreage
 
