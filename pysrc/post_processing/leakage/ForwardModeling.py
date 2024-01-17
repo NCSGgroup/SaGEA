@@ -5,9 +5,7 @@ import numpy as np
 
 from pysrc.auxiliary.core.GRID import GRID
 from pysrc.auxiliary.core.SHC import SHC
-from pysrc.auxiliary.tools.FileTool import FileTool
 from pysrc.auxiliary.tools.MathTool import MathTool
-# from pysrc.auxiliary.load_file.LoadBasinMask import LoadBasinMask
 from pysrc.auxiliary.load_file.LoadL2SH import load_SH_simple
 from pysrc.post_processing.filter.Base import SHCFilter
 from pysrc.post_processing.filter.Gaussian import Gaussian
@@ -53,13 +51,6 @@ class ForwardModelingConfig:
 
     def get_max_iteration(self):
         return self.__max_iteration
-
-    # def set_initial_grid(self, grid: GRID):
-    #     self.__initial_grid = grid
-    #     return self
-    #
-    # def get_initial_grid(self):
-    #     return self.__initial_grid
 
     def set_observed_grid(self, grid: GRID):
         self.__observed_grid = grid
@@ -116,8 +107,15 @@ class ForwardModelingConfig:
             basin[np.where(basin < 0.5)] = 0
             self.__basin = basin
 
-        else:
+        elif type(basin) is SHC:
             self.__basin = har.synthesis(basin).data[0]
+
+        elif type(basin) is np.ndarray:
+            self.__basin = basin
+
+        else:
+            print('Unsupported format of basin map.')
+            return -1
 
         return self
 
@@ -164,76 +162,7 @@ class ForwardModeling(Leakage):
             cqlm, sqlm = har.analysis_for_gqij(true_model)
             cqlm_filtered, sqlm_filtered = shc_filter.apply_to(SHC(cqlm, sqlm)).get_cs2d()
 
-            # cqlm_filtered[:, 0, :] = 0
-            # cqlm_filtered[:, 1, :] = 0
-            # sqlm_filtered[:, 1, :] = 0
-
             grids_predicted = har.synthesis_for_csqlm(cqlm_filtered, sqlm_filtered)
-
-            grids_difference = (observed_model - grids_predicted) * basin
-
-            true_model += grids_difference * acceleration_factor
-            # true_model = keep_signals_in_basin(true_model, basin, basin_to_conservation)
-
-            if iter_times >= max_iter_times:
-                break
-        print()
-
-        if get_grid:
-            grid = GRID(true_model, har.lat, har.lon)
-            return grid
-
-        else:
-            if reverse_basin_mode:
-                return - MathTool.global_integral(true_model * basin)
-            else:
-                return MathTool.global_integral(true_model * basin)
-
-    def apply_to_use_old_harmonic(self, grid: GRID, get_grid=False):
-        if self.configuration.get_observed_grid() is not None:
-            observed_model = self.configuration.get_observed_grid().data
-        else:
-            observed_model = copy.deepcopy(grid.data)
-
-        basin = self.configuration.get_basin()
-        reverse_basin_mode = self.configuration.get_reverse_basin_mode()
-        if reverse_basin_mode:
-            basin = 1 - basin
-
-        basin_to_conservation = self.configuration.get_basin_conservation()
-        shc_filter = self.configuration.get_filter()
-        har = self.configuration.get_harmonic()
-        acceleration_factor = self.configuration.get_acceleration_factor()
-        max_iter_times = self.configuration.get_max_iteration()
-
-        true_model = keep_signals_in_basin(grid.data, basin, basin_to_conservation)
-        iter_times = 0
-
-        PnmMat = MathTool.get_Legendre(har.lat, har.lmax)
-        Pnm = np.array([MathTool.cs_2dto1d(PnmMat[i]) for i in range(np.shape(PnmMat)[0])]).T
-
-        while True:
-            iter_times += 1
-            print(f'\rforward modeling: iter {iter_times}...', end='')
-
-            # cqlm, sqlm = har.analysis_for_gqij(true_model)
-            cqlm, sqlm = [], []
-            for i in range(len(true_model)):
-                cs = har.analysisOld(np.array([true_model[i]]), Pnm)
-                cqlm.append(cs[0])
-                sqlm.append(cs[1])
-
-            cqlm = np.array(cqlm)
-            sqlm = np.array(sqlm)
-
-            cqlm_filtered, sqlm_filtered = shc_filter.apply_to(SHC(cqlm, sqlm)).get_cs2d()
-
-            # grids_predicted = har.synthesis_for_csqlm(cqlm_filtered, sqlm_filtered)
-            grids_predicted = []
-            for i in range(len(cqlm_filtered)):
-                grids_predicted.append(
-                    har.synthesisOld(cqlm_filtered[i], sqlm_filtered[i], har.lmax, har.lat, har.lon, Pnm))
-            grids_predicted = np.array(grids_predicted)
 
             grids_difference = (observed_model - grids_predicted) * basin
 
@@ -265,9 +194,9 @@ def demo1():
     from pysrc.auxiliary.tools.FileTool import FileTool
 
     '''load shc'''
-    multi_times = 218
-    lmax = 96
-    spatial_resolution = 0.5
+    multi_times = 220
+    lmax = 60
+    spatial_resolution = 1
 
     clm, slm = load_SH_simple(
         FileTool.get_project_dir('data/auxiliary/GIF48.gfc'),
@@ -297,11 +226,7 @@ def demo1():
     fm.apply_to(grid)
     time2 = time.time()
 
-    time3 = time.time()
-    fm.apply_to_use_old_harmonic(grid)
-    time4 = time.time()
-
-    return time2 - time1, time4 - time3
+    return time2 - time1
 
 
 if __name__ == '__main__':
