@@ -1,11 +1,11 @@
 {
   "server": "GFZ",
-  "satellite": "GRACE_FO",
-  "product_type": "GSM",
-  "institute": "CSR",
-  "release": "RL062",
+  "satellite": "GRACE",
+  "product_type": "GAD",
+  "institute": "GFZ",
+  "release": "RL06",
 
-  "beginning_date": "2023-01",
-  "ending_date": "2023-12",
+  "beginning_date": "2002-04",
+  "ending_date": "2017-10",
   "update_mode": "on"
 }
