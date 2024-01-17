@@ -265,23 +265,12 @@ class CollectL2SH:
         # This method may temporarily change the settings set by the user,
         # therefore here make a backup before running for subsequent restoration of the settings.
 
-        if self.configuration.server == L2DataServer.GFZ:
-            # try:
-            #     self._run_once_for_server_gfz()
-            #
-            # except Exception as e:
-            #     if self.relink_time >= self.max_relink_time:
-            #         raise Exception(f'The relinking time has reached to the maximum ({self.max_relink_time}), '
-            #                         f'please check.')
-            #
-            #     self.relink_time += 1
-            #     print(f'There were some issues: "{e}", relinking for the {self.relink_time}th time...')
-            #     self._ftp.quit()
-            #
-            #     time.sleep(self.sleep_seconds_before_relink)
-            #     self._configuration.set_update_mode(True)
-            #     self.run()
+        # make a dir "temp"
+        dir_temp = FileTool.get_project_dir('temp')
+        if not dir_temp.exists():
+            dir_temp.mkdir(parents=True)
 
+        if self.configuration.server == L2DataServer.GFZ:
             for relink_time in range(self.max_relink_time):
                 try:
                     self._run_once_for_server_gfz()
