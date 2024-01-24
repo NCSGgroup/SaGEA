@@ -112,7 +112,7 @@ class ConvertSHC:
         convert_mat = np.ones((lmax + 1,))
 
         if field_type is FieldPhysicalQuantity.Dimensionless:
-            return self
+            pass
 
         elif field_type is FieldPhysicalQuantity.EWH:
             ln = ln[:lmax + 1]

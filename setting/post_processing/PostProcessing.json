@@ -41,7 +41,7 @@
   "shc_filter": "Gaussian",
   "?shc_filter": "",
 
-  "shc_filter_params": [300],
+  "shc_filter_params": [500],
   "?shc_filter_params": "",
 
   "leakage_method": "Iterative",

@@ -1,6 +1,6 @@
 from pysrc.auxiliary.tools.FileTool import FileTool
-from pysrc.data_collecting.collect_GRACE_L2.CollectL2SH import CollectL2SH
-from pysrc.data_collecting.collect_GRACE_L2.CollectL2LowDeg import CollectL2LowDeg
+from pysrc.data_collection.collect_GRACE_L2.CollectL2SH import CollectL2SH
+from pysrc.data_collection.collect_GRACE_L2.CollectL2LowDeg import CollectL2LowDeg
 
 from pysrc.auxiliary.preference.EnumClasses import *
 
@@ -8,7 +8,7 @@ from pysrc.auxiliary.preference.EnumClasses import *
 def demo_collect_L2_SH():
     col = CollectL2SH()
 
-    json_path = FileTool.get_project_dir() / 'setting/data_collecting/CollectL2Data.json'
+    json_path = FileTool.get_project_dir() / 'setting/data_collection/CollectL2Data.json'
     col.config(preset=json_path)
 
     # col.configuration.set_update_mode(True)
@@ -32,4 +32,5 @@ def demo_collect_L2_low_degrees():
 
 
 if __name__ == '__main__':
-    demo_collect_L2_SH()
+    # demo_collect_L2_SH()
+    demo_collect_L2_low_degrees()

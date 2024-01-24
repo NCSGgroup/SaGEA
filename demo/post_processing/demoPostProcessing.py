@@ -4,6 +4,7 @@ import pathlib
 import re
 
 import matplotlib.pyplot as plt
+import numpy as np
 
 from pysrc.auxiliary.core.GRID import GRID
 from pysrc.auxiliary.core.SHC import SHC
@@ -553,23 +554,28 @@ class PostProcessing:
             convert.configuration.set_Love_number(ln)
             shc = convert.apply_to(shc_tobe_processed)
 
-            if i == 0:
-                self.shc_GRACE = shc
+            # if i == 0:
+            #     self.shc_GRACE = shc
+            #
+            # else:
+            #     self.filtered_shc = shc
 
-            else:
-                self.filtered_shc = shc
+            shc_tobe_processed_list[i] = shc
 
         '''harmonic synthesis to grid'''
         har = self.harmonic
         special = field_type if field_type in (
             FieldPhysicalQuantity.HorizontalDisplacementEast,
             FieldPhysicalQuantity.HorizontalDisplacementNorth) else None
-        grid = har.synthesis(shc, special_type=special)
 
-        if self.filtered_shc is not None:
-            self.filtered_grid = grid
-        else:
-            self.grid = grid
+        for i in range(len(shc_tobe_processed_list)):
+            grid = har.synthesis(shc_tobe_processed_list[i], special_type=special)
+
+            if i == 0:
+                self.filtered_grid = grid
+
+            else:
+                self.grid = grid
 
         return self
 
@@ -727,5 +733,79 @@ def demo():
     plt.show()
 
 
+def demo_temp():
+    pp = PostProcessing()
+    jsonpath = FileTool.get_project_dir() / 'setting/post_processing/PostProcessing.json'
+    pp.configuration.set_from_json(jsonpath)
+
+    pp.prepare()
+
+    c_cra, s_cra = load_SH_simple(FileTool.get_project_dir('temp/zwh/CRA.gfc'), key='gfc', lmcs_in_queue=(2, 3, 4, 5),
+                                  lmax=60)
+    c_csr, s_csr = load_SH_simple(FileTool.get_project_dir('temp/zwh/CSR.gfc'), key='gfc', lmcs_in_queue=(2, 3, 4, 5),
+                                  lmax=60)
+
+    c_gif48, s_gif48 = load_SH_simple(FileTool.get_project_dir('data/auxiliary/GIF48.gfc'), key='gfc',
+                                      lmcs_in_queue=(2, 3, 4, 5),
+                                      lmax=60)
+
+    cqlm, sqlm = np.array([c_cra, c_csr]), np.array([s_cra, s_csr])
+    shc = SHC(cqlm, sqlm)
+    dates = (
+        [datetime.date(2009, 1, 1), datetime.date(2009, 1, 1)],
+        [datetime.date(2009, 1, 31), datetime.date(2009, 1, 31)]
+    )
+
+    '''load and replace low degrees'''
+    low_degs = {}
+
+    load_deg1 = LoadLowDegree()
+    load_deg1.configuration.set_file_id(L2LowDegreeFileID.TN13).set_institute(L2InstituteType.CSR)
+    low_degs.update(load_deg1.get_degree1())
+
+    load_c20 = LoadLowDegree()
+    load_c20.configuration.set_file_id(L2LowDegreeFileID.TN14)
+    low_degs.update(load_c20.get_c20())
+
+    load_c30 = LoadLowDegree()
+    load_c30.configuration.set_file_id(L2LowDegreeFileID.TN14)
+    low_degs.update(load_c30.get_c30())
+
+    rep = ReplaceLowDegree()
+    rep.configuration.set_replace_deg1(True).set_replace_c20(True).set_replace_c30(True)
+    rep.set_low_degrees(low_degs)
+
+    shc = rep.apply_to(shc, dates[0], dates[1])
+    shc.de_background(SHC(c_gif48, s_gif48))
+
+    pp.shc_GRACE = shc
+
+    pp.filter()  # low-pass filter
+
+    pp.shc_to_grid(field_type=FieldPhysicalQuantity.Geoid)
+
+    gs_radius = int(pp.shc_filter.configuration.filtering_radius / 1000)
+    plot_grids(
+        np.array([pp.grid.data[0], pp.grid.data[1], pp.grid.data[0] - pp.grid.data[1]]),
+        lat=pp.grid.lat,
+        lon=pp.grid.lon,
+        vmin=[-5e-3, -5e-3, -5e-4],
+        vmax=[5e-3, 5e-3, 5e-4],
+        subtitle=['(a) CSR', '(b)CRA', '(a)-(b)'],
+        title=f'degree1/c20/c30 replaced, GS{gs_radius}',
+        save=FileTool.get_project_dir(f'temp/zwh/GS{gs_radius}.pdf')
+    )
+
+    np.savez(
+        FileTool.get_project_dir(f'temp/zwh/geoid_height_GS{gs_radius}.npz'),
+        CSR=pp.grid.data[0],
+        CRA=pp.grid.data[1],
+        lat=pp.grid.lat,
+        lon=pp.grid.lon
+    )
+
+
 if __name__ == '__main__':
-    demo()
+    demo_temp()
+    # a = np.load(FileTool.get_project_dir('temp/zwh/geoid_height_GS300.npz'))
+    pass
