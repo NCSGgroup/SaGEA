@@ -24,9 +24,9 @@ Use this code to download the dependencies.
 
 ## Module Description and Usage
 
-### Data Class: SHC
+### Class SHC
  
-### Data Class: GRID
+### Class GRID
 
 ### Data Collecting
 GRACE and GRACE-FO level-2 products can be obtained at open source FTP server ftp://isdcftp.gfz-potsdam.de/.
