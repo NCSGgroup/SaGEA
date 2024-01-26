@@ -30,7 +30,7 @@ Use this code to download the dependencies.
 
 ## Class GRD
 
-## Data Collecting
+## Data Collection
 
 GRACE and GRACE-FO level-2 products can be obtained at open source FTP server ftp://isdcftp.gfz-potsdam.de/.
 Level-2 products includes GSM, GAA, GAB, GAC, and GAD (The last four products are collectively referred to as GAX.),
@@ -109,6 +109,8 @@ and the required associated Legendre polynomial can be obtained by the auxiliary
 file `/pysrc/auxiliary/tools/MathTools.py`.
 
 ## Post-processing: Corrections
+
+### Low-degrees replacement
 
 ### Filtering spherical harmonic coefficients
 
