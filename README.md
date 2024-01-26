@@ -123,3 +123,59 @@ This toolbox contains the following commonly used methods to correct the leakage
 - Forward Modeling by (Chen et al., 2015)
 - Data-driven (Vishwakarma et al., 2017).
 - Buffer zone (Chen et al., 2019)
+
+## Contributing
+
+## License
+MIT License
+
+Copyright (c) 2024 NCSG -- Numerical Computation and Satellite Geodesy research group
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+
+## Reference
+Chen, J.L., Wilson, C.R., Ries, J.C., 2016. Broadband assessment of degree-2 gravitational changes from GRACE and other estimates, 2002-2015. Journal of Geophysical Research: Solid Earth 121, 2112–2128. https://doi.org/10.1002/2015jb012708
+
+Duan, X. J., Guo, J. Y., Shum, C. K., & Van Der Wal, W., 2009, On the postprocessing removal of correlated errors in GRACE temporal gravity field solutions. Journal of Geodesy, 83(11), 1095–1106. https://doi.org/10.1007/s00190-009-0327-0
+
+Han, S.-C., Shum, C. K., Jekeli, C., Kuo, C.-Y., Wilson, C., & Seo, K.-W., 2005, Non-isotropic filtering of GRACE temporal gravity for geophysical signal enhancement. Geophysical Journal International, 163(1), 18–25. https://doi.org/10.1111/j.1365-246x.2005.02756.x
+
+Klees, R., Zapreeva, E. A., Winsemius, H. C., & Savenije, H. H. G.， 2007. The bias in GRACE estimates of continental water storage variations. Hydrology and Earth System Sciences, 11(4), 1227–1241. https://doi.org/10.5194/hess-11-1227-2007
+
+Kusche. J., 2007. Approximate decorrelation and non-isotropic smoothing of time-variable GRACE-type gravity field models. Journal of Geodesy, 81(11), 733–749. https://doi.org/10.1007/s00190-007-0143-3
+
+Landerer, F. W., & Swenson, S. C., 2012. Accuracy of scaled GRACE terrestrial water storage estimates. Water Resources Research, 48(4). https://doi.org/10.1029/2011wr011453
+
+Longuevergne, L., Scanlon, B. R., & Wilson, C. R.. 2010.， GRACE Hydrological estimates for small basins: Evaluating processing approaches on the High Plains Aquifer, USA. Water Resources Research, 46( 11). https://doi.org/10.1029/2009wr008564
+
+Loomis, B.D., Rachlin, K.E., Wiese, D.N., Landerer, F.W., Luthcke, S.B., 2020. Replacing GRACE/GRACE‐FO With Satellite Laser Ranging: Impacts on Antarctic Ice Sheet Mass Change. Geophysical Research Letters 47. https://doi.org/10.1029/2019gl085488
+
+Sun, Y., Riva, R., Ditmar, P., 2016. Optimizing estimates of annual variations and trends in geocenter motion and J2 from a combination of GRACE data and geophysical models. Journal of Geophysical Research: Solid Earth 121, 8352–8370. https://doi.org/10.1002/2016jb013073
+
+Swenson, S., Wahr, J., 2006. Post-processing removal of correlated errors in GRACE data, Geophysical Research Letters.
+
+https://doi.org/10.1029/2005gl025285.
+Vishwakarma, B. D., Horwath, M., Devaraju, B., Groh, A., & Sneeuw, N., 2017. A Data-Driven Approach for Repairing the Hydrological Catchment Signal Damage Due to Filtering of GRACE Products. Water Resources Research, 53(11), 9824–9844. https://doi.org/10.1002/2017wr021150
+
+Vishwakarma, B., Devaraju, B., & Sneeuw, N., 2018, What Is the Spatial Resolution of grace Satellite Products for Hydrology?. Remote Sensing, 10(6), 852. https://doi.org/10.3390/rs10060852
+
+Wahr, J., Molenaar, M., Bryan, F., 1998. Time variability of the Earth's gravity field: Hydrological and oceanic effects and their possible detection using GRACE. Journal of Geophysical Research: Space Physics 103, 30205–30229. https://doi.org/10.1029/98jb02844
+
+Zhang, Z.-Z., Chao, B. F., Lu, Y., & Hsu, H.-T., 2009, An effective filtering for GRACE time-variable gravity: Fan filter. Geophysical Research Letters, 36(17). https://doi.org/10.1029/2009gl039459
