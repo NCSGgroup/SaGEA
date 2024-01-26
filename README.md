@@ -1,11 +1,9 @@
-# SaGEA Toolbox
-
 SaGEA (Satellite Gravity error assessment) is a Python-based project for comprehensive error assessment of GRACE and
 GRACE-FO based mass change.
 This toolbox also comes with post-processing functions of GRACE(-FO)'s level-2 products,
 as well as the collection of the level-2 products, and the functions of the results visualization.
 
-## Installation
+# Installation
 
 This program homepage is: https://github.com/NCSGgroup/SaGEA.
 
@@ -19,20 +17,20 @@ Use this code to download the dependencies.
 
 `pip install -r requirements.txt`
 
-## Features
+# Features
 
 - Auto-collecting GRACE(-FO) level-2 products and related auxiliary files.
 - Complete and diverse popular methodologies and technologies of GRACE(-FO)'s post-processing.
 - Types of Error assessment/quantification of GRACE(-FO) based mass change.
 - User interface (under construction).
 
-## Functional Module Description
+# Functional Module Description
 
-### Class SHC
+## Class SHC
 
-### Class GRID
+## Class GRD
 
-### Data Collecting
+## Data Collecting
 
 GRACE and GRACE-FO level-2 products can be obtained at open source FTP server ftp://isdcftp.gfz-potsdam.de/.
 Level-2 products includes GSM, GAA, GAB, GAC, and GAD (The last four products are collectively referred to as GAX.),
@@ -68,7 +66,7 @@ collection of the corresponding files.
 This demo program also gives an example to download the low-degree files. Users can simply run the above program to
 achieve automatic collections.
 
-### Loading local GRACE level-2 products and replacing low-degree coefficients
+## Loading local GRACE level-2 products and replacing low-degree coefficients
 
 GRACE level-2 GSM solutions lack the three degree-1 coefficients,
 which are proportional to geocenter motion and can not been ignored for a complete representation of the mass
@@ -86,7 +84,7 @@ and path `/pysrc/auxiliary/load_file/LoadL2LowDeg.py` provides those of the low-
 Path `/pysrc/post_processing/replace_low_deg/ReplaceLowDegree.py` includes the source file to apply the replacing
 low-degree coefficients on given SHC.
 
-### Unit conversion and harmonic synthesis/analysis
+## Post-processing: Conversion between SHC and GRD
 
 GRACE level-2 products reflects the distribution of dimensionless geopotential,
 from which we can obtain the corresponding changes in gravity anomalies,
@@ -109,6 +107,8 @@ Path `/pysrc/post_processing/convert_field_physical_quantity/` includes the sour
 and analysis.
 and the required associated Legendre polynomial can be obtained by the auxiliary methods in source
 file `/pysrc/auxiliary/tools/MathTools.py`.
+
+## Post-processing: Corrections
 
 ### Filtering spherical harmonic coefficients
 
@@ -161,11 +161,13 @@ This toolbox contains the following commonly used methods to correct the leakage
 - Data-driven (Vishwakarma et al., 2017).
 - Buffer zone (Chen et al., 2019)
 
-## Usage
+## Post-processing: Temporal-spatial analysis
 
-## Contributing
+# Usage
 
-## License
+# Contributing
+
+# License
 
 MIT License
 
@@ -189,7 +191,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-## Reference
+# Reference
 
 Chen, J.L., Wilson, C.R., Ries, J.C., 2016. Broadband assessment of degree-2 gravitational changes from GRACE and other
 estimates, 2002-2015. Journal of Geophysical Research: Solid Earth 121, 2112–2128. https://doi.org/10.1002/2015jb012708
