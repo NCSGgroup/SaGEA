@@ -153,3 +153,17 @@ class BasinName(Enum):
     Yukon = 35
     Zambeze = 36
     Ocean = 37
+
+
+class EmpiricalDecorrelationType(Enum):
+    PnMm = 1
+    window_stable = 2
+    window_Wahr2006 = 3
+    window_Duan2009 = 4
+
+
+class AverageFilterType(Enum):
+    Gaussian = 1
+    fan = 2
+    non_isotropic_Gaussian = 3
+    DDK = 4

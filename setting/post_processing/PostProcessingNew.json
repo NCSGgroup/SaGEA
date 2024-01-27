@@ -1,5 +1,5 @@
 {
-  "Data source": {
+  "data source": {
     "mode": "local path",
     "?mode": "presets, local path",
     "institute": "JPL",
@@ -11,15 +11,15 @@
     "local path": "data/",
     "?local path": "relative path; required if mode is local path"
   },
-  "Dates": {
-    "begin date": "2002-04-01",
-    "?begin date": "yyyy-mm(-dd), specifying day does not have an impact in general, as GRACE TVG products are usually given with time resolution of a month.",
-    "end date": "2015-12-31",
-    "?end date": "yyyy-mm(-dd), specifying day does not have an impact in general, as GRACE TVG products are usually given with time resolution of a month."
+  "dates": {
+    "beginning": "2002-04-01",
+    "?beginning": "yyyy-mm(-dd), specifying day does not have an impact in general, as GRACE TVG products are usually given with time resolution of a month.",
+    "ending": "2015-12-31",
+    "?ending": "yyyy-mm(-dd), specifying day does not have an impact in general, as GRACE TVG products are usually given with time resolution of a month."
   },
   "basin": {
-    "mode": "presets",
-    "?mode": "presets, local_path",
+    "mode": "local path",
+    "?mode": "presets, local path",
     "preset basin": "Ocean",
     "?preset basin": "name of basin that is preset",
     "local path": "data/",
@@ -32,13 +32,13 @@
     "?replace x": "true, false",
     "degree1 file id": "TN13",
     "?degree1 file id": "TN13",
-    "low degree c20 file id": "TN14",
-    "?low degree c20_file id": "TN11, TN14",
-    "low degree c30 file id": "TN14",
-    "?low degree c30 file id": "TN14"
+    "c20 file id": "TN14",
+    "? c20_file id": "TN11, TN14",
+    "c30 file id": "TN14",
+    "?c30 file id": "TN14"
   },
   "de-correlation": {
-    "method": "none",
+    "method": "window_Duan2009",
     "?method": "PnMm, window_stable, window_Wahr2006, window_Duan2009 or none",
     "PnMm params": [
       3,
@@ -64,12 +64,14 @@
       5,
       5,
       10,
+      30,
+      10,
       30
     ],
     "?window Duan2009 params": "[fitting order: int, starting order: int, minimum window length: int, A: int, K: int,p: int, gamma: int]; required if method is window_Duan2009"
   },
   "average filter": {
-    "method": "Gaussian",
+    "method": "DDK",
     "?method": "Gaussian, fan, non_isotropic_Gaussian (by Han et al., 2005), DDK or none",
     "Gaussian params": 500,
     "?Gaussian params": "radius:int (km)",
@@ -78,12 +80,12 @@
       300
     ],
     "?fan params": "[radius_1:int (km), radius_2:int (km)]",
-    "non isotropic Gaussian": [
+    "non_isotropic_Gaussian params": [
       300,
       500,
       20
     ],
-    "?non isotropic Gaussian": "[radius_1:int (km), radius_2:int (km), m_0_:int]",
+    "?non_isotropic_Gaussian params": "[radius_1:int (km), radius_2:int (km), m_0_:int]",
     "DDK params": [
       3
     ],
@@ -91,7 +93,7 @@
   },
   "leakage correction": {
     "method": "iterative",
-    "?method": "iterative, additive, multiplicative, scaling, gridded scaling, data-driven, forward modeling, buffer or none",
+    "?method": "iterative, additive, multiplicative, scaling, gridded_scaling, data-driven, forward modeling, buffer or none",
     "iterative params": {
       "pre-average filter": {
         "method": "Gaussian",
