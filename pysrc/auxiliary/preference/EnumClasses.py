@@ -31,6 +31,12 @@ class L2Release(Enum):
     RL062 = 62
 
 
+class L2ProductMaxDegree(Enum):
+    Degree60 = 60
+    Degree90 = 90
+    Degree96 = 96
+
+
 class L2LowDegreeType(Enum):
     Deg1 = 1
     C20 = 2
@@ -58,7 +64,6 @@ class FieldPhysicalQuantity(Enum):
     HorizontalDisplacementEast = 6
     HorizontalDisplacementNorth = 7
     VerticalDisplacement = 8
-
 
 
 class LoveNumberMethod(Enum):
