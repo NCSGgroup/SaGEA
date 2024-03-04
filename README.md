@@ -239,8 +239,8 @@ which one can easily switch on or off, is also integrated into it.
 
 GMAM correction is proposed by Chen et al. (2019) to compensate the offset in Earth mass conservation due to the absence
 of global mean atmospheric mass (GMAM). Chen et al. (2019) found a constant annual phase lag(for about 10 deg) between
-GRACE and Altimeter-Argo estimates of GMOM changes. By removing GMAM from the GRACE solutions using atmospheric model (
-GAA, the monthly average of atmosphere), this annual phase lag is nearly compensated.
+GRACE and Altimeter-Argo estimates of GMOM changes. By removing GMAM from the GRACE solutions using atmospheric model
+(GAA, the monthly average of atmosphere), this annual phase lag is nearly compensated.
 
 In the SaGEA toolbox, the GAA model can be also easily collected, and the corresponding correction, which one can easily
 switch on or off, is integrated into SaGEA toolbox.
