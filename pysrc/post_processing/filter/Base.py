@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 
-from pysrc.auxiliary.core.SHC import SHC
+from pysrc.data_class.DataClass import SHC
 
 
 class SHCFilter(ABC):

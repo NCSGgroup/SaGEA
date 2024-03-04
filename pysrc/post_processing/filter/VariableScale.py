@@ -4,13 +4,13 @@ from enum import Enum
 import numpy as np
 from tqdm import trange
 
-from pysrc.auxiliary.core.GRID import GRID
-from pysrc.auxiliary.core.SHC import SHC
+from pysrc.data_class.DataClass import GRID
+from pysrc.data_class.DataClass import SHC
 from pysrc.auxiliary.load_file.LoadL2SH import LoadL2SH
 from pysrc.auxiliary.scripts.PlotGrids import plot_grids
-from pysrc.auxiliary.tools.FileTool import FileTool
-from pysrc.auxiliary.tools.MathTool import MathTool
-from pysrc.auxiliary.tools.TimeTool import TimeTool
+from pysrc.auxiliary.aux_tool.FileTool import FileTool
+from pysrc.auxiliary.aux_tool.MathTool import MathTool
+from pysrc.auxiliary.aux_tool.TimeTool import TimeTool
 from pysrc.post_processing.Love_number.LoveNumber import LoveNumber
 from pysrc.post_processing.convert_field_physical_quantity.ConvertSHC import ConvertSHC
 from pysrc.post_processing.harmonic.Harmonic import Harmonic
@@ -221,7 +221,7 @@ def demo2():
     '''load GRACE L2 SH products'''
     grid_space = 1
     lmax = 60
-    shc = SHC.eye(lmax)
+    shc = SHC.identity(lmax)
 
     lat, lon = MathTool.get_global_lat_lon_range(grid_space)
     har = Harmonic(lat, lon, lmax, option=1)

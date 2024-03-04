@@ -5,8 +5,8 @@ import datetime
 import json
 from pathlib import Path, WindowsPath
 
-from pysrc.auxiliary.tools.FileTool import FileTool
-from pysrc.auxiliary.tools.TimeTool import TimeTool
+from pysrc.auxiliary.aux_tool.FileTool import FileTool
+from pysrc.auxiliary.aux_tool.TimeTool import TimeTool
 
 from pysrc.auxiliary.preference.EnumClasses import Satellite, L2DataServer, L2ProductType, L2InstituteType, L2Release
 from pysrc.auxiliary.scripts.MatchConfigWithEnums import match_config

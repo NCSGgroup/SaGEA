@@ -6,7 +6,7 @@ import re
 
 from pysrc.auxiliary.preference.EnumClasses import L2InstituteType, L2Release, L2ProductMaxDegree, BasinName, \
     L2LowDegreeType, L2LowDegreeFileID, EmpiricalDecorrelationType, AverageFilterType
-from pysrc.auxiliary.tools.FileTool import FileTool
+from pysrc.auxiliary.aux_tool.FileTool import FileTool
 
 
 def match_str_enum(enum_class: enum.EnumMeta, value: str):

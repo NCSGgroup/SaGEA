@@ -4,11 +4,11 @@ from netCDF4 import Dataset
 
 import numpy as np
 
-from pysrc.auxiliary.core.SHC import SHC
+from pysrc.data_class.DataClass import SHC
 from pysrc.auxiliary.preference.EnumClasses import FieldPhysicalQuantity
 from pysrc.auxiliary.preference.Constants import GeoConstants
-from pysrc.auxiliary.tools.FileTool import FileTool
-from pysrc.auxiliary.tools.MathTool import MathTool
+from pysrc.auxiliary.aux_tool.FileTool import FileTool
+from pysrc.auxiliary.aux_tool.MathTool import MathTool
 from pysrc.post_processing.Love_number.LoveNumber import LoveNumber
 from pysrc.post_processing.convert_field_physical_quantity.ConvertSHC import ConvertSHC
 from pysrc.post_processing.geometric_correction.GeoidUndulation import GeoidUndulation

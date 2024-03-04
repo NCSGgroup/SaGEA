@@ -5,40 +5,34 @@ import re
 
 import matplotlib.pyplot as plt
 
-from pysrc.auxiliary.core.GRID import GRID
-from pysrc.auxiliary.core.SHC import SHC
+from pysrc.data_class.DataClass import GRID
+from pysrc.data_class.DataClass import SHC
 from pysrc.auxiliary.load_file.LoadGIA import LoadGIA
 from pysrc.auxiliary.load_file.LoadL2LowDeg import LoadLowDegree
 from pysrc.auxiliary.load_file.LoadNoah import get_TWS_series
 from pysrc.auxiliary.load_file.LoadShp import ShpToMask
 from pysrc.auxiliary.preference.EnumClasses import L2LowDegreeFileID, L2InstituteType, L2Release, SHCDecorrelationType, \
-    SHCFilterType, LeakageMethod, GIAModel, BasinName, SHCDecorrelationSlidingWindowType, L2ProductType
+    SHCFilterType, LeakageMethod, GIAModel, BasinName, SHCDecorrelationSlidingWindowType
 from pysrc.auxiliary.scripts.MatchConfigWithEnums import match_config
-from pysrc.auxiliary.tools.FileTool import FileTool
-from pysrc.auxiliary.tools.MathTool import MathTool
-from pysrc.auxiliary.tools.TimeTool import TimeTool
+from pysrc.auxiliary.aux_tool.FileTool import FileTool
+from pysrc.auxiliary.aux_tool.MathTool import MathTool
+from pysrc.auxiliary.aux_tool.TimeTool import TimeTool
 from pysrc.post_processing.GIA_correction.GIACorrectionSpectral import GIACorrectionSpectral
 from pysrc.post_processing.Love_number.LoveNumber import LoveNumber
 from pysrc.post_processing.convert_field_physical_quantity.ConvertSHC import ConvertSHC, FieldPhysicalQuantity
 from pysrc.auxiliary.load_file.LoadL2SH import LoadL2SH, load_SH_simple
-from pysrc.auxiliary.scripts.PlotGrids import plot_grids
-from pysrc.post_processing.filter.DDK import DDK, DDKFilterType
 from pysrc.post_processing.filter.GetSHCFilter import get_shc_decorrelation, get_shc_filter
-from pysrc.post_processing.leakage.Addictive import Addictive
 from pysrc.post_processing.leakage.BaseModelDriven import ModelDriven
 from pysrc.post_processing.leakage.BufferZone import BufferZone
 from pysrc.post_processing.leakage.DataDriven import DataDriven
 from pysrc.post_processing.leakage.ForwardModeling import ForwardModeling
 from pysrc.post_processing.leakage.GetLeakageDeductor import get_leakage_deductor
 from pysrc.post_processing.leakage.Iterative import Iterative
-from pysrc.post_processing.leakage.Multiplicative import Multiplicative
 
 from pysrc.post_processing.harmonic.Harmonic import Harmonic
 
 import datetime
 
-from pysrc.post_processing.leakage.Scaling import Scaling
-from pysrc.post_processing.leakage.ScalingGrid import ScalingGrid
 from pysrc.post_processing.replace_low_deg.ReplaceLowDegree import ReplaceLowDegree
 
 

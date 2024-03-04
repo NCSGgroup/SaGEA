@@ -2,13 +2,13 @@ import pathlib
 
 import numpy as np
 
-from pysrc.auxiliary.core.GRID import GRID
-from pysrc.auxiliary.core.SHC import SHC
+from pysrc.data_class.DataClass import GRID
+from pysrc.data_class.DataClass import SHC
 from pysrc.auxiliary.load_file.LoadL2SH import load_SH_simple
 from pysrc.post_processing.leakage.Base import Leakage, filter_grids
 from pysrc.post_processing.filter.Base import SHCFilter
 from pysrc.post_processing.harmonic.Harmonic import Harmonic
-from pysrc.auxiliary.tools.MathTool import MathTool
+from pysrc.auxiliary.aux_tool.MathTool import MathTool
 
 
 class DataDrivenConfig:

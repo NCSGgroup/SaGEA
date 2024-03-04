@@ -4,9 +4,9 @@ import numpy as np
 import h5py
 from netCDF4 import Dataset
 
-from pysrc.auxiliary.tools.FileTool import FileTool
-from pysrc.auxiliary.tools.MathTool import MathTool
-from pysrc.auxiliary.tools.TimeTool import TimeTool
+from pysrc.auxiliary.aux_tool.FileTool import FileTool
+from pysrc.auxiliary.aux_tool.MathTool import MathTool
+from pysrc.auxiliary.aux_tool.TimeTool import TimeTool
 
 
 class LoadNOAH21:

@@ -3,8 +3,8 @@ import copy
 import numpy as np
 from scipy import optimize
 
-from pysrc.auxiliary.core.GRID import GRID
-from pysrc.auxiliary.tools.MathTool import MathTool
+from pysrc.data_class.DataClass import GRID
+from pysrc.auxiliary.aux_tool.MathTool import MathTool
 
 
 class SeismicOld:

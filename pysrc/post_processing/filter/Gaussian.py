@@ -2,8 +2,8 @@ import numpy as np
 
 from pysrc.auxiliary.preference.Constants import GeoConstants
 
-from pysrc.auxiliary.core.SHC import SHC
-from pysrc.auxiliary.tools.MathTool import MathTool
+from pysrc.data_class.DataClass import SHC
+from pysrc.auxiliary.aux_tool.MathTool import MathTool
 from pysrc.post_processing.filter.Base import get_gaussian_weight_1d, SHCFilter
 
 

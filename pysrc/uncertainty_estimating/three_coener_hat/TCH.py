@@ -73,14 +73,13 @@ def demo():
     import datetime
     from tqdm import trange
 
-    from pysrc.auxiliary.core.SHC import SHC
+    from pysrc.data_class.DataClass import SHC
 
     from pysrc.auxiliary.load_file.LoadL2SH import LoadL2SH, load_SH_simple
-    from pysrc.auxiliary.tools.MathTool import MathTool
-    from pysrc.auxiliary.tools.FileTool import FileTool
+    from pysrc.auxiliary.aux_tool.MathTool import MathTool
+    from pysrc.auxiliary.aux_tool.FileTool import FileTool
     from pysrc.auxiliary.preference.EnumClasses import L2InstituteType
 
-    from pysrc.post_processing.filter.Gaussian import Gaussian
     from pysrc.post_processing.convert_field_physical_quantity.ConvertSHC import ConvertSHC
     from pysrc.post_processing.Love_number.LoveNumber import LoveNumber
     from pysrc.post_processing.harmonic.Harmonic import Harmonic

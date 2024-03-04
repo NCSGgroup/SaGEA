@@ -1,16 +1,9 @@
 import copy
-import datetime
 
 import numpy as np
 
-from pysrc.auxiliary.core.SHC import SHC
-from pysrc.auxiliary.load_file.LoadGIA import LoadGIA
-from pysrc.auxiliary.load_file.LoadL2LowDeg import LoadLowDegree
-from pysrc.auxiliary.load_file.LoadL2SH import LoadL2SH
-from pysrc.auxiliary.preference.EnumClasses import L2LowDegreeFileID
-from pysrc.auxiliary.tools.FileTool import FileTool
-from pysrc.auxiliary.tools.TimeTool import TimeTool
-from pysrc.post_processing.replace_low_deg.ReplaceLowDegree import ReplaceLowDegree
+from pysrc.data_class.DataClass import SHC
+from pysrc.auxiliary.aux_tool.TimeTool import TimeTool
 
 
 class GIACorrectionSpectralConfig:

@@ -1,6 +1,6 @@
 import numpy as np
 
-from pysrc.auxiliary.tools.MathTool import MathTool
+from pysrc.auxiliary.aux_tool.MathTool import MathTool
 from pysrc.post_processing.convert_field_physical_quantity.ConvertSHC import ConvertSHC
 
 

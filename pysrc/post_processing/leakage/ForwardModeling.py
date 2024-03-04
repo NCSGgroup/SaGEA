@@ -3,9 +3,9 @@ import pathlib
 
 import numpy as np
 
-from pysrc.auxiliary.core.GRID import GRID
-from pysrc.auxiliary.core.SHC import SHC
-from pysrc.auxiliary.tools.MathTool import MathTool
+from pysrc.data_class.DataClass import GRID
+from pysrc.data_class.DataClass import SHC
+from pysrc.auxiliary.aux_tool.MathTool import MathTool
 from pysrc.auxiliary.load_file.LoadL2SH import load_SH_simple
 from pysrc.post_processing.filter.Base import SHCFilter
 from pysrc.post_processing.filter.Gaussian import Gaussian
@@ -191,7 +191,7 @@ def demo1():
     """synthesis/analysis for once"""
     import time
     from pysrc.auxiliary.load_file.LoadL2SH import load_SH_simple
-    from pysrc.auxiliary.tools.FileTool import FileTool
+    from pysrc.auxiliary.aux_tool.FileTool import FileTool
 
     '''load shc'''
     multi_times = 220

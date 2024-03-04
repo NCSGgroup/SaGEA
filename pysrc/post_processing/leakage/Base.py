@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from pysrc.auxiliary.core.GRID import GRID
+from pysrc.data_class.DataClass import GRID
 from pysrc.post_processing.filter.Base import SHCFilter
 from pysrc.post_processing.harmonic.Harmonic import Harmonic
 

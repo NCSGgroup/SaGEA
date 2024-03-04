@@ -198,6 +198,7 @@ class MathTool:
             shape2d = (lmax + 1, lmax + 1)
 
             clm, slm = np.zeros(shape2d), np.zeros(shape2d)
+
             for l in range(lmax + 1):
                 for m in range(l + 1):
                     c_index_tri1d = int(l ** 2 + l + m)

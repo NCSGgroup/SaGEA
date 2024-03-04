@@ -1,7 +1,6 @@
 import warnings
 
-from pysrc.auxiliary.core.GRID import GRID
-from pysrc.auxiliary.tools.MathTool import MathTool
+from pysrc.auxiliary.aux_tool.MathTool import MathTool
 from pysrc.post_processing.leakage.BaseModelDriven import ModelDriven
 
 

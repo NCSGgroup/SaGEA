@@ -5,8 +5,8 @@ from pathlib import Path
 import numpy as np
 
 from pysrc.auxiliary.preference.EnumClasses import L2LowDegreeFileID, L2InstituteType, L2Release
-from pysrc.auxiliary.tools.FileTool import FileTool
-from pysrc.auxiliary.tools.TimeTool import TimeTool
+from pysrc.auxiliary.aux_tool.FileTool import FileTool
+from pysrc.auxiliary.aux_tool.TimeTool import TimeTool
 
 
 class LoadLowDegreeConfig:

@@ -185,7 +185,7 @@ def plot_grids(grid: np.ndarray, lat, lon, vmin, vmax, central_longitude=None,
 
 
 def demo():
-    from pysrc.auxiliary.tools.MathTool import MathTool
+    from pysrc.auxiliary.aux_tool.MathTool import MathTool
     grid1 = np.load('../../../results/spatial_std/2009-06_1.npy') * 1000
 
     grid2 = np.load('../../../results/spatial_std/sigmaEWH_200906_ITSG_lmax60_diag_GS300.npy') * 1000

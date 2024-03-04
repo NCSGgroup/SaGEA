@@ -1,9 +1,8 @@
 import numpy as np
 
-from pysrc.auxiliary.core.SHC import SHC
+from pysrc.data_class.DataClass import SHC
 from pysrc.auxiliary.preference.EnumClasses import FieldPhysicalQuantity, LoveNumberType
 from pysrc.auxiliary.preference.Constants import GeoConstants
-from pysrc.auxiliary.tools.MathTool import MathTool
 from pysrc.post_processing.Love_number.LoveNumber import LoveNumber
 
 

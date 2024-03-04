@@ -7,7 +7,7 @@ import numpy as np
 from tqdm import trange
 
 from demo.post_processing.demoPostProcessing import PostProcessing
-from pysrc.auxiliary.tools.FileTool import FileTool
+from pysrc.auxiliary.aux_tool.FileTool import FileTool
 
 
 def get_one_process_json_file(filepath: pathlib.WindowsPath):

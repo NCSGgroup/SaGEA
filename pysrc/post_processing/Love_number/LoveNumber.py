@@ -2,7 +2,7 @@ import numpy as np
 import scipy.io as scio
 from scipy import interpolate
 
-from pysrc.auxiliary.tools.FileTool import FileTool
+from pysrc.auxiliary.aux_tool.FileTool import FileTool
 
 from pysrc.auxiliary.preference.EnumClasses import LoveNumberMethod, LoveNumberType
 
