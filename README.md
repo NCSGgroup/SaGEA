@@ -20,7 +20,7 @@ Use this code to download the dependencies.
 # Features
 
 - Auto-collecting GRACE(-FO) level-2 products and related auxiliary files.
-- Complete and diverse popular methodologies and technologies of GRACE(-FO)'s post-processing.
+- Commony used methodologies and technologies of GRACE(-FO)'s post-processing.
 - Types of Error assessment/quantification of GRACE(-FO) based mass change.
 - User interface (under construction).
 
@@ -28,7 +28,7 @@ Use this code to download the dependencies.
 
 ## Class SHC
 
-## Class GRD
+## Class GRID
 
 ## Data Collection
 
@@ -84,7 +84,7 @@ and path `/pysrc/auxiliary/load_file/LoadL2LowDeg.py` provides those of the low-
 Path `/pysrc/post_processing/replace_low_deg/ReplaceLowDegree.py` includes the source file to apply the replacing
 low-degree coefficients on given SHC.
 
-## Post-processing: Conversion between SHC and GRD
+## Post-processing: Conversion between SHC and GRID
 
 GRACE level-2 products reflects the distribution of dimensionless geopotential,
 from which we can obtain the corresponding changes in gravity anomalies,
@@ -112,26 +112,37 @@ file `/pysrc/auxiliary/tools/MathTools.py`.
 
 ### Low-degrees replacement
 
+Due to the presumed Earth mass conservation and the on-orbit measuring mode,
+GRACE(-FO) has no ability to obtain the degree-0 and -1 terms of the gravity field (Wu et al., 2012).
+In addition, another major component, C20, is often not well observed,
+leading to the common practice of replacing their values with those obtained by Satellite laser ranging (SLR),
+which has long been relied upon for measuring changes in Earth’s dynamic oblateness (i.e., C20, see Cheng & Ries, 2017).
+Besides, it was further found by Loomis et al. (2020) that, the C30 coefficient,
+is also observed by GRACE/GRACE-FO when either mission is operating without two fully functional accelerometers.
+Therefore, recommendations are also made to replace C30 with that of SLR.
+
+SaGEA toolbox contains the following option to replace the low-degree terms of the gravity field:
+
+- degree-1 terms given by Sun & Ditmar (2016).
+- C20 terms given by Cheng & Ries (2017) and Loomis et al. (2020).
+- C30 terms given by Loomis et al. (2020).
+
 ### Filtering spherical harmonic coefficients
 
 Due to the existence of high-order noise and correlation error in the GRACE solutions,
 filtering is a necessary step before apply it on some scientific studies (Wahr et al., 2006).
 The most usd GRACE filter, isotropic Gaussian filter, was first suggested and applied by Wahr et al. (1998).
-Other filters based on different principles were raised then like empirical decorrelation filtering (EDF) raised by Wahr
-et al. (2006),
+Other filters based on different principles were raised then like empirical decorrelation filtering (EDF) raised by
+Swenson & Wahr (2006),
 DDK filter by Kusche (2007), etc.
 Among them, EDF was also improved and used by scholars since its initial proposal (Duan et al., 2009).
 SaGEA toolbox contains the following filtering methods:
 
-- Different types of EDFs.
-- Isotropic Gaussian filter.
+- Types of EDFs (Swenson & Wahr, 2006; Chen et al., 2007; Duan et al., 2009).
+- Isotropic Gaussian filter (Wahr et al., 1998).
 - Non-isotropic Gaussian fielter by Han et al. (2005).
 - Fan filter by Zhang et al. (2009).
 - DDK filter by Kusche et al. (2007, 2009).
-  Path SGPPToolbox/pysrc/filter/ includes the source files to filter the SHCs. Each filter has different parameter
-  requirements but the same basic usage apply_to(cqlm, [sqlm]) to return the filtered result, and a demo program
-  SGPPToolbox/demo/demo_filter.py gives a simple example to use the above programs. For more information, please refer
-  to the function introduction in the corresponding source files.
 
 ### Leakage Reduction
 
@@ -153,7 +164,7 @@ the leakage and reduced from the filtered signal.
 As for the bias, it is usually to gain a scale factor k to calibrate the filtered or smoothed signal. Researchers have
 raised numbers of method to estimate k, and other methods to restore correct the bias.
 
-This toolbox contains the following commonly used methods to correct the leakage and bias:
+SaGEA toolbox contains the following commonly used methods to correct the leakage and bias:
 
 - Iterative (Wahr et al., 1998)
 - Multiplicative (Longuevergne et al., 2007).
@@ -162,6 +173,77 @@ This toolbox contains the following commonly used methods to correct the leakage
 - Forward Modeling by (Chen et al., 2015)
 - Data-driven (Vishwakarma et al., 2017).
 - Buffer zone (Chen et al., 2019)
+
+### GIA Removal
+
+In the Earth’s gravity anomalies observed by GRACE(-FO), apart from the effects caused by surface mass migration, there
+are also influences from GIA driven redistribution of solid Earth mass, which cannot be identified and separated
+directly by GRACE(-FO). GIA’s influence is a long-term phenomenon, with effects extending far beyond the temporal
+scale of typical GRACE(-FO) observations, which span several decades (Peltier, 2004). Approximately, the impact of GIA
+can be considered linear, which allows for a simplified correction by predefined models. Thus, to reflect a true mass
+change, the GIA’s linear approximation has to be subtracted from the observed gravity changes.
+
+SaGEA toolbox provides methods for removing GIA in both spectral (for class SHC) and spatial (for class GRID) domains,
+including the following commonly used GIA models:
+
+- ICE6G-D (ICE series) by Peltier et al. (2018).
+- Geruo2013 by A et al. (2013).
+- Caron2018 by Caron et al. (2018).
+
+### De-aliasing
+
+Due to imperfect tidal models (mainly ocean tides), monthly gravity field solutions from GRACE contain aliasing errors
+of frequencies much longer than 30 days, such as the S2 (approximately 161 days), P1 (approximately 171 days) and S1
+(approximately 322 days) terms (Knudsen, 2003; Han et al., 2007; Seo et al., 2008). In particular, this aliasing error
+is prominent in high latitudes, and thereby needs to be considered (Chen et al., 2009). The aliasing error still remains
+as a major error source of the latest gravity product from GRACE(-FO), see Z. Li et al. (2022).
+
+In SAGEA toolbox, either by the Fourier spectrum analysis or by the least square analysis, those aliasing frequency are
+identified and removed, and S1, S2, P1 are available options.
+
+### Geometrical Correction
+
+The geometrical deviation of the actual Earth from the presumed sphere would lead to a bias when converting the
+geopotential into TWS (J. Li et al., 2017; Ditmar, 2018; Yang et al., 2022). Such bias would become increasingly
+significant as the latitude increases, or as the topography increases. Correction to this bias is termed as geometrical
+correction, which indeed consists of an ellipsoid correction and a topography correction.
+
+In SAGEA toolbox, the geometrical correction is implemented following the method of Yang et al. (2022), where one can
+easily switch it on or off.
+
+### Seismic Correction
+
+It is concluded by Chao & Liau (2019) that, the lowest earthquake magnitude threshold that can be detected by GRACE is
+the Mw 8.3. This also means, some of largest earthquakes could be directly modelled and removed from GRACE(-FO) monthly
+gravity fields, to leave clean enough information to reflect expected hydrological or oceanic signals (Tang et al.,
+2020). This procedure is termed as Seismic correction, which is necessary particularly for investigating the ocean
+mass change where the seismic clearly biases the estimation. In SAGEA, several seismic events are available for users to
+choose from, and we use the logarithmic and exponential function model for fitting those seismic events from GRACE(-FO).
+
+Currently, the seismic events available in SaGEA contain Sumatra 2004, Nias 2005, Bengkulu 2007, Maule 2010, Chile 2010,
+Tohoku-Oki 2011, Sumatra 2012 and Okhotsk 2013. On one hand, SaGEA will continue to update the available seismic events,
+and on the other hand, users can also edit their own list of seismic events for their need.
+
+### GAD Recovery
+
+In addition to the corrections that are universal and common for all regions, there is some other correction that is
+specific only for certain study, e.g., to study the global mean ocean mass (GMOM) change. To obtain the complete ocean
+mass, the non-tidal ocean mass, which have been modelled by ocean general circulation model and removed from the gravity
+field as prior model, has to be restored. This correction is done by added back another official gravity product, named
+GAD (the monthly average of ocean bottom pressure anomalies), which we know as GAD recovery.
+
+In the SaGEA toolbox, the GAD model can be easily collected, just like the GRACE level-2 products. And such correction,
+which one can easily switch on or off, is also integrated into it.
+
+### GMAM Correction
+
+GMAM correction is proposed by Chen et al. (2019) to compensate the offset in Earth mass conservation due to the absence
+of global mean atmospheric mass (GMAM). Chen et al. (2019) found a constant annual phase lag(for about 10 deg) between
+GRACE and Altimeter-Argo estimates of GMOM changes. By removing GMAM from the GRACE solutions using atmospheric model (
+GAA, the monthly average of atmosphere), this annual phase lag is nearly compensated.
+
+In the SaGEA toolbox, the GAA model can be also easily collected, and the corresponding correction, which one can easily
+switch on or off, is integrated into SaGEA toolbox.
 
 ## Post-processing: Temporal-spatial analysis
 
@@ -195,8 +277,32 @@ SOFTWARE.
 
 # Reference
 
+A, G., Wahr, J., Zhong, S., 2013. Computations of the viscoelastic response of a 3-D compressible Earth to surface
+loading: an application to Glacial Isostatic Adjustment in Antarctica and Canada. Geophysical Journal International 192,
+557–572. https://doi.org/10.1093/gji/ggs030
+
+Caron, L., Ivins, E. R., Larour, E., Adhikari, S., Nilsson, J., & Blewitt, G., 2018. GIA Model Statistics for GRACE
+Hydrology, Cryosphere, and Ocean Science. Geophysical Research Letters, 45 (5),
+2203–2212. https://doi.org/10.1002/2017gl076644
+
+Chao, B. F., & Liau, J. R., 2019. Gravity Changes Due to Large Earthquakes Detected in GRACE Satellite Data via
+Empirical Orthogonal Function Analysis. Journal of Geophysical Research: Solid Earth, 124 (3),
+3024-3035. https://doi.org/10.1029/2018jb016862
+
+Cheng, M., & Ries, J. (2017). The unexpected signal in GRACE estimates of c20. Journal of Geodesy , 91 (8), 897-914.
+https://doi.org/10.1007/s00190-016-0995-5
+
 Chen, J.L., Wilson, C.R., Ries, J.C., 2016. Broadband assessment of degree-2 gravitational changes from GRACE and other
 estimates, 2002-2015. Journal of Geophysical Research: Solid Earth 121, 2112–2128. https://doi.org/10.1002/2015jb012708
+
+Chen, J.L., Wilson, C.R., Tapley, B.D., Grand, S., 2007. GRACE detects coseismic and postseismic deformation from the
+Sumatra-Andaman earthquake. Geophysical Research Letters 34. https://doi.org/10.1029/2007gl030356.
+
+Chen, J. L., Wilson, C. R., & Seo, K.-W., 2009. S2 tide aliasing in GRACE time-variable gravity solutions. Journal of
+Geodesy , 83 (7), 679–687. https://doi.org/10.1007/s00190-008-0282-1
+
+Ditmar, P., 2018. Conversion of time-varying Stokes coefficients into mass anomalies at the Earth’s surface considering
+the Earth’s oblateness. Journal of Geodesy , 92 (12), 1401–1412. https://doi.org/10.1007/s00190-018-1128-0
 
 Duan, X. J., Guo, J. Y., Shum, C. K., & Van Der Wal, W., 2009, On the postprocessing removal of correlated errors in
 GRACE temporal gravity field solutions. Journal of Geodesy, 83(11), 1095–1106. https://doi.org/10.1007/s00190-009-0327-0
@@ -205,9 +311,15 @@ Han, S.-C., Shum, C. K., Jekeli, C., Kuo, C.-Y., Wilson, C., & Seo, K.-W., 2005,
 temporal gravity for geophysical signal enhancement. Geophysical Journal International, 163(1),
 18–25. https://doi.org/10.1111/j.1365-246x.2005.02756.x
 
+Han, S.-C., Ray, R. D., & Luthcke, S. B., 2007. Ocean tidal solutions in Antarctica from GRACE inter-satellite tracking
+data. Geophysical Research Letters, 34 (21). https://doi.org/10.1029/2007GL031540
+
 Klees, R., Zapreeva, E. A., Winsemius, H. C., & Savenije, H. H. G.， 2007. The bias in GRACE estimates of continental
 water storage variations. Hydrology and Earth System Sciences, 11(4),
 1227–1241. https://doi.org/10.5194/hess-11-1227-2007
+
+Knudsen, P., 2003. Ocean tides in GRACE Monthly Averaged Gravity Fields. Space Science Reviews, 108 (1),
+261–270. https://doi.org/10.1023/A:1026215124036
 
 Kusche. J., 2007. Approximate decorrelation and non-isotropic smoothing of time-variable GRACE-type gravity field
 models. Journal of Geodesy, 81(11), 733–749. https://doi.org/10.1007/s00190-007-0143-3
@@ -215,21 +327,36 @@ models. Journal of Geodesy, 81(11), 733–749. https://doi.org/10.1007/s00190-00
 Landerer, F. W., & Swenson, S. C., 2012. Accuracy of scaled GRACE terrestrial water storage estimates. Water Resources
 Research, 48(4). https://doi.org/10.1029/2011wr011453
 
+Li, J., Chen, J. L., Li, Z., Wang, S., & Hu, X., 2017. Ellipsoidal correction in GRACE Surface Mass Change Estimation.
+Journal of Geophysical Research: Solid Earth, 122 (11), 9437–9460. https://doi.org/10.1002/2017jb014033
+
+Li, Z., Zhang, Z., & Wang, H., 2022. On tide aliasing in GRACE Time-Variable Gravity Observations. Remote Sensing ,
+14 (21), 5403. https://doi.org/10.3390/rs14215403
+
 Longuevergne, L., Scanlon, B. R., & Wilson, C. R.. 2010.， GRACE Hydrological estimates for small basins: Evaluating
 processing approaches on the High Plains Aquifer, USA. Water Resources Research, 46(
 11). https://doi.org/10.1029/2009wr008564
 
-Loomis, B.D., Rachlin, K.E., Wiese, D.N., Landerer, F.W., Luthcke, S.B., 2020. Replacing GRACE/GRACE‐FO With Satellite
-Laser Ranging: Impacts on Antarctic Ice Sheet Mass Change. Geophysical Research Letters
-47. https://doi.org/10.1029/2019gl085488
+Loomis, B. D., Rachlin, K. E., Wiese, D. N., Landerer, F. W., & Luthcke, S. B. (2020). Replacing GRACE/GRACE-FO With
+Satellite Laser Ranging: Impacts on Antarctic Ice Sheet Mass Change. Geophysical Research Letters, 47 (3).
+https://doi.org/10.1029/2019gl085488
+
+Peltier, W. (2004). GLOBAL GLACIAL ISOSTASY AND THE SURFACE OF THE ICE-AGE EARTH: The ICE-5G (VM2) Model and GRACE.
+Annual Review of Earth and Planetary Sciences, 32 (1), 111-149. https://doi.org/10.1146/annurev.earth.32.082503.144359
+
+Seo, K.-W., Wilson, C. R., Chen, J. L., & Waliser, D. E., 2008. GRACE’s spatial aliasing error. Geophysical Journal
+International, 172 (1), 41–48. https://doi.org/10.1111/j.1365-246X.2007.03611.x
 
 Sun, Y., Riva, R., Ditmar, P., 2016. Optimizing estimates of annual variations and trends in geocenter motion and J2
 from a combination of GRACE data and geophysical models. Journal of Geophysical Research: Solid Earth 121,
 8352–8370. https://doi.org/10.1002/2016jb013073
 
 Swenson, S., Wahr, J., 2006. Post-processing removal of correlated errors in GRACE data, Geophysical Research Letters.
-
 https://doi.org/10.1029/2005gl025285.
+
+Tang, L., Li, J., Chen, J. L., Wang, S.-Y., Wang, R., & Hu, X., 2020. Seismic Impact of Large Earthquakes on Estimating
+Global Mean Ocean Mass Change from GRACE. Remote Sensing , 12 (6), 935. https://doi.org/10.3390/rs12060935
+
 Vishwakarma, B. D., Horwath, M., Devaraju, B., Groh, A., & Sneeuw, N., 2017. A Data-Driven Approach for Repairing the
 Hydrological Catchment Signal Damage Due to Filtering of GRACE Products. Water Resources Research, 53(11),
 9824–9844. https://doi.org/10.1002/2017wr021150
@@ -241,5 +368,12 @@ Wahr, J., Molenaar, M., Bryan, F., 1998. Time variability of the Earth's gravity
 and their possible detection using GRACE. Journal of Geophysical Research: Space Physics 103,
 30205–30229. https://doi.org/10.1029/98jb02844
 
+Wu, X., Ray, J., & van Dam, T., 2012. Geocenter motion and its geodetic and geophysical implications. Journal of
+Geodynamics, 58 , 44–61. https://doi.org/10.1016/j.jog.2012.01.007
+
+Yang, F., Luo, Z., Zhou, H., & Kusche, J., 2022. On study of the earth topography correction for the GRACE surface
+mass estimation. Journal of Geodesy , 96 . https://doi.org/10.1007/s00190-022-01683-0
+
 Zhang, Z.-Z., Chao, B. F., Lu, Y., & Hsu, H.-T., 2009, An effective filtering for GRACE time-variable gravity: Fan
 filter. Geophysical Research Letters, 36(17). https://doi.org/10.1029/2009gl039459
+
