@@ -245,7 +245,83 @@ GRACE and Altimeter-Argo estimates of GMOM changes. By removing GMAM from the GR
 In the SaGEA toolbox, the GAA model can be also easily collected, and the corresponding correction, which one can easily
 switch on or off, is integrated into SaGEA toolbox.
 
-## Post-processing: Temporal-spatial analysis
+## Post-processing: Spatial and temporal analysis
+
+### Spatial analysis
+
+Spatial analysis mainly indicates the extraction of basin-scale variability,
+like TWS (Total Water Storage) changes.
+It can be done in the spatial or the spectral domain (Swenson and Wahr, 2002), i.e.,
+
+- Geographic-latitude weighted sum of gridded signal in spatial domain.
+- Direct product sum of SHCs in spectral domain.
+
+Simply put, it is the use of gridded or spherical harmonic signals,
+as well as corresponding basin information, to extract target signals.
+While these two methods are theoretically equivalent,
+there are differences in practice due to the loss of spatial/spectral conversion.
+
+SaGEA provides both of the two approaches,
+and users can choose them according to their needs.
+
+### Temporal analysis
+
+The seasonality in time-series of GRACE(-FO) based mass change, i.e.,
+the secular trend, inter-annual periodic signal and seasonal periodic signals,
+is of particular interest of geoscience studies (Tapley et al., 2019).
+
+SaGEA provides three approaches to gain the seasonality from a time-series (of GRACE and GRACE-FO based mass change),
+that is,
+
+- Ordinary least squares (OLS).
+- Weighted least squares (WLS).
+- Fourier analysis.
+
+A majority of publication with GRACE(-FO) prefers to use OLS for extracting seasonality as the error is always presumed
+as heterogeneous and uniform.
+Further, WLS makes sense since SaGEA is able to provide the error information, otherwise WLS should be disabled.
+Another general tool, the Fourier analysis, is also able to obtain the seasonality other than a priori information.
+
+## Error assessment
+
+- **Error-I**
+
+  Due to the imperfect background models (Hauk and Pail, 2018; Yang et al., 2021) and on-board instrument error (
+  Bandikova
+  and Flury, 2014; Flechtner et al., 2016),
+  GRACE(-FO) level-2 monthly gravity product is generated with an intrinsic uncertainty,
+  known as formal error that represents the variance of each SHC.
+  Besides, ITSG solutions provide the full variance covariance matrix of these SHCs (Kvas et al., 2019; Kvas and
+  Mayer-Gürr, 2019).
+  As one has to post-process the level-2 product to derive desired variables (known as level-3 products),
+  the formal error, or the variance-covariance matrix,
+  needs to be propagated to support uncertainty estimation of the level-3 product.
+  Such kind of error is indicated as Error-I and integrated in SaGEA program.
+
+- Error-II
+
+  Besides the official GRACE data producers,
+  multiple producers are routinely producing level-2 solutions and contributing them to the International Centre for
+  Global Earth Models (ICGEM).
+  These level-2 products are different from each other,
+  therefore, the discrepancy between these level-2 products shall result in various estimates of desired variables,
+  e.g., TWS estimation.
+  Such a discrepancy is considered as between-group error, which is indicated as Error-II in SaGEA program.
+  As the most popular technique,
+  the TCH (Three-Cornered Hat, Ferreira et al., 2016; Chen et al., 2021) is integrated in SaGEA to consider the Error-II
+  of desired variables.
+
+- Error-III
+
+  This category of error might be caused by the non-uniqueness of the post-processing chain and the involvement of
+  corrections with less known uncertaintiesm.
+  As there is no official convention of post-processing chain, each study has adopted its own strategy, resulting in
+  potential large discrepancy (indicated as Error-III in SaGEA) at obtained level-3 products.
+  Error-III is considered as the within-group error since it always relies upon only one set of level-2 product.
+  To quantify it, a large number of ensembles, which reflect various postprocessing chains, are required.
+  As the advanced post-processing module are provided in SaGEA, a comprehensive quantification of Error-III at a diverse
+  and flexible option is possible.
+  Therefore, based on the post-processing module, SaGEA also provides a quantization program for Error-III.
 
 # Usage
 
@@ -281,6 +357,9 @@ A, G., Wahr, J., Zhong, S., 2013. Computations of the viscoelastic response of a
 loading: an application to Glacial Isostatic Adjustment in Antarctica and Canada. Geophysical Journal International 192,
 557–572. https://doi.org/10.1093/gji/ggs030
 
+Bandikova, T., Flury, J., 2014. Improvement of the GRACE star camera data based on the revision of the combination
+method. Advances in Space Research 54, 1818–1827. https://doi.org/10.1016/j.asr.2014.07.004.
+
 Caron, L., Ivins, E. R., Larour, E., Adhikari, S., Nilsson, J., & Blewitt, G., 2018. GIA Model Statistics for GRACE
 Hydrology, Cryosphere, and Ocean Science. Geophysical Research Letters, 45 (5),
 2203–2212. https://doi.org/10.1002/2017gl076644
@@ -289,17 +368,20 @@ Chao, B. F., & Liau, J. R., 2019. Gravity Changes Due to Large Earthquakes Detec
 Empirical Orthogonal Function Analysis. Journal of Geophysical Research: Solid Earth, 124 (3),
 3024-3035. https://doi.org/10.1029/2018jb016862
 
-Cheng, M., & Ries, J. (2017). The unexpected signal in GRACE estimates of c20. Journal of Geodesy , 91 (8), 897-914.
-https://doi.org/10.1007/s00190-016-0995-5
-
 Chen, J.L., Wilson, C.R., Ries, J.C., 2016. Broadband assessment of degree-2 gravitational changes from GRACE and other
 estimates, 2002-2015. Journal of Geophysical Research: Solid Earth 121, 2112–2128. https://doi.org/10.1002/2015jb012708
 
 Chen, J.L., Wilson, C.R., Tapley, B.D., Grand, S., 2007. GRACE detects coseismic and postseismic deformation from the
 Sumatra-Andaman earthquake. Geophysical Research Letters 34. https://doi.org/10.1029/2007gl030356.
 
-Chen, J. L., Wilson, C. R., & Seo, K.-W., 2009. S2 tide aliasing in GRACE time-variable gravity solutions. Journal of
+Chen, J.L., Wilson, C. R., & Seo, K.-W., 2009. S2 tide aliasing in GRACE time-variable gravity solutions. Journal of
 Geodesy , 83 (7), 679–687. https://doi.org/10.1007/s00190-008-0282-1
+
+Chen, J.L., Tapley, B., Tamisiea, M.E., Save, H., Wilson, C., Bettadpur, S., Seo, K., 2021. Error Assessment of GRACE
+and GRACE Follow-On Mass Change. Journal of Geophysical Research: Solid Earth 126. https://doi.org/10.1029/2021jb022124.
+
+Cheng, M., & Ries, J. (2017). The unexpected signal in GRACE estimates of c20. Journal of Geodesy , 91 (8), 897-914.
+https://doi.org/10.1007/s00190-016-0995-5
 
 Ditmar, P., 2018. Conversion of time-varying Stokes coefficients into mass anomalies at the Earth’s surface considering
 the Earth’s oblateness. Journal of Geodesy , 92 (12), 1401–1412. https://doi.org/10.1007/s00190-018-1128-0
@@ -307,12 +389,24 @@ the Earth’s oblateness. Journal of Geodesy , 92 (12), 1401–1412. https://doi
 Duan, X. J., Guo, J. Y., Shum, C. K., & Van Der Wal, W., 2009, On the postprocessing removal of correlated errors in
 GRACE temporal gravity field solutions. Journal of Geodesy, 83(11), 1095–1106. https://doi.org/10.1007/s00190-009-0327-0
 
+Ferreira, V., Montecino, H., Yakubu, C., Heck, B., 2016. Uncertainties of the Gravity Recovery and Climate Experiment
+time-variable gravity-field solutions based on three-cornered hat method. Journal of applied remote sensing 10,
+015015–015015. https://doi.org/10.1117/1.JRS.10.015015.
+
+Flechtner, F., Neumayer, K.H., Dahle, C., Dobslaw, H., Fagiolini, E., Raimondo, J.C., Güntner, A., 2016. What can be
+expected from the GRACE-FO laser ranging interferometer for earth science applications? Remote sensing and water
+resources , 263–280. https://doi.org/10.1007/s10712-015-9338-y.
+
 Han, S.-C., Shum, C. K., Jekeli, C., Kuo, C.-Y., Wilson, C., & Seo, K.-W., 2005, Non-isotropic filtering of GRACE
 temporal gravity for geophysical signal enhancement. Geophysical Journal International, 163(1),
 18–25. https://doi.org/10.1111/j.1365-246x.2005.02756.x
 
 Han, S.-C., Ray, R. D., & Luthcke, S. B., 2007. Ocean tidal solutions in Antarctica from GRACE inter-satellite tracking
 data. Geophysical Research Letters, 34 (21). https://doi.org/10.1029/2007GL031540
+
+Hauk, M., Pail, R., 2018. Treatment of ocean tide aliasing in the context of a next generation gravity field mission.
+Geophysical Journal International
+214, 345–365. https://doi.org/10.1093/gji/ggy145.
 
 Klees, R., Zapreeva, E. A., Winsemius, H. C., & Savenije, H. H. G.， 2007. The bias in GRACE estimates of continental
 water storage variations. Hydrology and Earth System Sciences, 11(4),
@@ -323,6 +417,13 @@ Knudsen, P., 2003. Ocean tides in GRACE Monthly Averaged Gravity Fields. Space S
 
 Kusche. J., 2007. Approximate decorrelation and non-isotropic smoothing of time-variable GRACE-type gravity field
 models. Journal of Geodesy, 81(11), 733–749. https://doi.org/10.1007/s00190-007-0143-3
+
+Kvas, A., Behzadpour, S., Ellmer, M., Klinger, B., Strasser, S., Zehentner, N., Mayer-Gürr, T., 2019. ITSG-Grace2018:
+Overview and evaluation of a new GRACE-only gravity field time series. Journal of Geophysical Research: Solid Earth 124,
+9332–9344. https://doi.org/10.1029/2019JB017415.
+
+Kvas, A., Mayer-Gürr, T., 2019. GRACE gravity field recovery with background model uncertainties. Journal of geodesy 93,
+2543–2552. https://doi.org/10.1007/s00190-019-01314-1.
 
 Landerer, F. W., & Swenson, S. C., 2012. Accuracy of scaled GRACE terrestrial water storage estimates. Water Resources
 Research, 48(4). https://doi.org/10.1029/2011wr011453
@@ -351,11 +452,19 @@ Sun, Y., Riva, R., Ditmar, P., 2016. Optimizing estimates of annual variations a
 from a combination of GRACE data and geophysical models. Journal of Geophysical Research: Solid Earth 121,
 8352–8370. https://doi.org/10.1002/2016jb013073
 
+Swenson, S., Wahr, J., 2002. Methods for inferring regional surface-mass anomalies from Gravity Recovery and Climate
+Experiment (GRACE) measurements of time-variable gravity. Journal of Geophysical Research: Planets 107, ETG 3–1–ETG 3–1.
+https://doi.org/10.1029/2001jb000576.
+
 Swenson, S., Wahr, J., 2006. Post-processing removal of correlated errors in GRACE data, Geophysical Research Letters.
 https://doi.org/10.1029/2005gl025285.
 
 Tang, L., Li, J., Chen, J. L., Wang, S.-Y., Wang, R., & Hu, X., 2020. Seismic Impact of Large Earthquakes on Estimating
 Global Mean Ocean Mass Change from GRACE. Remote Sensing , 12 (6), 935. https://doi.org/10.3390/rs12060935
+
+Tapley, B.D., Watkins, M.M., Flechtner, F., Reigber, C., Bettadpur, S., Rodell, M., Sasgen, I., Famiglietti, J.S.,
+Landerer, F.W., Chambers, D.P., et al.,2019. Contributions of GRACE to understanding climate change. Nature Climate
+Change 9, 358–369. https://doi.org/10.1038/s41558-019-0456-2.
 
 Vishwakarma, B. D., Horwath, M., Devaraju, B., Groh, A., & Sneeuw, N., 2017. A Data-Driven Approach for Repairing the
 Hydrological Catchment Signal Damage Due to Filtering of GRACE Products. Water Resources Research, 53(11),
@@ -373,6 +482,10 @@ Geodynamics, 58 , 44–61. https://doi.org/10.1016/j.jog.2012.01.007
 
 Yang, F., Luo, Z., Zhou, H., & Kusche, J., 2022. On study of the earth topography correction for the GRACE surface
 mass estimation. Journal of Geodesy , 96 . https://doi.org/10.1007/s00190-022-01683-0
+
+Yang, F., Forootan, E., Wang, C., Kusche, J., Luo, Z., 2021. A New 1-Hourly ERA5-Based Atmosphere De-Aliasing Product
+for GRACE, GRACEFO, and Future Gravity Missions. Journal of Geophysical Research: Solid Earth 126, e2021JB021926.
+https://doi.org/10.1029/2021JB021926.
 
 Zhang, Z.-Z., Chao, B. F., Lu, Y., & Hsu, H.-T., 2009, An effective filtering for GRACE time-variable gravity: Fan
 filter. Geophysical Research Letters, 36(17). https://doi.org/10.1029/2009gl039459
