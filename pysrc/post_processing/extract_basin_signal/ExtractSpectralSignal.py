@@ -3,7 +3,7 @@ from pathlib import Path
 
 import numpy as np
 
-from pysrc.auxiliary.core.SHC import SHC
+from pysrc.data_class.DataClass import SHC
 from pysrc.post_processing.extract_basin_signal.ExtractSpectralSignalConfig import ExtractSpectralSignalConfig
 
 from pysrc.auxiliary.load_file.LoadL2SH import load_SH_simple
@@ -84,7 +84,7 @@ class ExtractSpectral:
 
 
 if __name__ == '__main__':
-    from pysrc.auxiliary.tools.FileTool import FileTool
+    from pysrc.auxiliary.aux_tool.FileTool import FileTool
 
     signal_c = np.random.normal(0, 100, (61, 61))
     signal_s = np.random.normal(0, 100, (61, 61))

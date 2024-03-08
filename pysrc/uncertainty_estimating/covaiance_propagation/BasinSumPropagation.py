@@ -1,6 +1,6 @@
 import numpy as np
 
-from pysrc.auxiliary.tools.MathTool import MathTool
+from pysrc.auxiliary.aux_tool.MathTool import MathTool
 from pysrc.post_processing.extract_basin_signal.ExtractSpectralSignal import ExtractSpectral
 
 

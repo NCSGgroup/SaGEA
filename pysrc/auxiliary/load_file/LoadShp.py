@@ -4,10 +4,10 @@ import numpy as np
 import geopandas as gpd
 import shapely.vectorized
 
-from pysrc.auxiliary.core.GRID import GRID
+from pysrc.data_class.DataClass import GRID
 from pysrc.auxiliary.scripts.PlotGrids import plot_grids
-from pysrc.auxiliary.tools.FileTool import FileTool
-from pysrc.auxiliary.tools.MathTool import MathTool
+from pysrc.auxiliary.aux_tool.FileTool import FileTool
+from pysrc.auxiliary.aux_tool.MathTool import MathTool
 from pysrc.post_processing.harmonic.Harmonic import Harmonic
 
 

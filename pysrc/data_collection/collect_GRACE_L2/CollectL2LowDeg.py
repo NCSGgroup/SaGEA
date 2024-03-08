@@ -2,7 +2,7 @@ import ftplib
 import re
 from pathlib import Path
 
-from pysrc.auxiliary.tools.FileTool import FileTool
+from pysrc.auxiliary.aux_tool.FileTool import FileTool
 
 from pysrc.auxiliary.preference.EnumClasses import L2DataServer, L2LowDegreeFileID
 

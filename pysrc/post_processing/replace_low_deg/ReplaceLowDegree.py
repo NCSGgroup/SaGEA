@@ -1,6 +1,6 @@
 import numpy as np
 
-from pysrc.auxiliary.core.SHC import SHC
+from pysrc.data_class.DataClass import SHC
 
 
 class ReplaceLowDegreeConfig:
@@ -184,7 +184,7 @@ class ReplaceLowDegree:
 
 def demo():
     from pysrc.auxiliary.load_file.LoadL2SH import LoadL2SH, TimeTool
-    from pysrc.auxiliary.load_file.LoadL2LowDeg import LoadLowDegree, LoadLowDegreeConfig, L2LowDegreeFileID
+    from pysrc.auxiliary.load_file.LoadL2LowDeg import LoadLowDegree, L2LowDegreeFileID
     import datetime
 
     load = LoadL2SH()

@@ -1,0 +1,172 @@
+{
+  "data source": {
+    "mode": "local path",
+    "?mode": "presets, local path",
+    "institute": "JPL",
+    "?institute": "CSR, JPL, GFZ; required if mode is presets",
+    "release": "RL06",
+    "?release": "RL06, RL061, RL062; required if mode is presets",
+    "lmax": 60,
+    "?lmax": "int; required if mode is presets",
+    "local path": "data/",
+    "?local path": "relative path; required if mode is local path"
+  },
+  "dates": {
+    "beginning": "2002-04-01",
+    "?beginning": "yyyy-mm(-dd), specifying day does not have an impact in general, as GRACE TVG products are usually given with time resolution of a month.",
+    "ending": "2015-12-31",
+    "?ending": "yyyy-mm(-dd), specifying day does not have an impact in general, as GRACE TVG products are usually given with time resolution of a month."
+  },
+  "basin": {
+    "mode": "local path",
+    "?mode": "presets, local path",
+    "preset basin": "Ocean",
+    "?preset basin": "name of basin that is preset",
+    "local path": "data/",
+    "?local path": "relative path of a basin kernel given in format of SHC, or shpfile; required if mode is presets"
+  },
+  "replace low degree": {
+    "replace degree 1": true,
+    "replace c20": true,
+    "replace c30": true,
+    "?replace x": "true, false",
+    "degree1 file id": "TN13",
+    "?degree1 file id": "TN13",
+    "c20 file id": "TN14",
+    "? c20_file id": "TN11, TN14",
+    "c30 file id": "TN14",
+    "?c30 file id": "TN14"
+  },
+  "de-correlation": {
+    "method": "window_Duan2009",
+    "?method": "PnMm, window_stable, window_Wahr2006, window_Duan2009 or none",
+    "PnMm params": [
+      3,
+      5
+    ],
+    "?PnMm params": "[fitting order: int, starting order: int]; required if method is PnMm",
+    "window stable params": [
+      3,
+      5,
+      5
+    ],
+    "?window stable params": "[fitting order: int, starting order: int, minimum window length: int]; required if method is window_stable",
+    "window Wahr2006 params": [
+      3,
+      5,
+      5,
+      10,
+      30
+    ],
+    "?window Wahr2006 params": "[fitting order: int, starting order: int, minimum window length: int, A: int, K: int]; required if method is window_Wahr2006",
+    "window Duan2009 params": [
+      3,
+      5,
+      5,
+      10,
+      30,
+      10,
+      30
+    ],
+    "?window Duan2009 params": "[fitting order: int, starting order: int, minimum window length: int, A: int, K: int,p: int, gamma: int]; required if method is window_Duan2009"
+  },
+  "average filter": {
+    "method": "DDK",
+    "?method": "Gaussian, fan, non_isotropic_Gaussian (by Han et al., 2005), DDK or none",
+    "Gaussian params": 500,
+    "?Gaussian params": "radius:int (km)",
+    "fan params": [
+      300,
+      300
+    ],
+    "?fan params": "[radius_1:int (km), radius_2:int (km)]",
+    "non_isotropic_Gaussian params": [
+      300,
+      500,
+      20
+    ],
+    "?non_isotropic_Gaussian params": "[radius_1:int (km), radius_2:int (km), m_0_:int]",
+    "DDK params": [
+      3
+    ],
+    "?DDK params": "[DDK_type: int, 1-8]"
+  },
+  "leakage correction": {
+    "method": "iterative",
+    "?method": "iterative, additive, multiplicative, scaling, gridded_scaling, data-driven, forward modeling, buffer or none",
+    "iterative params": {
+      "pre-average filter": {
+        "method": "Gaussian",
+        "?method": "Gaussian, fan, non_isotropic_Gaussian (by Han et al., 2005), DDK or none",
+        "Gaussian params": 200,
+        "?Gaussian params": "radius:int (km)",
+        "fan params": [
+          300,
+          300
+        ],
+        "?fan params": "[radius_1:int (km), radius_2:int (km)]",
+        "non isotropic Gaussian": [
+          300,
+          500,
+          20
+        ],
+        "?non isotropic Gaussian": "[radius_1:int (km), radius_2:int (km), m_0_:int]",
+        "DDK params": [
+          3
+        ],
+        "?DDK params": "[DDK_type: int, 1-8]"
+      }
+    },
+    "addictive params": {
+      "preference model": "GLDAS Noah2.1",
+      "?preference model": "GLDAS Noah2.1, "
+    },
+    "multiplicative params": {
+      "preference model": "GLDAS Noah2.1",
+      "?preference model": "GLDAS Noah2.1, "
+    },
+    "scaling params": {
+      "preference model": "GLDAS Noah2.1",
+      "?preference model": "GLDAS Noah2.1, "
+    },
+    "gridded scaling params": {
+      "preference model": "GLDAS Noah2.1",
+      "?preference model": "GLDAS Noah2.1, "
+    },
+    "forward modeling params": {
+      "iteration times": 50,
+      "?iteration times": "int"
+    },
+    "buffer params": {
+      "buffer width": 300,
+      "?buffer width": "int (km)"
+    }
+  },
+  "GIA correction": {
+    "model": "ICE6G_D",
+    "?model": "ICE6G_C, ICE6G_D, Caron2018, Caron2019",
+    "with filtering": true,
+    "?with filtering": "if true, GIA model will suffer the same average filter and leakage correction with GRACE data."
+  },
+  "GAX recovery": {
+    "model": "GAD",
+    "?model": "GAA, GAB, GAC, GAD",
+    "with filtering": true,
+    "?with filtering": "if true, GAX model will suffer the same average filter and leakage correction with GRACE data."
+  },
+  "GMAM correction": {
+    "apply": true
+  },
+  "Seismic correction": {
+    "apply": true,
+    "seismic events": {
+    }
+  },
+  "de-aliasing": {
+    "apply": true,
+    "tides": "S1, S2, P1"
+  },
+  "geometrical correction": {
+    "apply": true
+  }
+}

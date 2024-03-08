@@ -3,7 +3,7 @@ from pathlib import Path
 
 import numpy as np
 
-from pysrc.auxiliary.core.GRID import GRID
+from pysrc.data_class.DataClass import GRID
 from pysrc.post_processing.extract_basin_signal.ExtractSpatialSignalConfig import ExtractSpatialSignalConfig
 
 from pysrc.auxiliary.load_file.LoadL2SH import load_SH_simple
@@ -121,7 +121,7 @@ class ExtractSpatial:
 
 
 if __name__ == '__main__':
-    from pysrc.auxiliary.tools.FileTool import FileTool
+    from pysrc.auxiliary.aux_tool.FileTool import FileTool
 
     signal = np.random.uniform(0, 10, (180, 360))
 

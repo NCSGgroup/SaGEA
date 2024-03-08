@@ -1,4 +1,4 @@
-from pysrc.auxiliary.tools.FileTool import FileTool
+from pysrc.auxiliary.aux_tool.FileTool import FileTool
 from pysrc.data_collection.collect_GRACE_L2.CollectL2SH import CollectL2SH
 from pysrc.data_collection.collect_GRACE_L2.CollectL2LowDeg import CollectL2LowDeg
 
@@ -32,5 +32,4 @@ def demo_collect_L2_low_degrees():
 
 
 if __name__ == '__main__':
-    # demo_collect_L2_SH()
-    demo_collect_L2_low_degrees()
+    demo_collect_L2_SH()

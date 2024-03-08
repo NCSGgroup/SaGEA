@@ -1,12 +1,10 @@
 import pathlib
 import warnings
 
-import numpy as np
-
-from pysrc.auxiliary.core.SHC import SHC
+from pysrc.data_class.DataClass import SHC
 from pysrc.auxiliary.load_file.LoadL2SH import load_SH_simple
 from pysrc.auxiliary.preference.EnumClasses import GIAModel
-from pysrc.auxiliary.tools.FileTool import FileTool
+from pysrc.auxiliary.aux_tool.FileTool import FileTool
 
 
 class LoadGIAConfig:

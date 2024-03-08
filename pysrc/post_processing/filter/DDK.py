@@ -10,9 +10,9 @@ from scipy.linalg import block_diag
 
 from enum import Enum
 
-from pysrc.auxiliary.core.SHC import SHC
-from pysrc.auxiliary.tools.FileTool import FileTool
-from pysrc.auxiliary.tools.MathTool import MathTool
+from pysrc.data_class.DataClass import SHC
+from pysrc.auxiliary.aux_tool.FileTool import FileTool
+from pysrc.auxiliary.aux_tool.MathTool import MathTool
 from pysrc.post_processing.filter.Base import SHCFilter
 
 
@@ -212,4 +212,3 @@ class DDK(SHCFilter):
         cs1d_filtered = MathTool.cs_combine_to_triangle_1d(cqlm_filtered, sqlm_filtered)
 
         return SHC(cs1d_filtered)
-

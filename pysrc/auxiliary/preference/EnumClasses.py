@@ -31,6 +31,12 @@ class L2Release(Enum):
     RL062 = 62
 
 
+class L2ProductMaxDegree(Enum):
+    Degree60 = 60
+    Degree90 = 90
+    Degree96 = 96
+
+
 class L2LowDegreeType(Enum):
     Deg1 = 1
     C20 = 2
@@ -58,7 +64,6 @@ class FieldPhysicalQuantity(Enum):
     HorizontalDisplacementEast = 6
     HorizontalDisplacementNorth = 7
     VerticalDisplacement = 8
-
 
 
 class LoveNumberMethod(Enum):
@@ -148,3 +153,17 @@ class BasinName(Enum):
     Yukon = 35
     Zambeze = 36
     Ocean = 37
+
+
+class EmpiricalDecorrelationType(Enum):
+    PnMm = 1
+    window_stable = 2
+    window_Wahr2006 = 3
+    window_Duan2009 = 4
+
+
+class AverageFilterType(Enum):
+    Gaussian = 1
+    fan = 2
+    non_isotropic_Gaussian = 3
+    DDK = 4

@@ -4,9 +4,10 @@ import numpy as np
 from tqdm import trange
 
 from pysrc.auxiliary.preference.EnumClasses import FieldPhysicalQuantity
-from pysrc.auxiliary.tools.MathTool import MathTool
-from pysrc.auxiliary.core.GRID import GRID
-from pysrc.auxiliary.core.SHC import SHC
+from pysrc.auxiliary.aux_tool.MathTool import MathTool
+
+from pysrc.auxiliary.core_data_class.CoreGRID import CoreGRID
+from pysrc.auxiliary.core_data_class.CoreSHC import CoreSHC
 
 
 class Harmonic:
@@ -39,6 +40,14 @@ class Harmonic:
         # Associative Legendre polynomials, indexes stand for (co-lat[rad], degree l, order m)
         # 3-d array [theta, l, m] shape: (nlat * (lmax + 1) * (lmax + 1))
 
+        # self.si = np.sin(self.lat) * np.pi / (2 * self.lmax + 1)
+
+        # get Neumann weights
+        x_mat = np.array([np.cos(self.lat) ** i for i in range(self.nlat)])
+        r_vec = np.ones(self.nlat) * 2 / np.arange(1, self.nlat + 1, 1)
+        r_vec[np.arange(1, self.nlat + 1, 2)] = 0
+        self.wi = np.linalg.pinv(x_mat) @ r_vec
+
         m = np.arange(self.lmax + 1)
         self.g = m[:, None] @ self.lon[None, :]
 
@@ -49,12 +58,19 @@ class Harmonic:
         self.factor2 = np.ones((self.lmax + 1, self.lmax + 1))
         self.factor2[:, 0] += 1
         self.factor2 *= np.pi / (2 * self.nlat)
+
+        self.factor3 = np.ones((self.lmax + 1, self.lmax + 1))
+        self.factor3[:, 0] += 1
+        self.factor3 /= 2
         pass
 
-    def analysis(self, grid: GRID):
+    def analysis(self, grid: CoreGRID):
+        """
+        grid: data class GRID
+        """
         # assert MathTool.get_colat_lon_rad(grid.lat, grid.lon) == (self.lat, self.lon)
-        colat_lon_of_grid = MathTool.get_colat_lon_rad(grid.lat, grid.lon)
-        assert all(abs(colat_lon_of_grid[0] - self.lat) < 1e-14) and all(abs(colat_lon_of_grid[1] - self.lon) < 1e-14)
+        # colat_lon_of_grid = MathTool.get_colat_lon_rad(grid.lat, grid.lon)
+        # assert all(abs(colat_lon_of_grid[0] - self.lat) < 1e-14) and all(abs(colat_lon_of_grid[1] - self.lon) < 1e-14)
 
         if grid.is_series():
             gqij = grid.data
@@ -63,9 +79,9 @@ class Harmonic:
 
         cqlm, sqlm = self.analysis_for_gqij(gqij)
 
-        return SHC(cqlm, sqlm)
+        return CoreSHC(cqlm, sqlm)
 
-    def synthesis(self, shc: SHC, special_type: FieldPhysicalQuantity = None):
+    def synthesis(self, shc: CoreSHC, special_type: FieldPhysicalQuantity = None):
         assert shc.get_lmax() == self.lmax
         assert special_type in (
             FieldPhysicalQuantity.HorizontalDisplacementEast, FieldPhysicalQuantity.HorizontalDisplacementNorth, None)
@@ -74,18 +90,32 @@ class Harmonic:
 
         grids = self.synthesis_for_csqlm(cqlm, sqlm, special_type)
 
-        return GRID(grids, self.lat, self.lon)
+        return CoreGRID(grids, self.lat, self.lon)
 
     def analysis_for_gqij(self, gqij: np.ndarray):
-        g = self.g.T
+        g = self.g
         co = np.cos(g)
         so = np.sin(g)
 
-        am = np.einsum('pij,jm->pim', gqij, co, optimize='greedy') * self.factor1
-        bm = np.einsum('pij,jm->pim', gqij, so, optimize='greedy') * self.factor1
+        am = np.einsum('pij,mj->pim', gqij, co, optimize='greedy') * self.factor1
+        bm = np.einsum('pij,mj->pim', gqij, so, optimize='greedy') * self.factor1
 
         cqlm = np.einsum('pim,ilm,i->plm', am, self.pilm, np.sin(self.lat), optimize='greedy') * self.factor2
         sqlm = np.einsum('pim,ilm,i->plm', bm, self.pilm, np.sin(self.lat), optimize='greedy') * self.factor2
+
+        # cqlm = np.einsum('pim,ilm,i->plm', am, self.pilm, self.wi, optimize='greedy') * self.factor3
+        # sqlm = np.einsum('pim,ilm,i->plm', bm, self.pilm, self.wi, optimize='greedy') * self.factor3
+
+        # cqlm[:, :, 0] = (np.einsum('pim,ilm->plm', am * self.wi[:, None], self.pilm,
+        #                               optimize='greedy') * self.factor3)[:, :, 0]
+        # sqlm[:, :, 0] = (np.einsum('pim,ilm->plm', bm * self.wi[:, None], self.pilm,
+        #                            optimize='greedy') * self.factor3)[:, :, 0]
+
+        # cqlm = np.einsum('pim,ilm->plm', am * self.wi[:, None], self.pilm,
+        #                  optimize='greedy') * self.factor3
+        # sqlm = np.einsum('pim,ilm->plm', bm * self.wi[:, None], self.pilm,
+        #                  optimize='greedy') * self.factor3
+
         return cqlm, sqlm
 
     def synthesis_for_csqlm(self, cqlm: iter, sqlm: iter, special_type: FieldPhysicalQuantity = None):
@@ -122,81 +152,12 @@ class Harmonic:
 
         return gqij
 
-    def analysisOld(self, Inner, Pnm):
-        Nmax = self.lmax
-        lat, lon = self.lat, self.lon
-
-        nlat = len(lat)
-        nlon = len(lon)
-        theta, phi = MathTool.get_colat_lon_rad(lat, lon)
-
-        term1 = np.zeros(Nmax + 1)
-
-        for l in range(0, Nmax + 1):
-            term1[l] = 1 + 2 * l
-
-        NMmax = int((Nmax + 1) * (Nmax + 2) / 2)
-
-        factor1 = 2 * np.pi / nlon
-        factor2 = 0.25 / nlat
-        Cnm, Snm = np.zeros(NMmax), np.zeros(NMmax)
-
-        Am, Bm = np.zeros((Nmax + 1, nlat)), np.zeros((Nmax + 1, nlat))
-        I_new = Inner.reshape(-1, nlon)
-
-        for m in range(Nmax + 1):
-            Am[m] = factor1 * np.array(I_new * np.mat(np.cos(m * phi)).T).flatten()
-            Bm[m] = factor1 * np.array(I_new * np.mat(np.sin(m * phi)).T).flatten()
-
-        thetaS = np.tile(np.sin(theta), (MathTool.getIndex(Nmax, Nmax) + 1, 1))
-        Qnm = Pnm * thetaS
-
-        for n in range(Nmax + 1):
-            indexM = np.arange(n + 1)
-            Cnm[MathTool.getIndex(n, 0):MathTool.getIndex(n, n) + 1] = factor2 * np.sum(
-                Qnm[MathTool.getIndex(n, 0):MathTool.getIndex(n, n) + 1] * Am[indexM], 1)
-            Snm[MathTool.getIndex(n, 0):MathTool.getIndex(n, n) + 1] = factor2 * np.sum(
-                Qnm[MathTool.getIndex(n, 0):MathTool.getIndex(n, n) + 1] * Bm[indexM], 1)
-            pass
-        # return Cnm, Snm
-        return MathTool.cs_1dto2d(Cnm), MathTool.cs_1dto2d(Snm)
-
-    def synthesisOld(self, Cnm, Snm, Nmax, lat, lon, Pnm):
-        """
-        A two step synthesis method, see the paper GJI (Nico Sneew)
-        :param Cnm: in general, it should be the geo-potential coefficients sorted in 2 dimension.
-        :param Snm:
-        :param Nmax: Max degree of harmonic expansion.
-        :param lat: geophysical latitude in unit "degree" [dimension : N]
-        :param lon: geophysical latitude in unit "degree"[dimension : M]
-        :return: grid (nlat*nlon) [dimension N*M]
-        """
-
-        lat, lon = MathTool.get_colat_lon_rad(lat, lon)
-        nlat = np.size(lat)
-        nlon = np.size(lon)
-        Am, Bm = np.zeros((Nmax + 1, nlat)), np.zeros((Nmax + 1, nlat))
-        for m in range(Nmax + 1):
-            for l in range(m, Nmax + 1):
-                index = MathTool.getIndex(l, m)
-                Am[m] = Am[m] + Pnm[index] * Cnm[l][m]
-                Bm[m] = Bm[m] + Pnm[index] * Snm[l][m]
-
-        Fout = 0
-
-        for m in range(Nmax + 1):
-            co = np.cos(m * lon)
-            so = np.sin(m * lon)
-            Fout = Fout + np.mat(Am[m]).T * co + np.mat(Bm[m]).T * so
-
-        return np.array(Fout)
-
 
 def demo1():
     """synthesis/analysis for once"""
 
     from pysrc.auxiliary.load_file.LoadL2SH import load_SH_simple
-    from pysrc.auxiliary.tools.FileTool import FileTool
+    from pysrc.auxiliary.aux_tool.FileTool import FileTool
 
     '''load shc'''
     lmax = 96
@@ -255,7 +216,7 @@ def demo3():
     """synthesis/analysis for multi times"""
 
     from pysrc.auxiliary.load_file.LoadL2SH import load_SH_simple
-    from pysrc.auxiliary.tools.FileTool import FileTool
+    from pysrc.auxiliary.aux_tool.FileTool import FileTool
 
     multi_times = 218
     lmax = 60
@@ -315,8 +276,8 @@ def demo4():
 
 
 def demo_calculate_Neumann_weights():
-    sp = 0.5
-    lats = np.arange(-90. + sp / 2, 90. + sp / 2)
+    sp = 1
+    lats = np.arange(-90. + sp / 2, 90. + sp / 2, sp)
     colats = np.radians(90. - lats)
     N = len(colats)
 
@@ -330,8 +291,18 @@ def demo_calculate_Neumann_weights():
     # print(r_vec)
 
     w = np.linalg.pinv(x_mat) @ r_vec
-    print(w)
+    print(w.shape)
+
+
+def demo_fourier_mat():
+    N = 60
+    n = np.arange(N)
+    k = n.reshape((N, 1))
+    M = np.exp(-2j * np.pi * k * n / N)
+
+    pass
 
 
 if __name__ == '__main__':
-    demo_calculate_Neumann_weights()
+    # demo_calculate_Neumann_weights()
+    demo_shtools()

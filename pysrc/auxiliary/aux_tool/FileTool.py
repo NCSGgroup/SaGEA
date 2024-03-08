@@ -3,7 +3,7 @@ import gzip
 import re
 
 from pysrc.auxiliary.preference.EnumClasses import L2ProductType, L2InstituteType, L2Release, L2LowDegreeFileID
-from pysrc.auxiliary.tools.TimeTool import TimeTool
+from pysrc.auxiliary.aux_tool.TimeTool import TimeTool
 
 
 class FileTool:

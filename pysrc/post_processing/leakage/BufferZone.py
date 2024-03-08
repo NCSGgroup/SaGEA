@@ -1,12 +1,11 @@
 import pathlib
 
-import matplotlib.pyplot as plt
 import numpy as np
 
-from pysrc.auxiliary.core.GRID import GRID
-from pysrc.auxiliary.core.SHC import SHC
+from pysrc.data_class.DataClass import GRID
+from pysrc.data_class.DataClass import SHC
 from pysrc.auxiliary.load_file.LoadL2SH import load_SH_simple
-from pysrc.auxiliary.tools.MathTool import MathTool
+from pysrc.auxiliary.aux_tool.MathTool import MathTool
 from pysrc.post_processing.filter.Base import SHCFilter
 from pysrc.post_processing.harmonic.Harmonic import Harmonic
 from pysrc.post_processing.leakage.Base import Leakage
@@ -88,7 +87,7 @@ class BufferZone(Leakage):
 
 
 if __name__ == '__main__':
-    from pysrc.auxiliary.tools.FileTool import FileTool
+    from pysrc.auxiliary.aux_tool.FileTool import FileTool
     from pysrc.auxiliary.scripts.PlotGrids import plot_grids
     from pysrc.post_processing.filter.Gaussian import Gaussian
 

@@ -3,7 +3,7 @@ import pathlib
 import h5py
 import numpy as np
 
-from pysrc.auxiliary.tools.FileTool import FileTool
+from pysrc.auxiliary.aux_tool.FileTool import FileTool
 
 
 def make_hdf5(filepath: pathlib.WindowsPath or str, v: dict, make_dir=True, rewrite=False):

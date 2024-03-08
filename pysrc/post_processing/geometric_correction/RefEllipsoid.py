@@ -10,7 +10,7 @@ from enum import Enum
 
 import numpy as np
 
-from pysrc.auxiliary.tools.MathTool import MathTool
+from pysrc.auxiliary.aux_tool.MathTool import MathTool
 
 
 class EllipsoidType(Enum):
