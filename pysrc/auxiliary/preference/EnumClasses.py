@@ -3,6 +3,7 @@ from enum import Enum
 
 class L2DataServer(Enum):
     GFZ = 1
+    ITSG = 2
 
 
 class L2ProductType(Enum):
@@ -18,6 +19,7 @@ class L2InstituteType(Enum):
     GFZ = 2
     JPL = 3
     COST_G = 4
+    ITSG = 5
 
 
 class L2Release(Enum):
@@ -30,11 +32,17 @@ class L2Release(Enum):
     RL061 = 61
     RL062 = 62
 
+    ITSGGrace2014 = 1002014
+    ITSGGrace2016 = 1002016
+    ITSGGrace2018 = 1002018
+    ITSGGrace_operational = 2002018
+
 
 class L2ProductMaxDegree(Enum):
     Degree60 = 60
     Degree90 = 90
     Degree96 = 96
+    Degree120 = 120
 
 
 class L2LowDegreeType(Enum):

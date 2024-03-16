@@ -1,3 +1,4 @@
+import h5py
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -48,47 +49,31 @@ class GRID(CoreGRID):
         return shc
 
 
-def demo():
+def demo_get_land_mask(resolution=1.):
     from pysrc.auxiliary.load_file.LoadL2SH import load_SH_simple
-    lmax = 60
-    grid_space = 1
+    lmax = int(min(360., 180. / resolution))
+    grid_space = resolution
 
     c, s = load_SH_simple(
         FileTool.get_project_dir(
-            'data/L2_SH_products/GSM/CSR/RL06/BA01/2002/GSM-2_2002095-2002120_GRAC_UTCSR_BA01_0600'),
-        key='GRCOF2',
-        lmax=lmax
+            'data/auxiliary/ocean360_grndline.sh'),
+        key='',
+        lmax=lmax,
+        lmcs_in_queue=(1, 2, 3, 4)
     )
-    c[0, 0] = 0
 
     shc = SHC(c, s)
 
     grid = shc.to_grid(grid_space)
+    grid_data = grid.data[0]
+    grid_data[np.where(grid_data > 0.5)] = 1
+    grid_data[np.where(grid_data < 0.5)] = 0
 
-    shc_new = grid.to_SHC(lmax=lmax)
-
-    diff_cs1d = np.abs((shc.cs[0] - shc_new.cs[0]))
-    # diff_cs1d = shc_new.cs[0]
-
-    # begin_order = 3
-    # cl0_even = MathTool.cs_decompose_triangle1d_to_cs2d(diff_cs1d)[0][begin_order:, begin_order]
-    # plt.plot(cl0_even)
-    # # plt.ylim(0.955, 1.035)
-    # plt.show()
-    # print(np.sum(diff_cs1d ** 2))
-
-    diff_cs_tri = MathTool.cs_combine_to_triangle(*MathTool.cs_decompose_triangle1d_to_cs2d(diff_cs1d))
-
-    for i in range(len(diff_cs_tri)):
-        for j in range(len(diff_cs_tri[i])):
-            if i < np.abs(j - lmax):
-                diff_cs_tri[i, j] = np.nan
-
-    plt.matshow(diff_cs_tri)
-    # plt.matshow(diff_cs_tri, vmin=0, vmax=1.5e-7)
+    plt.matshow(grid_data)
     plt.colorbar()
     plt.show()
-    pass
+
+    return grid.lat, grid.lon, 1 - grid_data
 
 
 def demo_shtools():
@@ -140,5 +125,26 @@ def demo_shtools():
 
 
 if __name__ == '__main__':
-    demo()
+    # lat_1, lon_1, res_1 = demo_get_land_mask(1)
+    # lat_05, lon_05, res_05 = demo_get_land_mask(0.5)
+
+    with h5py.File(FileTool.get_project_dir('temp/20240308/land_mask/GlobalLandMask.hdf5'), 'r') as f:
+        pass
+    """
+    GlobalLandMask.hdf5
+      |
+      |--resolution_1
+      |    |
+      |    |--lat
+      |    |--lon
+      |    |--mask
+      |
+      |--resolution_05
+      |    |
+      |    |--lat
+      |    |--lon
+      |    |--mask
+    """
+
+    pass
     # demo_shtools()

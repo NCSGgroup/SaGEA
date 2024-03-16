@@ -8,7 +8,8 @@ from pathlib import Path, WindowsPath
 from pysrc.auxiliary.aux_tool.FileTool import FileTool
 from pysrc.auxiliary.aux_tool.TimeTool import TimeTool
 
-from pysrc.auxiliary.preference.EnumClasses import Satellite, L2DataServer, L2ProductType, L2InstituteType, L2Release
+from pysrc.auxiliary.preference.EnumClasses import Satellite, L2DataServer, L2ProductType, L2InstituteType, L2Release, \
+    L2ProductMaxDegree
 from pysrc.auxiliary.scripts.MatchConfigWithEnums import match_config
 
 
@@ -20,6 +21,7 @@ class CollectL2SHConfig:
         self.product_type = L2ProductType.GSM
         self.institute = L2InstituteType.CSR
         self.release = L2Release.RL06
+        self.degree = L2ProductMaxDegree.Degree60
         self.beginning_date = datetime.date(2002, 4, 1)
         self.ending_date = datetime.date(2002, 12, 31)
         self.update_mode = False
@@ -42,6 +44,10 @@ class CollectL2SHConfig:
 
     def set_satellite(self, sat: Satellite):
         self.satellite = sat
+        return self
+
+    def set_degree(self, deg: L2ProductMaxDegree):
+        self.degree = deg
         return self
 
     def set_beginning_date(self, beginning_date: datetime.date or str):
@@ -180,6 +186,9 @@ class CollectL2SH:
         if self.configuration.server == L2DataServer.GFZ:
             hostname = 'isdcftp.gfz-potsdam.de'
 
+        elif self.configuration.server == L2DataServer.ITSG:
+            hostname = 'ftp.tugraz.at'
+
         else:
             raise Exception
 
@@ -195,9 +204,15 @@ class CollectL2SH:
 
     def _get_remote_l2dir(self):
         if self.configuration.server == L2DataServer.GFZ:
-            # hostname = 'isdcftp.gfz-potsdam.de'
             sat_str = self.configuration.satellite.name.lower().replace('_', '-')
             path = Path(sat_str) / 'Level-2' / self.configuration.institute.name / self.configuration.release.name
+
+        elif self.configuration.server == L2DataServer.ITSG:
+            path = Path('outgoing/ITSG/GRACE')
+            path /= self.configuration.release.name.replace('ITSGGrace', 'ITSG-Grace')
+            path /= 'monthly'
+            path /= f'monthly_n{str(self.configuration.degree.value)}'
+
         else:
             raise Exception
 
@@ -249,6 +264,30 @@ class CollectL2SH:
                 ]
             )
 
+
+        elif self.configuration.server == L2DataServer.ITSG:
+            regular_pattern = r'ITSG-(.*)_(n\d{2})_(\d{4})-(\d{2}).gfc'
+            matches = re.match(regular_pattern, filename).groups()
+            # parameter matches is a tuple, the elements in order are:
+            # index 0, product release, 'Grace_operational'
+            # index 1, max degree/order, 'n60'
+            # index 2, year, e.g. '2018'
+            # index 3, month, e.g. '06'
+            ave_year, ave_month = int(matches[2]), int(matches[3])
+            beginning_date = datetime.date(ave_year, ave_month, 1)
+            ending_date = TimeTool.get_the_final_day_of_this_month(beginning_date)
+
+            return dict(
+                product_type='GSM',
+                beginning_date=beginning_date,
+                ending_date=ending_date,
+                satellite_short_name=Satellite.GRACE_FO.name if self.configuration.release == L2Release.ITSGGrace_operational else Satellite.GRACE.name,
+                solution_institute=L2InstituteType.ITSG.name,
+                product_id=matches[1],
+                product_release=matches[0]
+
+            )
+
         else:
             raise Exception
 
@@ -274,6 +313,26 @@ class CollectL2SH:
             for relink_time in range(self.max_relink_time):
                 try:
                     self._run_once_for_server_gfz()
+
+                except Exception as e:
+                    self.relink_time += 1
+                    if self.relink_time >= self.max_relink_time:
+                        raise Exception(f'The relinking time has reached to the maximum ({self.max_relink_time}), '
+                                        f'please check.')
+
+                    print(f'There were some issues: "{e}", relinking for the {self.relink_time}th time...')
+                    self._ftp.quit()
+
+                    time.sleep(self.sleep_seconds_before_relink)
+                    self.configuration.set_update_mode(True)
+
+                else:
+                    break
+
+        elif self.configuration.server == L2DataServer.ITSG:
+            for relink_time in range(self.max_relink_time):
+                try:
+                    self._run_once_for_server_itsg()
 
                 except Exception as e:
                     self.relink_time += 1
@@ -338,3 +397,57 @@ class CollectL2SH:
             Path.unlink(temp_gz_filepath)
 
             print('done!')
+
+    def _run_once_for_server_itsg(self):
+        print('Connecting the remote server...')
+        self._login()
+        self._into_remote_filepath()
+
+        files_list = self._ftp.nlst()
+        files_list.sort()
+
+        for i in range(len(files_list)):
+            this_file = files_list[i]
+
+            formatted_filename = self._format_filename(filename=this_file)
+            pass
+            if formatted_filename['product_type'] != self.configuration.product_type.name:
+                continue
+            if formatted_filename['beginning_date'] < self.configuration.beginning_date:
+                continue
+            if formatted_filename['ending_date'] > self.configuration.ending_date:
+                continue
+            if 'ITSG' + formatted_filename['product_release'] != self.configuration.release.name:
+                continue
+
+            local_l2path = self._get_local_l2path_from_filename(this_file)
+            if self.configuration.update_mode and Path.exists(local_l2path):
+                print(f'File {local_l2path.name} already exists at {local_l2path.parent}.')
+                continue
+
+            if not Path.exists(local_l2path.parent):
+                Path.mkdir(local_l2path.parent, parents=True)
+
+            with open(local_l2path, "wb") as f:
+                file_handle = f.write
+
+                print(f'Collecting {this_file}...', end=' ')
+                self._ftp.retrbinary('RETR %s' % this_file, file_handle, blocksize=1024)
+
+            print('done!')
+
+
+def demo():
+    collect = CollectL2SH()
+    collect.configuration.set_server(L2DataServer.ITSG)
+    collect.configuration.set_institute(L2InstituteType.ITSG)
+    collect.configuration.set_release(L2Release.ITSGGrace2018)
+    collect.configuration.set_degree(L2ProductMaxDegree.Degree96)
+    collect.configuration.set_beginning_date(datetime.date(2003, 1, 1))
+    collect.configuration.set_ending_date(datetime.date(2017, 12, 31))
+
+    collect.run()
+
+
+if __name__ == '__main__':
+    demo()
