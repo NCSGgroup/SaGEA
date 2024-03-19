@@ -1,32 +1,23 @@
-from enum import Enum
+"""
+@Company: CGE-HUST, Wuhan, China
+@Author: Yang Fan
+@Contact: yfan_cge@hust.edu.cn
+@Modify Time:2022/6/1
+@Description:
+"""
 
+from pysrc.auxiliary.aux_tool.FileTool import FileTool
+from pysrc.post_processing.geometric_correction.original_files.Setting import FieldType, Assumption, Constants, HarAnalysisType, \
+    LoveNumberType, EllipsoidType, DataType, \
+    SynthesisType
+from pysrc.post_processing.geometric_correction.original_files.GeoMathKit import GeoMathKit
+from pysrc.post_processing.geometric_correction.original_files.GeoidUndulation import GeoidUndulation
+from pysrc.post_processing.geometric_correction.original_files.Harmonic import Harmonic
+from pysrc.post_processing.geometric_correction.original_files.LoveNumber import LoveNumber
+from pysrc.post_processing.geometric_correction.original_files.RefEllipsoid import RefEllipsoid
 from netCDF4 import Dataset
 
 import numpy as np
-
-from pysrc.data_class.DataClass import SHC
-from pysrc.auxiliary.preference.EnumClasses import FieldPhysicalQuantity
-from pysrc.auxiliary.preference.Constants import GeoConstants
-from pysrc.auxiliary.aux_tool.FileTool import FileTool
-from pysrc.auxiliary.aux_tool.MathTool import MathTool
-from pysrc.post_processing.Love_number.LoveNumber import LoveNumber
-from pysrc.post_processing.convert_field_physical_quantity.ConvertSHC import ConvertSHC
-from pysrc.post_processing.geometric_correction.GeoidUndulation import GeoidUndulation
-from pysrc.post_processing.geometric_correction.RefEllipsoid import RefEllipsoid, EllipsoidType
-from pysrc.post_processing.harmonic.Harmonic import Harmonic
-
-
-class DataType(Enum):
-    TEMP = 0
-    SHUM = 1
-    PSFC = 2
-    PHISFC = 3
-
-
-class Assumption(Enum):
-    Sphere = 0
-    Ellipsoid = 1
-    ActualEarth = 2
 
 
 class ReadNC:
@@ -79,12 +70,12 @@ class ForwardModel:
     this class is used to convert EWH or Pressure field into geo-potential Spherical Harmonic under a certain assumption
     """
 
-    def __init__(self, orography, undulation, elliposid: RefEllipsoid, love_number: LoveNumber):
+    def __init__(self, orography, undulation, elliposid: RefEllipsoid, loveNumber: LoveNumber):
 
         self.__ellipsoid = elliposid
         self.__orography = orography
         self.__undulation = undulation
-        self.__loveNumber = love_number
+        self.__loveNumber = loveNumber
         self.__assumption = None
         pass
 
@@ -92,22 +83,19 @@ class ForwardModel:
         self.__assumption = assumption
         return self
 
-    def getCS(self, lat, lon, field, max_deg: int, kind=FieldPhysicalQuantity.EWH):
+    def getCS(self, lat, lon, field, maxDeg: int, kind=FieldType.EWH):
         """
         Set pressure or other physical fields input and carry out surface ellipsoidal integral
-        :param lat:
-        :param lon:
-        :param field: pressure field or EWH field or ...  [N*M]
-        :param max_deg: up to given max degree/order that output Stokes coefficients will get
-        :param kind:
+        :param pressure: pressure field or EWH field or ...  [N*M]
+        :param maxDeg: up to given max degree/order that output Stokes coefficients will get
         :return:
         """
-        assert kind in FieldPhysicalQuantity
+        assert kind in FieldType
         lonMesh, latMesh = np.meshgrid(lon, lat)
         lonMesh = lonMesh.flatten()
         latMesh = latMesh.flatten()
         '''reference ellipsoid + geoid undulation + orography'''
-        z = self._getHeight(latMesh, self.__orography / GeoConstants.g_wmo)
+        z = self._getHeight(latMesh, self.__orography / Constants.g_wmo)
 
         if self.__assumption == Assumption.ActualEarth:
 
@@ -130,65 +118,41 @@ class ForwardModel:
         iniPower = ar
 
         if self.__assumption == Assumption.Sphere:
-            if kind == FieldPhysicalQuantity.Pressure:
+            if kind == FieldType.Pressure:
                 deltaI = [field / gr]
             else:
                 deltaI = [field]
         else:
 
-            for i in range(max_deg + 1):
+            for i in range(maxDeg + 1):
                 I_lev = np.zeros(np.size(ar))
                 iniPower = iniPower * ar
                 # I_lev = np.power(ar, i + 2) * pressure / self._getG(latMesh, z)
-                if kind == FieldPhysicalQuantity.Pressure:
+                if kind == FieldType.Pressure:
                     I_lev = iniPower * field / gr
                 else:
                     I_lev = iniPower * field
                 deltaI.append(I_lev)
 
-        Pnm = MathTool.get_Legendre_1d_index(lat, max_deg, 1)  # run for once is enough
+        Pnm = GeoMathKit.getPnm(lat, maxDeg, 1)  # run for once is enough
 
-        # hm = Harmonic(self.__loveNumber, Parallel=-1).setLoveNumMethod(LoveNumberType.Wang)
-        hm = Harmonic(lat, lon, max_deg, option=1)
+        hm = Harmonic(self.__loveNumber, Parallel=-1).setLoveNumMethod(LoveNumberType.Wang)
 
-        if kind == FieldPhysicalQuantity.Pressure:
-            # cnm, snm = hm.analysis(Nmax=max_deg, Inner=deltaI, lat=lat, lon=lon, Pnm=Pnm,
-            #                        kind=HarAnalysisType.InnerIntegral)
-
-            assert False, 'under construction'
-
-        elif kind == FieldPhysicalQuantity.EWH:
-
-            cnm, snm = hm.analysis_for_gqij(np.array(deltaI))
-
-            '''convert shc quantity to ewh'''
-            convert = ConvertSHC()
-            convert.configuration.set_output_type(FieldPhysicalQuantity.EWH)
-            LN = LoveNumber()
-            LN.configuration.set_lmax(max_deg)
-            ln = LN.get_Love_number()
-            convert.set_Love_number(ln)
-
-            shc_tobe_processed = SHC(cnm, snm)
-            shc = convert.apply_to(shc_tobe_processed)
-
-            csqlm = shc.get_cs2d()
-            cnm, snm = csqlm[0][0], csqlm[1][0]
-
+        if kind == FieldType.Pressure:
+            cnm, snm = hm.analysis(Nmax=maxDeg, Inner=deltaI, lat=lat, lon=lon, Pnm=Pnm,
+                                   kind=HarAnalysisType.InnerIntegral)
         else:
-            assert False, 'under construction'
+            cnm, snm = hm.analysis(Nmax=maxDeg, Inner=deltaI, lat=lat, lon=lon, Pnm=Pnm,
+                                   kind=HarAnalysisType.InnerIntegral_EWH)
 
         return cnm, snm
 
     @DeprecationWarning
-    def getCS2(self, lat, lon, field, max_deg: int, kind=FieldPhysicalQuantity.EWH):
+    def getCS2(self, lat, lon, field, maxDeg: int, kind=FieldType.EWH):
         """
         Set pressure or other physical fields input and carry out surface ellipsoidal integral
-        :param lat:
-        :param lon:
-        :param field: pressure field or EWH field or ...  [N*M]
-        :param max_deg: up to given max degree/order that output Stokes coefficients will get
-        :param kind:
+        :param pressure: pressure field or EWH field or ...  [N*M]
+        :param maxDeg: up to given max degree/order that output Stokes coefficients will get
         :return:
         """
 
@@ -196,7 +160,7 @@ class ForwardModel:
         lonMesh = lonMesh.flatten()
         latMesh = latMesh.flatten()
         '''reference ellipsoid + geoid undulation + orography'''
-        z = self._getHeight(latMesh, self.__orography / GeoConstants.g_wmo)
+        z = self._getHeight(latMesh, self.__orography / Constants.g_wmo)
 
         if self.__assumption == Assumption.ActualEarth:
 
@@ -213,59 +177,38 @@ class ForwardModel:
         ar = r / self.__ellipsoid.SemimajorAxis
 
         # gr = self._getG(latMesh, z)
-        gr = GeoConstants.g_wmo
+        gr = Constants.g_wmo
 
         deltaI = []
         iniPower = ar
 
         if self.__assumption == Assumption.Sphere:
-            if kind == FieldPhysicalQuantity.Pressure:
+            if kind == FieldType.Pressure:
                 deltaI = [field / gr]
             else:
                 deltaI = [field]
         else:
 
-            for i in range(max_deg + 1):
+            for i in range(maxDeg + 1):
                 I_lev = np.zeros(np.size(ar))
                 iniPower = iniPower * ar
                 # I_lev = np.power(ar, i + 2) * pressure / self._getG(latMesh, z)
-                if kind == FieldPhysicalQuantity.Pressure:
+                if kind == FieldType.Pressure:
                     I_lev = iniPower * field / gr
                 else:
                     I_lev = iniPower * field
                 deltaI.append(I_lev)
 
-        Pnm = MathTool.get_Legendre_1d_index(lat, max_deg, 1)  # run for once is enough
+        Pnm = GeoMathKit.getPnm(lat, maxDeg, 1)  # run for once is enough
 
-        # hm = Harmonic(self.__loveNumber, Parallel=-1).setLoveNumMethod(LoveNumberType.Wang)
-        hm = Harmonic(lat, lon, max_deg, option=1)
+        hm = Harmonic(self.__loveNumber, Parallel=-1).setLoveNumMethod(LoveNumberType.Wang)
 
-        if kind == FieldPhysicalQuantity.Pressure:
-            # cnm, snm = hm.analysis(Nmax=max_deg, Inner=deltaI, lat=lat, lon=lon, Pnm=Pnm,
-            #                        kind=HarAnalysisType.InnerIntegral)
-
-            assert False, 'under construction'
-
-        elif kind == FieldPhysicalQuantity.EWH:
-
-            cnm, snm = hm.analysis_for_gqij(np.array(deltaI))
-
-            '''convert shc quantity to ewh'''
-            convert = ConvertSHC()
-            convert.configuration.set_output_type(FieldPhysicalQuantity.EWH)
-            LN = LoveNumber()
-            LN.configuration.set_lmax(max_deg)
-            ln = LN.get_Love_number()
-            convert.set_Love_number(ln)
-
-            shc_tobe_processed = SHC(cnm, snm)
-            shc = convert.apply_to(shc_tobe_processed)
-
-            csqlm = shc.get_cs2d()
-            cnm, snm = csqlm[0][0], csqlm[1][0]
-
+        if kind == FieldType.Pressure:
+            cnm, snm = hm.analysis(Nmax=maxDeg, Inner=deltaI, lat=lat, lon=lon, Pnm=Pnm,
+                                   kind=HarAnalysisType.InnerIntegral)
         else:
-            assert False, 'under construction'
+            cnm, snm = hm.analysis(Nmax=maxDeg, Inner=deltaI, lat=lat, lon=lon, Pnm=Pnm,
+                                   kind=HarAnalysisType.InnerIntegral_EWH)
 
         return cnm, snm
 
@@ -328,12 +271,12 @@ class GeometricalCorrection:
         self.__assumption = None
         self.__gf = None
         self.__kind = None
-        self.__lmax = None
+        self.__Nmax = None
         self.__lat, self.__lon = None, None
         pass
 
-    def configure(self, lmax, lat, lon, assumption=Assumption.Sphere, kind=FieldPhysicalQuantity.EWH):
-        self.__lmax = lmax
+    def configure(self, Nmax, lat, lon, assumption=Assumption.Sphere, kind=FieldType.EWH):
+        self.__Nmax = Nmax
         self.__lat, self.__lon = lat, lon
         # self.__gf = GravityField
         self.__assumption = assumption
@@ -350,17 +293,16 @@ class GeometricalCorrection:
         elltype = EllipsoidType.GRS80_IERS2010
         ell = RefEllipsoid(elltype)
         undulation = GeoidUndulation(elltype).getGeoid(self.__lat, self.__lon).flatten()
-        LN = LoveNumber()
 
-        PHISFC = FileTool.get_project_dir() / 'data/Topography/PHISFC_ERA5_invariant.nc'
+        LN = LoveNumber(FileTool.get_project_dir('data/auxiliary/'))
+        PHISFC = FileTool.get_project_dir('data/Topography/PHISFC_ERA5_invariant.nc', relative=True)
         orography = ReadNC().setPar(PHISFC, DataType.PHISFC).read()[0].flatten()
-        self.__Pnm = MathTool.get_Legendre_1d_index(self.__lat, self.__lmax, 1)
+        self.__Pnm = GeoMathKit.getPnm(self.__lat, self.__Nmax, 1)
 
         self.__fm = ForwardModel(orography=orography, undulation=undulation, elliposid=ell,
-                                 love_number=LN).setAssumption(assumption=self.__assumption)
+                                 loveNumber=LN).setAssumption(assumption=self.__assumption)
 
-        # self.__HM = Harmonic(LN).setLoveNumMethod(LoveNumberType.Wang)
-        self.__HM = Harmonic(self.__lat, self.__lon, self.__lmax, option=1)
+        self.__HM = Harmonic(LN).setLoveNumMethod(LoveNumberType.Wang)
 
         pass
 
@@ -374,29 +316,10 @@ class GeometricalCorrection:
         # grid = []
         # CS = []
 
-        # SynType = SynthesisType[self.__kind.name]
+        SynType = SynthesisType[self.__kind.name]
 
         '''surface mass derived from true CS for spherical Earth'''
-        # gg = HM.synthesis(Cnm=CnmT, Snm=SnmT, lat=lat, lon=lon, Nmax=self.__lmax, kind=SynType)
-        if self.__kind == FieldPhysicalQuantity.EWH:
-            '''convert shc quantity to ewh'''
-            convert = ConvertSHC()
-            convert.configuration.set_output_type(FieldPhysicalQuantity.EWH)
-            LN = LoveNumber()
-            LN.configuration.set_lmax(self.__lmax)
-            ln = LN.get_Love_number()
-            convert.set_Love_number(ln)
-
-            shc_tobe_processed = SHC(CnmT, SnmT)
-            shc = convert.apply_to(shc_tobe_processed)
-
-            csqlm = shc.get_cs2d()
-            cnm, snm = csqlm[0][0], csqlm[1][0]
-
-        else:
-            assert False, 'under construction'
-
-        gg = HM.synthesis_for_csqlm(np.array([cnm]), np.array([snm]))
+        gg = HM.synthesis(Cnm=CnmT, Snm=SnmT, lat=lat, lon=lon, Nmax=self.__Nmax, kind=SynType)
 
         # grid.append(gg)
         # CS.append([CnmT, SnmT])
@@ -404,7 +327,7 @@ class GeometricalCorrection:
         for iter in range(iterMax):
             print('Iteration No: %s' % iter)
             '''reference'''
-            CnmR, SnmR = fm.getCS(lat=lat, lon=lon, field=gg.flatten(), max_deg=self.__lmax, kind=self.__kind)
+            CnmR, SnmR = fm.getCS(lat=lat, lon=lon, field=gg.flatten(), maxDeg=self.__Nmax, kind=self.__kind)
 
             xr_C, xr_S = CnmT / CnmR, SnmT / SnmR
 
@@ -427,28 +350,7 @@ class GeometricalCorrection:
             CnmT, SnmT = xr_C * CnmT0, xr_S * SnmT0
             SnmT[np.isnan(SnmT)] = 0
             CnmT[np.isnan(CnmT)] = 0
-
-            if self.__kind == FieldPhysicalQuantity.EWH:
-                '''convert shc quantity to ewh'''
-                convert = ConvertSHC()
-                convert.configuration.set_output_type(FieldPhysicalQuantity.EWH)
-                LN = LoveNumber()
-                LN.configuration.set_lmax(self.__lmax)
-                ln = LN.get_Love_number()
-                convert.set_Love_number(ln)
-
-                shc_tobe_processed = SHC(CnmT, SnmT)
-                shc = convert.apply_to(shc_tobe_processed)
-
-                csqlm = shc.get_cs2d()
-                cnm, snm = csqlm[0][0], csqlm[1][0]
-
-                pass
-            else:
-                assert False, 'under construction'
-
-            # gg = HM.synthesis(Cnm=CnmT, Snm=SnmT, lat=lat, lon=lon, Nmax=self.__lmax, kind=SynType)
-            gg = HM.synthesis_for_csqlm(np.array([cnm]), np.array([snm]))
+            gg = HM.synthesis(Cnm=CnmT, Snm=SnmT, lat=lat, lon=lon, Nmax=self.__Nmax, kind=SynType)
             # grid.append(gg)
             # CS.append([CnmT, SnmT])
 

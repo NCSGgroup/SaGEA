@@ -402,30 +402,39 @@ class LoadL2SH:
 
 def demo():
     from pysrc.auxiliary.scripts.PlotGrids import plot_grids
+    from pysrc.post_processing.geometric_correction.GeometricalCorrection import GeometricalCorrection
 
     load = LoadL2SH()
     load.configuration.set_institute(L2InstituteType.ITSG)
     load.configuration.set_release(L2Release.ITSGGrace2018)
-    load.configuration.set_lmax(96)
+    load.configuration.set_lmax(60)
     load.configuration.set_begin_date(datetime.date(2005, 1, 1))
-    load.configuration.set_end_date(datetime.date(2015, 12, 31))
+    load.configuration.set_end_date(datetime.date(2005, 12, 31))
     shc_ITSG, dates_ITSG = load.get_shc(with_dates=True)
     shc_ITSG.de_background()
 
-    load.configuration.set_institute(L2InstituteType.CSR)
-    load.configuration.set_release(L2Release.RL06)
-    load.configuration.set_lmax(96)
-    shc_CSR, dates_CSR = load.get_shc(with_dates=True)
-    shc_CSR.de_background()
+    # load.configuration.set_institute(L2InstituteType.CSR)
+    # load.configuration.set_release(L2Release.RL06)
+    # load.configuration.set_lmax(60)
+    # shc_CSR, dates_CSR = load.get_shc(with_dates=True)
+    # shc_CSR.de_background()
+
+    gc = GeometricalCorrection()
+    shc_ITSG_gc = gc.apply_to(shc_ITSG)
 
     grid_ITSG = shc_ITSG.to_grid(grid_space=0.5)
-    grid_CSR = shc_ITSG.to_grid(grid_space=0.5)
+    grid_ITSG_gc = shc_ITSG_gc.to_grid(grid_space=0.5)
 
-    index = 100
+    index = 0
     plot_grids(
-        np.array([grid_ITSG.data[index], grid_CSR.data[index], grid_ITSG.data[index] - grid_CSR.data[index]]),
+        np.array([
+            grid_ITSG.data[index],
+            grid_ITSG_gc.data[index],
+            grid_ITSG.data[index] - grid_ITSG_gc.data[index]
+        ]),
         grid_ITSG.lat, grid_ITSG.lon,
-        None, None
+        # [None, None, -0.1], [None, None, 0.1]
+        [None, None, -0.1], [None, None, 0.1]
     )
 
 

@@ -9,11 +9,12 @@
 
 import numpy as np
 
-from pysrc2.Harmonic import Harmonic
-from pysrc2.LoadSH import LoadSH, Gif48
-from pysrc2.LoveNumber import LoveNumber
-from pysrc2.RefEllipsoid import EllipsoidType, RefEllipsoid
-from pysrc2.Setting import SynthesisType, LoveNumberType
+from pysrc.auxiliary.aux_tool.FileTool import FileTool
+from pysrc.post_processing.geometric_correction.original_files.Harmonic import Harmonic
+from pysrc.post_processing.geometric_correction.original_files.LoadSH import LoadSH, Gif48
+from pysrc.post_processing.geometric_correction.original_files.LoveNumber import LoveNumber
+from pysrc.post_processing.geometric_correction.original_files.RefEllipsoid import EllipsoidType, RefEllipsoid
+from pysrc.post_processing.geometric_correction.original_files.Setting import SynthesisType, LoveNumberType
 
 
 class GeoidUndulation:
@@ -78,7 +79,7 @@ class GeoidUndulation:
         :return:
         """
         self.__Nmax = 160
-        self.__SH = Gif48().load('../data/GIF48.gfc')
+        self.__SH = Gif48().load(FileTool.get_project_dir('data/Auxiliary/GIF48.gfc'))
         # self.__SH = Gif48().load('../data/Auxiliary/ITG-Grace2010s.gfc')
         pass
 

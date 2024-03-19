@@ -84,9 +84,9 @@ class SeismicOld:
                         seismic[t] = c1
                     else:
                         seismic[t] = c2 + p * (1 - np.exp(-(time_points[t] - teq) / tau))
-                    # self.grids_correction[t].map[l][m] += seismic[t]
+                    # self.grids_correction[t].map[l][m] += seismic_correction[t]
                     self.grids_correction[t, l, m] += seismic[t]
-                    # self.grids_corrected[t].map[l][m] -= seismic[t]
+                    # self.grids_corrected[t].map[l][m] -= seismic_correction[t]
                     self.grids_corrected[t, l, m] -= seismic[t]
 
         pass

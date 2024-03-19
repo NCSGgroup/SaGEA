@@ -6,21 +6,10 @@
 # datetime:2020/6/16 上午11:35
 # software: Atmosphere dealaising product
 # usage of this file:
-from enum import Enum
-
 import numpy as np
 
-from pysrc.auxiliary.aux_tool.MathTool import MathTool
-
-
-class EllipsoidType(Enum):
-    """
-    we provide two types of reference ellipsoid.
-    """
-    GRS80 = 0
-    WGS84 = 1
-    GRS80_IERS2010 = 2
-    gif48 = 3  # mostly used for gravity field application
+from pysrc.post_processing.geometric_correction.original_files.GeoMathKit import GeoMathKit
+from pysrc.post_processing.geometric_correction.original_files.Setting import EllipsoidType
 
 
 class RefEllipsoid:
@@ -58,11 +47,11 @@ class RefEllipsoid:
             self.GM = 3.986004418e14
             '''Stokes coefficients of normal gravity field, only C20 C40 C60 C80 and C10 is offered, see Ref A.'''
             self.NormalGravity = np.zeros(6 * 11)
-            self.NormalGravity[MathTool.getIndex(2, 0)] = -4.841667749599428E-04
-            self.NormalGravity[MathTool.getIndex(4, 0)] = 7.903037334041510E-07
-            self.NormalGravity[MathTool.getIndex(6, 0)] = -1.687249611016718E-09
-            self.NormalGravity[MathTool.getIndex(8, 0)] = 3.460524681471410E-12
-            self.NormalGravity[MathTool.getIndex(10, 0)] = -2.650022244590134E-15
+            self.NormalGravity[GeoMathKit.getIndex(2, 0)] = -4.841667749599428E-04
+            self.NormalGravity[GeoMathKit.getIndex(4, 0)] = 7.903037334041510E-07
+            self.NormalGravity[GeoMathKit.getIndex(6, 0)] = -1.687249611016718E-09
+            self.NormalGravity[GeoMathKit.getIndex(8, 0)] = 3.460524681471410E-12
+            self.NormalGravity[GeoMathKit.getIndex(10, 0)] = -2.650022244590134E-15
 
         elif self.type == EllipsoidType.GRS80:
             '''a, semi-major axis (equatorial) [m]'''
@@ -75,11 +64,11 @@ class RefEllipsoid:
             self.GM = 3.986005e14
             '''Stokes coefficients of normal gravity field, only C00 C20 C40 C60 C80 and C10 is offered.'''
             self.NormalGravity = np.zeros(6 * 11)
-            self.NormalGravity[MathTool.getIndex(2, 0)] = -4.84166774985e-4
-            self.NormalGravity[MathTool.getIndex(4, 0)] = 7.90303733511e-7
-            self.NormalGravity[MathTool.getIndex(6, 0)] = -1.68724961151e-9
-            self.NormalGravity[MathTool.getIndex(8, 0)] = 3.46052468394e-10
-            self.NormalGravity[MathTool.getIndex(10, 0)] = -2.65002225767e-15
+            self.NormalGravity[GeoMathKit.getIndex(2, 0)] = -4.84166774985e-4
+            self.NormalGravity[GeoMathKit.getIndex(4, 0)] = 7.90303733511e-7
+            self.NormalGravity[GeoMathKit.getIndex(6, 0)] = -1.68724961151e-9
+            self.NormalGravity[GeoMathKit.getIndex(8, 0)] = 3.46052468394e-10
+            self.NormalGravity[GeoMathKit.getIndex(10, 0)] = -2.65002225767e-15
 
         elif self.type == EllipsoidType.GRS80_IERS2010:
             '''a, semi-major axis (equatorial) [m]'''
@@ -92,11 +81,11 @@ class RefEllipsoid:
             self.GM = 3.986004418e14
             '''Stokes coefficients of normal gravity field, only C00 C20 C40 C60 C80 and C10 is offered.'''
             self.NormalGravity = np.zeros(6 * 11)
-            self.NormalGravity[MathTool.getIndex(2, 0)] = -4.84166774985e-4
-            self.NormalGravity[MathTool.getIndex(4, 0)] = 7.90303733511e-7
-            self.NormalGravity[MathTool.getIndex(6, 0)] = -1.68724961151e-9
-            self.NormalGravity[MathTool.getIndex(8, 0)] = 3.46052468394e-10
-            self.NormalGravity[MathTool.getIndex(10, 0)] = -2.65002225767e-15
+            self.NormalGravity[GeoMathKit.getIndex(2, 0)] = -4.84166774985e-4
+            self.NormalGravity[GeoMathKit.getIndex(4, 0)] = 7.90303733511e-7
+            self.NormalGravity[GeoMathKit.getIndex(6, 0)] = -1.68724961151e-9
+            self.NormalGravity[GeoMathKit.getIndex(8, 0)] = 3.46052468394e-10
+            self.NormalGravity[GeoMathKit.getIndex(10, 0)] = -2.65002225767e-15
 
         elif self.type == EllipsoidType.gif48:
             '''a, semi-major axis (equatorial) [m]'''
@@ -109,11 +98,11 @@ class RefEllipsoid:
             self.GM = 3.986004415e14
             '''Stokes coefficients of normal gravity field, only C00 C20 C40 C60 C80 and C10 is offered.'''
             self.NormalGravity = np.zeros(6 * 11)
-            self.NormalGravity[MathTool.getIndex(2, 0)] = -4.84166774985e-4
-            self.NormalGravity[MathTool.getIndex(4, 0)] = 7.90303733511e-7
-            self.NormalGravity[MathTool.getIndex(6, 0)] = -1.68724961151e-9
-            self.NormalGravity[MathTool.getIndex(8, 0)] = 3.46052468394e-10
-            self.NormalGravity[MathTool.getIndex(10, 0)] = -2.65002225767e-15
+            self.NormalGravity[GeoMathKit.getIndex(2, 0)] = -4.84166774985e-4
+            self.NormalGravity[GeoMathKit.getIndex(4, 0)] = 7.90303733511e-7
+            self.NormalGravity[GeoMathKit.getIndex(6, 0)] = -1.68724961151e-9
+            self.NormalGravity[GeoMathKit.getIndex(8, 0)] = 3.46052468394e-10
+            self.NormalGravity[GeoMathKit.getIndex(10, 0)] = -2.65002225767e-15
 
     def __calOther(self):
         """
@@ -125,10 +114,10 @@ class RefEllipsoid:
         G = 6.6742867e-11
 
         '''flatness'''
-        self.Flattening = 1.0 / self.InverseFlattening
+        self.Flattening = 1.0/self.InverseFlattening
 
         '''Mass of the Earth'''
-        self.Mass = self.GM / G
+        self.Mass = self.GM/G
 
         '''short axis'''
         self.SemiminorAxis = self.SemimajorAxis * (1 - self.Flattening)
@@ -165,3 +154,8 @@ def demo1():
 
 if __name__ == '__main__':
     demo1()
+
+
+
+
+
