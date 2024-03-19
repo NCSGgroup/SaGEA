@@ -443,8 +443,8 @@ def demo():
     collect.configuration.set_institute(L2InstituteType.ITSG)
     collect.configuration.set_release(L2Release.ITSGGrace2018)
     collect.configuration.set_degree(L2ProductMaxDegree.Degree96)
-    collect.configuration.set_beginning_date(datetime.date(2003, 1, 1))
-    collect.configuration.set_ending_date(datetime.date(2017, 12, 31))
+    collect.configuration.set_beginning_date(datetime.date(2010, 7, 1))
+    collect.configuration.set_ending_date(datetime.date(2010, 7, 31))
 
     collect.run()
 

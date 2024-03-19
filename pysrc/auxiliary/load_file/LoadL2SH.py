@@ -102,27 +102,40 @@ class LoadL2SHSingleFile:
 
         '''load beginning and ending dates, and unused days.'''
         filename = self.filepath.name
-        pat_key = '(GSM|GAA|GAB|GAC|GAD)-2_([0-9]{7})-([0-9]{7})'
-        groups = re.search(pat_key, filename, re.M).groups()  # ('GSM', '2008001', '2008031')
 
-        begin_year_first = datetime.date(int(groups[1][:4]), 1, 1)
-        begin_days = int(groups[1][4:])
-        begin_date = begin_year_first + datetime.timedelta(begin_days - 1)
+        if 'UTCSR' in filename or 'GFZOP' in filename or 'JPLEM' in filename:
+            pat_key = '(GSM|GAA|GAB|GAC|GAD)-2_([0-9]{7})-([0-9]{7})'
+            groups = re.search(pat_key, filename, re.M).groups()  # ('GSM', '2008001', '2008031')
 
-        end_year_first = datetime.date(int(groups[2][:4]), 1, 1)
-        end_days = int(groups[2][4:])
-        end_date = end_year_first + datetime.timedelta(end_days - 1)
+            begin_year_first = datetime.date(int(groups[1][:4]), 1, 1)
+            begin_days = int(groups[1][4:])
+            begin_date = begin_year_first + datetime.timedelta(begin_days - 1)
 
-        pat_unused_days = r'unused_days.*(\[.*\])'
-        unues = re.search(pat_unused_days, txt)
-        unues_dates = []
-        if unues is not None:
-            pat_unused_days_each = r'\d{4}-\d{2}-\d{2}'
-            unues_each = re.findall(pat_unused_days_each, unues.group())
-            for i in range(len(unues_each)):
-                ymd = unues_each[i].split('-')
-                year, month, day = int(ymd[0]), int(ymd[1]), int(ymd[2])
-                unues_dates.append(datetime.date(year, month, day))
+            end_year_first = datetime.date(int(groups[2][:4]), 1, 1)
+            end_days = int(groups[2][4:])
+            end_date = end_year_first + datetime.timedelta(end_days - 1)
+
+            pat_unused_days = r'unused_days.*(\[.*\])'
+            unues = re.search(pat_unused_days, txt)
+            unues_dates = []
+            if unues is not None:
+                pat_unused_days_each = r'\d{4}-\d{2}-\d{2}'
+                unues_each = re.findall(pat_unused_days_each, unues.group())
+                for i in range(len(unues_each)):
+                    ymd = unues_each[i].split('-')
+                    year, month, day = int(ymd[0]), int(ymd[1]), int(ymd[2])
+                    unues_dates.append(datetime.date(year, month, day))
+
+        elif 'ITSG' in filename:
+            year_month_pattern = r'n\d{2}_(\d{4})-(\d{2})'
+            year, month = re.search(year_month_pattern, filename).groups()
+            begin_date = datetime.date(int(year), int(month), 1)
+            end_date = TimeTool.get_the_final_day_of_this_month(begin_date)
+
+            unues_dates = []
+
+        else:
+            assert False
 
         '''load Clm2d, Slm2d'''
         pat_degree = r'degree *:? *\d+'
@@ -355,18 +368,32 @@ class LoadL2SH:
                 for i in range(len(filelist_this_year)):
                     this_filepath = filelist_this_year[i]
                     this_filename = this_filepath.name
-                    year_day_pattern = r'[A-Z]{3}-2_(\d{7})-(\d{7})'
-                    beginning_year_day, ending_year_day = re.search(year_day_pattern, this_filename).groups()
 
-                    this_begin_date = TimeTool.convert_date_format(beginning_year_day,
-                                                                   input_type=TimeTool.DateFormat.YearDay,
-                                                                   output_type=TimeTool.DateFormat.ClassDate)
+                    if self.configuration.institute in (L2InstituteType.CSR, L2InstituteType.GFZ, L2InstituteType.GFZ):
+                        year_day_pattern = r'[A-Z]{3}-2_(\d{7})-(\d{7})'
+                        beginning_year_day, ending_year_day = re.search(year_day_pattern, this_filename).groups()
 
-                    this_end_date = TimeTool.convert_date_format(ending_year_day,
-                                                                 input_type=TimeTool.DateFormat.YearDay,
-                                                                 output_type=TimeTool.DateFormat.ClassDate)
+                        this_begin_date = TimeTool.convert_date_format(beginning_year_day,
+                                                                       input_type=TimeTool.DateFormat.YearDay,
+                                                                       output_type=TimeTool.DateFormat.ClassDate)
 
-                    this_ave_date = this_begin_date + (this_end_date - this_begin_date) / 2
+                        this_end_date = TimeTool.convert_date_format(ending_year_day,
+                                                                     input_type=TimeTool.DateFormat.YearDay,
+                                                                     output_type=TimeTool.DateFormat.ClassDate)
+
+                        this_ave_date = this_begin_date + (this_end_date - this_begin_date) / 2
+
+                    elif self.configuration.institute == L2InstituteType.ITSG:
+                        year_month_pattern = r'n\d{2}_(\d{4})-(\d{2})'
+                        year, month = re.search(year_month_pattern, this_filename).groups()
+                        this_begin_date = datetime.date(int(year), int(month), 1)
+                        this_end_date = TimeTool.get_the_final_day_of_this_month(this_begin_date)
+
+                        this_ave_date = this_begin_date + (this_end_date - this_begin_date) / 2
+
+                    else:
+                        assert False
+
                     if begin_date <= this_ave_date <= end_date:
                         filepath_list.append(this_filepath)
 
@@ -374,13 +401,32 @@ class LoadL2SH:
 
 
 def demo():
+    from pysrc.auxiliary.scripts.PlotGrids import plot_grids
+
     load = LoadL2SH()
+    load.configuration.set_institute(L2InstituteType.ITSG)
+    load.configuration.set_release(L2Release.ITSGGrace2018)
+    load.configuration.set_lmax(96)
     load.configuration.set_begin_date(datetime.date(2005, 1, 1))
     load.configuration.set_end_date(datetime.date(2015, 12, 31))
-    shc, dates = load.get_shc(with_dates=True)
+    shc_ITSG, dates_ITSG = load.get_shc(with_dates=True)
+    shc_ITSG.de_background()
 
-    ave_dates = TimeTool.get_average_dates(dates[0], dates[1])
-    ave_dates_with_unused_dates = TimeTool.get_average_dates(*dates)
+    load.configuration.set_institute(L2InstituteType.CSR)
+    load.configuration.set_release(L2Release.RL06)
+    load.configuration.set_lmax(96)
+    shc_CSR, dates_CSR = load.get_shc(with_dates=True)
+    shc_CSR.de_background()
+
+    grid_ITSG = shc_ITSG.to_grid(grid_space=0.5)
+    grid_CSR = shc_ITSG.to_grid(grid_space=0.5)
+
+    index = 100
+    plot_grids(
+        np.array([grid_ITSG.data[index], grid_CSR.data[index], grid_ITSG.data[index] - grid_CSR.data[index]]),
+        grid_ITSG.lat, grid_ITSG.lon,
+        None, None
+    )
 
 
 if __name__ == '__main__':

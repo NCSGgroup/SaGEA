@@ -54,7 +54,7 @@ class CoreSHC:
         assert len(params) in (1, 2)
 
         if len(params) == 1:
-            if type(params[0]) is CoreSHC:
+            if issubclass(type(params[0]), CoreSHC):
                 shc = params[0]
             else:
                 shc = CoreSHC(params[0])

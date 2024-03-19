@@ -1,6 +1,9 @@
+import pathlib
 from pathlib import Path
 import gzip
 import re
+
+import h5py
 
 from pysrc.auxiliary.preference.EnumClasses import L2ProductType, L2InstituteType, L2Release, L2LowDegreeFileID
 from pysrc.auxiliary.aux_tool.TimeTool import TimeTool
@@ -84,12 +87,22 @@ class FileTool:
         if release == L2Release.RL06:
             assert lmax in (60, 96)
         if product_type == L2ProductType.GSM:
-            degree_id_name = ('BA01', 'BB01')[(60, 96).index(lmax)]
+
+            if institute in (L2InstituteType.CSR, L2InstituteType.GFZ, L2InstituteType.JPL):
+                degree_id_name = ('BA01', 'BB01')[(60, 96).index(lmax)]
+            elif institute == L2InstituteType.ITSG:
+                degree_id_name = f'n{str(lmax)}'
+            else:
+                assert False
         else:
             degree_id_name = 'BC01'
 
         dir_up_to_year = FileTool.get_project_dir() / 'data/L2_SH_Products/'
-        dir_up_to_year /= f'{product_type.name}/{institute.name}/{release.name}/{degree_id_name}/{str(year)}'
+        dir_up_to_year /= product_type.name
+        dir_up_to_year /= institute.name
+        dir_up_to_year /= release.name.replace('ITSG', '')
+        dir_up_to_year /= degree_id_name
+        dir_up_to_year /= str(year)
 
         return dir_up_to_year
 
@@ -128,3 +141,54 @@ class FileTool:
             raise Exception
 
         return filepath
+
+    @staticmethod
+    def get_hdf5_structure(filepath):
+        def append_structure(fdata, flevel=0, texts=None):
+            if texts is None:
+                texts = []
+
+            texts.append(f"{'|  ' * flevel}|--{fdata.name.split('/')[-1]}")
+
+            if type(fdata) is h5py._hl.group.Group:
+                flevel += 1
+                texts.append('|  ' * flevel + '|')
+                for fkey in fdata.keys():
+                    append_structure(fdata[fkey], flevel, texts)
+                flevel -= 1
+                texts.append('|  ' * flevel + '|')
+
+            elif type(fdata) is h5py._hl.dataset.Dataset:
+                lines[-1] += f' {fdata.shape}'
+                pass
+
+            return texts
+
+        filepath = Path(filepath)
+        assert filepath.name.endswith('.hdf5')
+        lines = []
+
+        with h5py.File(filepath, 'r') as f:
+            lines.append(f'{filepath.name}')
+            lines.append('|')
+
+            for key in f.keys():
+                lines = append_structure(f[key], texts=lines)
+
+        for i in range(len(lines) - 1, -1, -1):
+            if lines[i].replace('|', '').replace(' ', '') == '':
+                lines.pop(i)
+            else:
+                break
+
+        print('\n'.join(lines))
+
+
+def demo():
+    FileTool.get_hdf5_structure(FileTool.get_project_dir('temp/GlobalLandMask.hdf5'))
+    # print()
+    # FileTool.get_hdf5_structure(FileTool.get_project_dir('temp/make_h5_1.hdf5'))
+
+
+if __name__ == '__main__':
+    demo()
