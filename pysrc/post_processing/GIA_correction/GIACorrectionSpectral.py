@@ -34,7 +34,7 @@ class GIACorrectionSpectral:
     def __init__(self):
         self.configuration = GIACorrectionSpectralConfig()
 
-    def get_year_fractions(self):
+    def __get_year_fractions(self):
         times_list = self.configuration.get_times()  # list datetime.date
 
         year_frac = TimeTool.convert_date_format(times_list,
@@ -46,8 +46,8 @@ class GIACorrectionSpectral:
         return year_frac
 
     def apply_to(self, shc):
-        cs_gia_trend = self.configuration.get_gia_trend().cs
-        year_frac = self.get_year_fractions()
+        cs_gia_trend = self.configuration.get_gia_trend().cs[0]
+        year_frac = self.__get_year_fractions()
         year_frac -= np.mean(year_frac)
 
         cs_each_times = year_frac[:, None] @ cs_gia_trend[None, :]
