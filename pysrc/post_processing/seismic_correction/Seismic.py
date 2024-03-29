@@ -1,18 +1,10 @@
-import copy
 import json
 import pathlib
-import datetime
-
-import matplotlib.pyplot as plt
 import numpy as np
 from scipy import optimize
 
-from pysrc.auxiliary.aux_tool.FileTool import FileTool
 from pysrc.auxiliary.aux_tool.TimeTool import TimeTool
-from pysrc.auxiliary.load_file.LoadL2SH import LoadL2SH
-from pysrc.auxiliary.preference.EnumClasses import L2InstituteType
 from pysrc.data_class.DataClass import GRID
-from pysrc.auxiliary.aux_tool.MathTool import MathTool
 
 
 class SeismicConfig:
@@ -220,6 +212,13 @@ class Seismic:
 
 
 if __name__ == '__main__':
+    from pysrc.auxiliary.load_file.LoadL2SH import LoadL2SH
+    from pysrc.auxiliary.preference.EnumClasses import L2InstituteType
+    from pysrc.auxiliary.aux_tool.FileTool import FileTool
+    import datetime
+
+    import matplotlib.pyplot as plt
+
     '''load GRACE L2 SH products'''
     begin_date = datetime.date(2002, 1, 1)
     end_date = datetime.date(2015, 12, 31)
