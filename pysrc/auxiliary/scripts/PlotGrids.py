@@ -9,7 +9,7 @@ import matplotlib
 from matplotlib import pyplot as plt
 
 
-def plot_grids(grid: np.ndarray, lat, lon, vmin, vmax, central_longitude=None,
+def plot_grids(grid: np.ndarray, lat, lon, vmin=None, vmax=None, central_longitude=None,
                extent=None, subtitle=None, title=None, save=None):
     """
 
