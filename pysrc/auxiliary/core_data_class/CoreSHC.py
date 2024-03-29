@@ -116,7 +116,7 @@ class CoreSHC:
             self.__de_average()
 
         else:
-            assert type(background) is CoreSHC
+            assert issubclass(type(background), CoreSHC)
             self.cs -= background.cs
 
     @staticmethod
