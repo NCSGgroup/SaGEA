@@ -1,66 +1,134 @@
 import copy
+import json
+import pathlib
+import datetime
 
+import matplotlib.pyplot as plt
 import numpy as np
 from scipy import optimize
 
+from pysrc.auxiliary.aux_tool.FileTool import FileTool
+from pysrc.auxiliary.aux_tool.TimeTool import TimeTool
+from pysrc.auxiliary.load_file.LoadL2SH import LoadL2SH
+from pysrc.auxiliary.preference.EnumClasses import L2InstituteType
 from pysrc.data_class.DataClass import GRID
 from pysrc.auxiliary.aux_tool.MathTool import MathTool
 
 
-class SeismicOld:
+class SeismicConfig:
     def __init__(self):
-        self.time_points = []
-        self.grids_input = []
-        self.earthquakes = {}
-        self.grids_correction = []
-        self.grids_corrected = []
-        pass
+        self.__earthquake_list = None
+        # dict, {'name': {'lat_range': [., .], 'lon_range': [., .], 'teq': [. ,], 'tau': [. ,], }}
 
-    def setSeries(self, time_points, grids):
+        self.__times = None
+
+    def set_earthquakes(self, filepath):
         """
-        :param time_points: year fraction
-        :param grids:
+        set earthquake events from dict or .json file
         """
-        self.time_points = time_points
-        self.grids_input = grids
+        assert type(filepath) in (dict, pathlib.WindowsPath)
+
+        if type(filepath) is pathlib.WindowsPath:
+            assert filepath.name.endswith('.json')
+            self.__set_earthquakes_from_json(filepath)
+
+        elif type(filepath) is dict:
+            assert False
+
         return self
 
-    def addEarthquakes(self, eq: dict):
-        """
-        :param eq: dict of dicts, supposed to include these parameters:
-                    {name: {'lon': np.ndarray, 'lat': np.ndarray, 'teq': teq(list), 'tau': tau(list)}}
-        """
-        for name in eq.keys():
-            keys_of_this_eq = eq[name].keys()
-            assert {'lon', 'lat', 'teq'}.issubset(set(keys_of_this_eq))
-        self.earthquakes.update(eq)
-        return
+    def __set_earthquakes_from_json(self, filepath):
+        with open(filepath) as f:
+            load = json.load(f)
 
-    def __analyse_for_once(self, lon, lat, teq, tau):
-        points = []
-        time_points = np.array(self.time_points)
+        self.__earthquake_list = load
 
-        gs = lon[1] - lon[0]
-        for i in range(len(lon)):
-            for j in range(len(lat)):
-                points.append([lon[i], lat[j]])
-                l, m = MathTool.getGridIndex(lon[i], lat[j], gs)
+        return self
+
+    def get_earthquakes(self):
+        return self.__earthquake_list
+
+    def set_times(self, times):
+        """
+        :param times: list of datetime.date
+        """
+        self.__times = times
+        return self
+
+    def get_times(self):
+        return self.__times
+
+
+class Seismic:
+    def __init__(self):
+        self.configuration = SeismicConfig()
+
+    def __get_year_fractions(self):
+        times_list = self.configuration.get_times()  # list datetime.date
+
+        year_frac = TimeTool.convert_date_format(times_list,
+                                                 input_type=TimeTool.DateFormat.ClassDate,
+                                                 output_type=TimeTool.DateFormat.YearFraction)
+
+        year_frac = np.array(year_frac)
+
+        return year_frac
+
+    def apply_to(self, grid: GRID):
+        earthquakes = self.configuration.get_earthquakes()
+        for key in earthquakes:
+            '''get lat and lon index of grid.data'''
+            assert len(earthquakes[key]['lat_range']) == 2
+            assert len(earthquakes[key]['lon_range']) == 2
+            assert len(earthquakes[key]['teq']) in (1, 2)
+            assert len(earthquakes[key]['teq']) == len(earthquakes[key]['tau'])
+
+            lat_min, lat_max = earthquakes[key]['lat_range']
+            lon_min, lon_max = earthquakes[key]['lon_range']
+
+            lat_index = np.where((lat_min < grid.lat) & (grid.lat < lat_max))[0]
+            lon_index = np.where((lon_min < grid.lon) & (grid.lon < lon_max))[0]
+
+            teq, tau = earthquakes[key]['teq'], earthquakes[key]['tau']
+
+            if len(earthquakes[key]['teq']) == 1:
+                self.__analyse_for_once(grid, lon_index, lat_index, teq, tau)
+
+            elif len(earthquakes[key]['teq']) == 2:
+                self.__analyse_for_twice(grid, lon_index, lat_index, teq, tau)
+
+            else:
+                assert False
+
+    def __analyse_for_once(self, grid, lon_index, lat_index, teq, tau):
+        teq, tau = teq[0], tau[0]
+
+        def fit_function1(x, c):
+            return c
+
+        def fit_function2(x, c, p):
+            return c + p * (1 - np.exp(-(x - teq) / tau))
+
+        year_fractions = self.__get_year_fractions()
+
+        for i in lon_index:
+            for j in lat_index:
 
                 sigs = []
-                for t in range(len(time_points)):
-                    sigs.append(self.grids_input[t, l, m])
+                for t in range(len(year_fractions)):
+                    sigs.append(grid.data[t, j, i])
                 sigs = np.array(sigs)
 
                 times_before = []
                 sigs_before = []
                 times_after = []
                 sigs_after = []
-                for t in range(len(time_points)):
-                    if time_points[t] < teq:
-                        times_before.append(time_points[t])
+                for t in range(len(year_fractions)):
+                    if year_fractions[t] < teq:
+                        times_before.append(year_fractions[t])
                         sigs_before.append(sigs[t])
                     else:
-                        times_after.append(time_points[t])
+                        times_after.append(year_fractions[t])
                         sigs_after.append(sigs[t])
 
                 times_before = np.array(times_before)
@@ -68,45 +136,39 @@ class SeismicOld:
                 times_after = np.array(times_after)
                 sigs_after = np.array(sigs_after)
 
-                def fit_function1(x, c):
-                    return c
-
-                def fit_function2(x, c, p):
-                    return c + p * (1 - np.exp(-(x - teq) / tau))
-
                 z1 = optimize.curve_fit(fit_function1, times_before, sigs_before)[0]
                 z2 = optimize.curve_fit(fit_function2, times_after, sigs_after)[0]
                 c1 = z1[0]
                 c2, p = z2[0], z2[1]
-                seismic = np.zeros_like(time_points)
-                for t in range(len(time_points)):
-                    if time_points[t] < teq:
+                seismic = np.zeros_like(year_fractions)
+                for t in range(len(year_fractions)):
+                    if year_fractions[t] < teq:
                         seismic[t] = c1
                     else:
-                        seismic[t] = c2 + p * (1 - np.exp(-(time_points[t] - teq) / tau))
-                    # self.grids_correction[t].map[l][m] += seismic_correction[t]
-                    self.grids_correction[t, l, m] += seismic[t]
-                    # self.grids_corrected[t].map[l][m] -= seismic_correction[t]
-                    self.grids_corrected[t, l, m] -= seismic[t]
+                        seismic[t] = c2 + p * (1 - np.exp(-(year_fractions[t] - teq) / tau))
+
+                grid.data[:, j, i] -= seismic
 
         pass
 
-    def __analyse_for_twice(self, lon, lat, teq, tau):
+    def __analyse_for_twice(self, grid, lon_index, lat_index, teq, tau):
+
+        def fit_function2(x, c, p):
+            return c + p * (1 - np.exp(-(x - teq1) / tau1))
+
+        def fit_function3(x, c, p):
+            return c + p * (1 - np.exp(-(x - teq2) / tau2))
+
         teq1, teq2 = teq[0], teq[1]
         tau1, tau2 = tau[0], tau[1]
-        points = []
-        time_points = np.array(self.time_points)
+        time_points = self.__get_year_fractions()
 
-        gs = lon[1] - lon[0]
-        for i in range(len(lon)):
-            for j in range(len(lat)):
-                points.append([lon[i], lat[j]])
-                l, m = MathTool.getGridIndex(lon[i], lat[j], gs)
+        for i in lon_index:
+            for j in lat_index:
 
                 sigs = []
                 for t in range(len(time_points)):
-                    # sigs.append(self.grids_input[t].map[l][m])
-                    sigs.append(self.grids_input[t, l, m])
+                    sigs.append(grid.data[t, j, i])
                 sigs = np.array(sigs)
 
                 times_before = []
@@ -136,12 +198,6 @@ class SeismicOld:
                 def fit_function1(x, c):
                     return c
 
-                def fit_function2(x, c, p):
-                    return c + p * (1 - np.exp(-(x - teq1) / tau1))
-
-                def fit_function3(x, c, p):
-                    return c + p * (1 - np.exp(-(x - teq2) / tau2))
-
                 z1 = optimize.curve_fit(fit_function1, times_before, sigs_before)[0]
                 z2 = optimize.curve_fit(fit_function2, times_middle, sigs_middle)[0]
                 z3 = optimize.curve_fit(fit_function3, times_after, sigs_after)[0]
@@ -156,63 +212,47 @@ class SeismicOld:
                         seismic[t] = c2 + p1 * (1 - np.exp(-(time_points[t] - teq1) / tau1))
                     else:
                         seismic[t] = c3 + p2 * (1 - np.exp(-(time_points[t] - teq2) / tau2))
-                    self.grids_correction[t, l, m] += seismic[t]
-                    self.grids_corrected[t, l, m] -= seismic[t]
 
-        pass
+                grid.data[:, j, i] -= seismic
+                pass
 
-    def run(self):
-        self.grids_correction = copy.deepcopy(self.grids_input)
-        for i in range(len(self.grids_correction)):
-            # self.grids_correction[i].map = np.zeros_like(self.grids_correction[i].map)
-            self.grids_correction[i] = np.zeros_like(self.grids_correction[i])
-        self.grids_corrected = copy.deepcopy(self.grids_input)
-        for name in self.earthquakes.keys():
-            this_eq = self.earthquakes[name]
-
-            lon = this_eq['lon']
-            lat = this_eq['lat']
-
-            if type(this_eq['teq']) in [list, tuple, np.ndarray]:
-                times = len(this_eq['teq'])
-            else:
-                times = 1
-
-            assert times in [1, 2]
-            teq = this_eq['teq']
-            tau = this_eq['tau']
-
-            if times == 1:
-                self.__analyse_for_once(lon, lat, teq, tau)
-
-            if times == 2:
-                self.__analyse_for_twice(lon, lat, teq, tau)
-
-        pass
-
-
-class SeismicConfig:
-    def __init__(self):
-        self.__earthquake_list = []  # [[latitudes: array, longitudes: array, time, tau], ...]
-
-    def add_earthquake(self, earthquake: list):
-        self.__earthquake_list.append(earthquake)
-
-        return self
-
-    def clear_earthquake(self):
-        self.__earthquake_list = []
-
-        return self
-
-
-class Seismic:
-    def __init__(self):
-        self.configuration = SeismicConfig()
-
-    def apply_to(self, grid: GRID):
         pass
 
 
 if __name__ == '__main__':
+    '''load GRACE L2 SH products'''
+    begin_date = datetime.date(2002, 1, 1)
+    end_date = datetime.date(2015, 12, 31)
+    institute = L2InstituteType.CSR
+    lmax = 60
+
+    print('loading files...')
+    load = LoadL2SH()
+
+    load.configuration.set_begin_date(begin_date)
+    load.configuration.set_end_date(end_date)
+    load.configuration.set_institute(institute)
+    load.configuration.set_lmax(lmax)
+
+    shc, dates = load.get_shc(with_dates=True)
+
+    ave_dates_GRACE = TimeTool.get_average_dates(*dates)
+    shc.de_background()
+    '''end of loading files'''
+
+    grid_space = 1
+    grid = shc.to_grid(grid_space)
+
+    seis = Seismic()
+    seis.configuration.set_times(ave_dates_GRACE)
+    seis.configuration.set_earthquakes(FileTool.get_project_dir('data/earthquake/earthquakes.json'))
+
+    grid_data_before = grid.data.copy()
+    seis.apply_to(grid)
+    grid_data_after = grid.data.copy()
+
+    plt.plot(grid_data_before[:, 125, 315])
+    plt.plot(grid_data_after[:, 125, 315])
+    plt.show()
+
     pass
