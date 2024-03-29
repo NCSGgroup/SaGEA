@@ -311,7 +311,7 @@ class LoadL2SH:
         self.configuration = config
         return self
 
-    def get_shc(self, with_dates: bool = False):
+    def get_shc(self, with_dates: bool = False, get_sigma=False):
         """
         Obtain shc, or simultaneously obtain the corresponding dates.
         If dates is obtained, a tuple will be returned, where the 1st element is shc,
@@ -329,7 +329,10 @@ class LoadL2SH:
 
         for i in range(len(filepath_list)):
             load = LoadL2SHSingleFile(filepath_list[i], lmax=self.configuration.lmax)
-            this_shc = load.get_shc()
+            if get_sigma:
+                this_shc = load.get_sigma_shc()
+            else:
+                this_shc = load.get_shc()
 
             if shc is None:
                 shc = this_shc
