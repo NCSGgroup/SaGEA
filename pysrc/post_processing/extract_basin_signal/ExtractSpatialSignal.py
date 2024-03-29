@@ -3,6 +3,7 @@ from pathlib import Path
 
 import numpy as np
 
+from pysrc.auxiliary.core_data_class.CoreGRID import CoreGRID
 from pysrc.data_class.DataClass import GRID
 from pysrc.post_processing.extract_basin_signal.ExtractSpatialSignalConfig import ExtractSpatialSignalConfig
 
@@ -13,15 +14,17 @@ from pysrc.post_processing.harmonic.Harmonic import Harmonic
 
 class ExtractSpatial:
     def __init__(self):
-        self._configuration = ExtractSpatialSignalConfig()
+        self.configuration = ExtractSpatialSignalConfig()
 
         self.basin = None
         self.signal = None
 
+        self.weight = None
+
         self.radius_earth = GeoConstants.radius_earth
 
     def config(self, config: ExtractSpatialSignalConfig):
-        self._configuration = config
+        self.configuration = config
 
         return self
 
@@ -39,7 +42,7 @@ class ExtractSpatial:
             basin = self.__load_SHC_to_basin(basin)
 
         basin_shape = np.shape(basin)
-        assert basin_shape == (len(self._configuration.lat_range), len(self._configuration.lon_range))
+        assert basin_shape == (len(self.configuration.lat_range), len(self.configuration.lon_range))
 
         self.basin = basin
         return self
@@ -47,7 +50,7 @@ class ExtractSpatial:
     def __load_SHC_to_basin(self, path: Path):
         lmax = 60
         clm_basin, slm_basin = load_SH_simple(path, key='', lmax=lmax, lmcs_in_queue=(1, 2, 3, 4))
-        har = Harmonic(self._configuration.lat_range, self._configuration.lon_range, lmax)
+        har = Harmonic(self.configuration.lat_range, self.configuration.lon_range, lmax)
         grid_basin = har.synthesis_for_csqlm(np.array([clm_basin]), np.array([slm_basin]))[0]
 
         return grid_basin
@@ -56,13 +59,23 @@ class ExtractSpatial:
         """
         :param grid: 2d-array of gridded signal or 3d-array for series
         """
-        if type(grid) is GRID:
+        if issubclass(type(grid), CoreGRID):
             grid = grid.data
 
         if grid.ndim == 2:
             grid = np.array([grid])
 
         self.signal = grid
+        return self
+
+    def set_weight(self, grid: np.ndarray or GRID):
+        if issubclass(type(grid), CoreGRID):
+            grid = grid.data
+
+        if grid.ndim == 2:
+            grid = np.array([grid])
+
+        self.weight = grid
         return self
 
     def get_sum(self):
@@ -80,12 +93,12 @@ class ExtractSpatial:
         basin_redistributed_pre = (self.basin[1:, :] + self.basin[:-1, :]) / 2
         basin_redistributed = (basin_redistributed_pre[:, 1:] + basin_redistributed_pre[:, :-1]) / 2
 
-        lon2d, lat2d = np.meshgrid(self._configuration.lon_range, self._configuration.lat_range)
+        lon2d, lat2d = np.meshgrid(self.configuration.lon_range, self.configuration.lat_range)
         lat2d_redistributed_pre = (lat2d[1:, :] + lat2d[:-1, :]) / 2
         lat2d_redistributed = (lat2d_redistributed_pre[:, 1:] + lat2d_redistributed_pre[:, :-1]) / 2
 
-        delta_lat = np.abs(self._configuration.lat_range[1:] - self._configuration.lat_range[:-1])
-        delta_lon = np.abs(self._configuration.lon_range[1:] - self._configuration.lon_range[:-1])
+        delta_lat = np.abs(self.configuration.lat_range[1:] - self.configuration.lat_range[:-1])
+        delta_lon = np.abs(self.configuration.lon_range[1:] - self.configuration.lon_range[:-1])
 
         delta_lon2d, delta_lat2d = np.meshgrid(delta_lon, delta_lat)
         d_omega = self.radius_earth ** 2 * np.sin(lat2d_redistributed) * delta_lon2d * delta_lat2d
@@ -97,22 +110,28 @@ class ExtractSpatial:
         Calculate the weighted average of signals in the basin, using sine co-latitude of each grid point as the weight.
         """
 
-        lon2d, lat2d = np.meshgrid(self._configuration.lon_range, self._configuration.lat_range)
+        lon2d, lat2d = np.meshgrid(self.configuration.lon_range, self.configuration.lat_range)
         sin_theta = np.sin(lat2d)
 
-        return np.sum(self.signal * sin_theta * self.basin) / np.sum(sin_theta * self.basin)
+        if self.weight is None:
+            weight = np.ones_like(self.signal)
+        else:
+            weight = self.weight
+
+        return np.sum(self.signal * sin_theta * weight * self.basin, axis=(1, 2)) / np.sum(
+            sin_theta * weight * self.basin, axis=(1, 2))
 
     def get_area(self):
         """calculate area of basin"""
         basin_redistributed_pre = (self.basin[1:, :] + self.basin[:-1, :]) / 2
         basin_redistributed = (basin_redistributed_pre[:, 1:] + basin_redistributed_pre[:, :-1]) / 2
 
-        lon2d, lat2d = np.meshgrid(self._configuration.lon_range, self._configuration.lat_range)
+        lon2d, lat2d = np.meshgrid(self.configuration.lon_range, self.configuration.lat_range)
         lat2d_redistributed_pre = (lat2d[1:, :] + lat2d[:-1, :]) / 2
         lat2d_redistributed = (lat2d_redistributed_pre[:, 1:] + lat2d_redistributed_pre[:, :-1]) / 2
 
-        delta_lat = np.abs(self._configuration.lat_range[1:] - self._configuration.lat_range[:-1])
-        delta_lon = np.abs(self._configuration.lon_range[1:] - self._configuration.lon_range[:-1])
+        delta_lat = np.abs(self.configuration.lat_range[1:] - self.configuration.lat_range[:-1])
+        delta_lon = np.abs(self.configuration.lon_range[1:] - self.configuration.lon_range[:-1])
 
         delta_lon2d, delta_lat2d = np.meshgrid(delta_lon, delta_lat)
         d_omega = self.radius_earth ** 2 * np.sin(lat2d_redistributed) * delta_lon2d * delta_lat2d
