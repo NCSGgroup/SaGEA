@@ -7,7 +7,7 @@ from pysrc.auxiliary.aux_tool.TimeTool import TimeTool
 from pysrc.data_class.DataClass import GRID
 
 
-class SeismicConfig:
+class SeismicCorrectionConfig:
     def __init__(self):
         self.__earthquake_list = None
         # dict, {'name': {'lat_range': [., .], 'lon_range': [., .], 'teq': [. ,], 'tau': [. ,], }}
@@ -51,9 +51,9 @@ class SeismicConfig:
         return self.__times
 
 
-class Seismic:
+class SeismicCorrection:
     def __init__(self):
-        self.configuration = SeismicConfig()
+        self.configuration = SeismicCorrectionConfig()
 
     def __get_year_fractions(self):
         times_list = self.configuration.get_times()  # list datetime.date
@@ -242,7 +242,7 @@ if __name__ == '__main__':
     grid_space = 1
     grid = shc.to_grid(grid_space)
 
-    seis = Seismic()
+    seis = SeismicCorrection()
     seis.configuration.set_times(ave_dates_GRACE)
     seis.configuration.set_earthquakes(FileTool.get_project_dir('data/earthquake/earthquakes.json'))
 
