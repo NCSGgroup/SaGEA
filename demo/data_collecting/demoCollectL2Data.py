@@ -11,10 +11,7 @@ def demo_collect_L2_SH():
     json_path = FileTool.get_project_dir() / 'setting/data_collection/CollectL2Data.json'
     col.config(preset=json_path)
 
-    # col.configuration.set_update_mode(True)
-    # col.configuration.set_product_type(L2ProductType.GAC)
-    # col.configuration.set_beginning_date('2002-4')
-    # col.configuration.set_ending_date('2015-12')
+    col.configuration.set_max_relink_times(999)
     col.run()
 
 

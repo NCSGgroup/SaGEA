@@ -26,6 +26,8 @@ class CollectL2SHConfig:
         self.ending_date = datetime.date(2002, 12, 31)
         self.update_mode = False
 
+        self.__max_relink_time = 3
+
     def set_server(self, server: L2DataServer):
         self.server = server
         return self
@@ -123,6 +125,13 @@ class CollectL2SHConfig:
 
         return self
 
+    def set_max_relink_times(self, times):
+        self.__max_relink_time = times
+        return self
+
+    def get_max_relink_times(self):
+        return self.__max_relink_time
+
     def __str__(self):
         """
 
@@ -148,14 +157,14 @@ class CollectL2SH:
         :param preset: a standardized class of CollectL2ProductConfig or pathlib.Path;
                         a default presets of class CollectL2ProductConfig would be used if presets got None.
         """
-        self._ftp = None
-
-        self.relink_time = 0
-        self.max_relink_time = 3
-        self.sleep_seconds_before_relink = 5
-
         # in form of an instantiated class CollectL2ProductConfig
         self.configuration = CollectL2SHConfig()
+
+        self._ftp = None
+
+        self.__max_relink_time = self.configuration.get_max_relink_times()
+        self.__relink_time = 0
+        self.__sleep_seconds_before_relink = 5
 
         if preset is not None:
             self.config(preset)
@@ -205,7 +214,14 @@ class CollectL2SH:
     def _get_remote_l2dir(self):
         if self.configuration.server == L2DataServer.GFZ:
             sat_str = self.configuration.satellite.name.lower().replace('_', '-')
-            path = Path(sat_str) / 'Level-2' / self.configuration.institute.name / self.configuration.release.name
+
+            if self.configuration.release.name in ('RL061', 'RL062'):
+                path = Path(
+                    sat_str) / 'Level-2' / self.configuration.institute.name / self.configuration.release.name.replace(
+                    'RL06', 'RL06.')
+            else:
+                path = Path(
+                    sat_str) / 'Level-2' / self.configuration.institute.name / self.configuration.release.name
 
         elif self.configuration.server == L2DataServer.ITSG:
             path = Path('outgoing/ITSG/GRACE')
@@ -259,11 +275,10 @@ class CollectL2SH:
                     ('UTCSR', 'GFZOP', 'JPLEM').index(matches[4])
                 ],
                 product_id=matches[5],
-                product_release=(L2Release.RL06.name,)[
-                    ('0600',).index(matches[6])
+                product_release=(L2Release.RL06.name, L2Release.RL061.name, L2Release.RL062.name,)[
+                    ('0600', '0601', '0602',).index(matches[6])
                 ]
             )
-
 
         elif self.configuration.server == L2DataServer.ITSG:
             regular_pattern = r'ITSG-(.*)_(n\d{2})_(\d{4})-(\d{2}).gfc'
@@ -310,40 +325,40 @@ class CollectL2SH:
             dir_temp.mkdir(parents=True)
 
         if self.configuration.server == L2DataServer.GFZ:
-            for relink_time in range(self.max_relink_time):
+            for relink_time in range(self.__max_relink_time):
                 try:
                     self._run_once_for_server_gfz()
 
                 except Exception as e:
-                    self.relink_time += 1
-                    if self.relink_time >= self.max_relink_time:
-                        raise Exception(f'The relinking time has reached to the maximum ({self.max_relink_time}), '
+                    self.__relink_time += 1
+                    if self.__relink_time >= self.__max_relink_time:
+                        raise Exception(f'The relinking time has reached to the maximum ({self.__max_relink_time}), '
                                         f'please check.')
 
-                    print(f'There were some issues: "{e}", relinking for the {self.relink_time}th time...')
+                    print(f'There were some issues: "{e}", relinking for the {self.__relink_time}th time...')
                     self._ftp.quit()
 
-                    time.sleep(self.sleep_seconds_before_relink)
+                    time.sleep(self.__sleep_seconds_before_relink)
                     self.configuration.set_update_mode(True)
 
                 else:
                     break
 
         elif self.configuration.server == L2DataServer.ITSG:
-            for relink_time in range(self.max_relink_time):
+            for relink_time in range(self.__max_relink_time):
                 try:
                     self._run_once_for_server_itsg()
 
                 except Exception as e:
-                    self.relink_time += 1
-                    if self.relink_time >= self.max_relink_time:
-                        raise Exception(f'The relinking time has reached to the maximum ({self.max_relink_time}), '
+                    self.__relink_time += 1
+                    if self.__relink_time >= self.__max_relink_time:
+                        raise Exception(f'The relinking time has reached to the maximum ({self.__max_relink_time}), '
                                         f'please check.')
 
-                    print(f'There were some issues: "{e}", relinking for the {self.relink_time}th time...')
+                    print(f'There were some issues: "{e}", relinking for the {self.__relink_time}th time...')
                     self._ftp.quit()
 
-                    time.sleep(self.sleep_seconds_before_relink)
+                    time.sleep(self.__sleep_seconds_before_relink)
                     self.configuration.set_update_mode(True)
 
                 else:

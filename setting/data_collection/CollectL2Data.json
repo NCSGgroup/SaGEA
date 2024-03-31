@@ -1,11 +1,11 @@
 {
   "server": "GFZ",
-  "satellite": "GRACE",
-  "product_type": "GAD",
+  "satellite": "GRACE_FO",
+  "product_type": "GAA",
   "institute": "GFZ",
-  "release": "RL06",
+  "release": "RL061",
 
-  "beginning_date": "2002-04",
-  "ending_date": "2017-10",
+  "beginning_date": "2017-01",
+  "ending_date": "2023-12",
   "update_mode": "on"
 }
