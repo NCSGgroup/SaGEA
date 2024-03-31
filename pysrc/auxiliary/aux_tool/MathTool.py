@@ -491,17 +491,30 @@ class MathTool:
             return MathTool.dot_for_more(np.dot(mat0, mat1), mat[2:])
 
     @staticmethod
-    def curve_fit(function, t, *y):
-        A = MathTool.get_design_matrix(function, t)
-        AT = A.T
-        ATA_I = np.linalg.inv(np.dot(AT, A))
-        A_ginv = np.dot(ATA_I, AT)
-        A_ginv_A_ginv_T = np.dot(A_ginv, A_ginv.T)
+    def curve_fit(function, t, *y, weight=None):
+        """
+        if weight is None, OLS;
+        else, WLS.
+        """
 
         if len(y) == 1:
             y = y[0].reshape(-1, 1)
         else:
             y = np.vstack(y)
+
+        A = MathTool.get_design_matrix(function, t)
+
+        if weight is not None:
+            assert len(t) == len(weight)
+            D = np.diag(np.sqrt(weight))
+            D_I = np.linalg.inv(D)
+            A = D_I @ A
+            y = D_I @ y
+
+        AT = A.T
+        ATA_I = np.linalg.inv(np.dot(AT, A))
+        A_ginv = np.dot(ATA_I, AT)
+        A_ginv_A_ginv_T = np.dot(A_ginv, A_ginv.T)
 
         results = np.dot(A_ginv, y)
 
