@@ -507,9 +507,8 @@ class MathTool:
         if weight is not None:
             assert len(t) == len(weight)
             D = np.diag(np.sqrt(weight))
-            D_I = np.linalg.inv(D)
-            A = D_I @ A
-            y = D_I @ y
+            A = D @ A
+            y = D @ y
 
         AT = A.T
         ATA_I = np.linalg.inv(np.dot(AT, A))

@@ -140,9 +140,9 @@ def demo():
 
     y_noise = np.random.randn(len(year_fraction))
 
-    sigma = np.linspace(1.2, 0.3, len(y_noise))
+    sigma = np.linspace(2.2, 0.1, len(y_noise))
     y_noise *= sigma
-    weight = sigma ** 2 / np.sum(sigma ** 2)
+    weight = 1 / sigma ** 2
 
     wls = WLSFor1d()
     wls.setSignals(year_fraction, y + y_noise, weight=None)
