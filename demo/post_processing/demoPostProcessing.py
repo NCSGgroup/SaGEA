@@ -749,6 +749,9 @@ class PostProcessing:
 
         return self.time_series_ewh
 
+    def get_filtered_grids(self):
+        return self.filtered_grid
+
 
 def demo():
     dates = [
@@ -796,16 +799,23 @@ def demo():
     pp.filter()
     pp.shc_to_grid(field_type=FieldPhysicalQuantity.EWH)  # synthesis harmonic to (EWH) grid
 
-    pp.basin_average()
-    pp.correct_leakage()
+    grids = pp.get_filtered_grids()
 
-    times = pp.get_year_fraction()
-    ewh = pp.get_ewh()
+    plot_grids(
+        grids.data[:4],
+        *MathTool.get_lat_lon_degree(pp.harmonic.lat, pp.harmonic.lon),
+    )
 
-    plt.plot(times, ewh[0], label='uncorrected')
-    plt.plot(times, ewh[1], label='corrected')
-    plt.legend()
-    plt.show()
+    # pp.basin_average()
+    # pp.correct_leakage()
+    #
+    # times = pp.get_year_fraction()
+    # ewh = pp.get_ewh()
+    #
+    # plt.plot(times, ewh[0], label='uncorrected')
+    # plt.plot(times, ewh[1], label='corrected')
+    # plt.legend()
+    # plt.show()
 
 
 def demo_temp():
