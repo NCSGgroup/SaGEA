@@ -2,7 +2,7 @@ import pathlib
 import warnings
 
 from pysrc.data_class.DataClass import SHC
-from pysrc.auxiliary.load_file.LoadL2SH import load_SH_simple
+from pysrc.auxiliary.load_file.LoadL2SH import load_SHC
 from pysrc.auxiliary.preference.EnumClasses import GIAModel
 from pysrc.auxiliary.aux_tool.FileTool import FileTool
 
@@ -55,7 +55,7 @@ class LoadGIA:
         gia_filepath = self.configuration.get_filepath()
         lmax = self.configuration.get_lmax()
 
-        clm, slm = load_SH_simple(gia_filepath, key='', lmax=lmax, lmcs_in_queue=(1, 2, 3, 4))
+        clm, slm = load_SHC(gia_filepath, key='', lmax=lmax, lmcs_in_queue=(1, 2, 3, 4))
         shc = SHC(clm, slm)
 
         return shc

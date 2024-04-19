@@ -12,7 +12,7 @@ from pysrc.auxiliary.aux_tool.TimeTool import TimeTool
 from pysrc.data_class.DataClass import SHC
 
 
-def load_SH_simple(filepath: Path, key: str, lmax: int, lmcs_in_queue=None):
+def load_SHC(*filepath, key: str, lmax: int, lmcs_in_queue=None):
     """
 
     :param filepath: path of SH file
@@ -21,49 +21,60 @@ def load_SH_simple(filepath: Path, key: str, lmax: int, lmcs_in_queue=None):
     :param lmcs_in_queue: iter, Number of columns where degree l, order m, coefficient clm, and slm are located.
     :return: 2d tuple, whose elements are clm and slm in form of 2d array.
     """
-
-    def are_all_num(x: list):
-        for i in lmcs_in_queue:
-            if x[i - 1].replace('e', '').replace('E', '').replace('E', '').replace('E', '').replace('-', '').replace(
+    if len(filepath) == 1:
+        def are_all_num(x: list):
+            for i in lmcs_in_queue:
+                if x[i - 1].replace('e', '').replace('E', '').replace('E', '').replace('E', '').replace('-',
+                                                                                                        '').replace(
                     '+', '').replace('.', '').isnumeric():
-                pass
-            else:
-                return False
+                    pass
+                else:
+                    return False
 
-        return True
+            return True
 
-    if lmcs_in_queue is None:
-        lmcs_in_queue = [2, 3, 4, 5]
+        if lmcs_in_queue is None:
+            lmcs_in_queue = [2, 3, 4, 5]
 
-    l_queue = lmcs_in_queue[0]
-    m_queue = lmcs_in_queue[1]
-    c_queue = lmcs_in_queue[2]
-    s_queue = lmcs_in_queue[3]
+        l_queue = lmcs_in_queue[0]
+        m_queue = lmcs_in_queue[1]
+        c_queue = lmcs_in_queue[2]
+        s_queue = lmcs_in_queue[3]
 
-    mat_shape = (lmax + 1, lmax + 1)
-    clm, slm = np.zeros(mat_shape), np.zeros(mat_shape)
+        mat_shape = (lmax + 1, lmax + 1)
+        clm, slm = np.zeros(mat_shape), np.zeros(mat_shape)
 
-    with open(filepath) as f:
-        txt_list = f.readlines()
-        for i in range(len(txt_list)):
-            if txt_list[i].startswith(key):
-                this_line = txt_list[i].split()
+        with open(filepath[0]) as f:
+            txt_list = f.readlines()
+            for i in range(len(txt_list)):
+                if txt_list[i].startswith(key):
+                    this_line = txt_list[i].split()
 
-                # if len(this_line) == 4 and are_all_num(this_line):
-                if are_all_num(this_line):
-                    l = int(this_line[l_queue - 1])
-                    if l > lmax:
+                    # if len(this_line) == 4 and are_all_num(this_line):
+                    if are_all_num(this_line):
+                        l = int(this_line[l_queue - 1])
+                        if l > lmax:
+                            continue
+
+                        m = int(this_line[m_queue - 1])
+
+                        clm[l, m] = float(this_line[c_queue - 1])
+                        slm[l, m] = float(this_line[s_queue - 1])
+
+                    else:
                         continue
 
-                    m = int(this_line[m_queue - 1])
+        return clm, slm
 
-                    clm[l, m] = float(this_line[c_queue - 1])
-                    slm[l, m] = float(this_line[s_queue - 1])
+    else:
+        cqlm, sqlm = [], []
+        for i in range(len(filepath)):
+            clm, slm = load_SHC(filepath[i], key=key, lmax=lmax, lmcs_in_queue=lmcs_in_queue)
 
-                else:
-                    continue
+            cqlm.append(clm)
+            sqlm.append(slm)
 
-    return clm, slm
+        return np.array(cqlm), np.array(sqlm)
 
 
 class LoadL2SHSingleFile:
@@ -372,7 +383,7 @@ class LoadL2SH:
                     this_filepath = filelist_this_year[i]
                     this_filename = this_filepath.name
 
-                    if self.configuration.institute in (L2InstituteType.CSR, L2InstituteType.GFZ, L2InstituteType.GFZ):
+                    if self.configuration.institute in (L2InstituteType.CSR, L2InstituteType.GFZ, L2InstituteType.JPL):
                         year_day_pattern = r'[A-Z]{3}-2_(\d{7})-(\d{7})'
                         beginning_year_day, ending_year_day = re.search(year_day_pattern, this_filename).groups()
 

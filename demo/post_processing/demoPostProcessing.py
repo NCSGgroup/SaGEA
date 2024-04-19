@@ -6,6 +6,7 @@ import re
 import matplotlib.pyplot as plt
 import numpy as np
 
+from pysrc.auxiliary.scripts.PlotGrids import plot_grids
 from pysrc.data_class.DataClass import GRID
 from pysrc.data_class.DataClass import SHC
 from pysrc.auxiliary.load_file.LoadGIA import LoadGIA
@@ -21,7 +22,7 @@ from pysrc.auxiliary.aux_tool.TimeTool import TimeTool
 from pysrc.post_processing.GIA_correction.GIACorrectionSpectral import GIACorrectionSpectral
 from pysrc.post_processing.Love_number.LoveNumber import LoveNumber
 from pysrc.post_processing.convert_field_physical_quantity.ConvertSHC import ConvertSHC, FieldPhysicalQuantity
-from pysrc.auxiliary.load_file.LoadL2SH import LoadL2SH, load_SH_simple
+from pysrc.auxiliary.load_file.LoadL2SH import LoadL2SH, load_SHC
 from pysrc.post_processing.filter.GetSHCFilter import get_shc_decorrelation, get_shc_filter
 from pysrc.post_processing.leakage.BaseModelDriven import ModelDriven
 from pysrc.post_processing.leakage.BufferZone import BufferZone
@@ -39,6 +40,8 @@ from pysrc.post_processing.replace_low_deg.ReplaceLowDegree import ReplaceLowDeg
 
 class PostProcessingConfig:
     def __init__(self):
+        self.__GSM_local_dir = ''
+
         self.__begin_date = datetime.date(2005, 1, 1)
         self.__end_date = datetime.date(2015, 12, 31)
         self.__basin = BasinName.Amazon
@@ -82,7 +85,8 @@ class PostProcessingConfig:
         else:
             return -1
 
-        assert ({'begin_date',
+        assert ({'GSM_from_local_dir',
+                 'begin_date',
                  'end_date',
                  'basin',
                  'GRACE_institute',
@@ -100,6 +104,7 @@ class PostProcessingConfig:
                  'leakage_method',
                  'GIA_model'} <= set(dict_from_jason.keys()))
 
+        self.set_gsm_local_dir(dict_from_jason['GSM_from_local_dir'])
         self.set_begin_date(dict_from_jason['begin_date'])
         self.set_end_date(dict_from_jason['end_date'])
         self.set_lmax(dict_from_jason['lmax'])
@@ -140,6 +145,18 @@ class PostProcessingConfig:
 
     def export_json(self, filepath: str or pathlib.WindowsPath):
         pass
+
+    def set_gsm_local_dir(self, path):
+        if path == '':
+            pass
+
+        else:
+            self.__GSM_local_dir = FileTool.get_project_dir(sub=path)
+
+        return self
+
+    def get_gsm_local_dir(self):
+        return self.__GSM_local_dir
 
     def set_begin_date(self, d):
 
@@ -341,7 +358,9 @@ class PostProcessing:
     def __init__(self):
         self.configuration = PostProcessingConfig()
 
-        self.times = None
+        self.dates_begin = None
+        self.dates_end = None
+        self.dates = None
         self.time_series_ewh = []
 
         self.shc_GRACE = None
@@ -371,7 +390,7 @@ class PostProcessing:
 
     def load_files(self):
         self.__load_basin()
-        self.__load_GRACE_shc_and_replace_low_degree()
+        self.__load_GRACE_shc()
 
         return self
 
@@ -384,7 +403,7 @@ class PostProcessing:
         if isinstance(basin, BasinName):
             basin_name = basin.name
             basin_shc_filepath = FileTool.get_project_dir() / f'data/basin_mask/{basin_name}_maskSH.dat'
-            basin_clm, basin_slm = load_SH_simple(basin_shc_filepath, key='', lmcs_in_queue=(1, 2, 3, 4), lmax=lmax)
+            basin_clm, basin_slm = load_SHC(basin_shc_filepath, key='', lmcs_in_queue=(1, 2, 3, 4), lmax=lmax)
             shc_basin = SHC(basin_clm, basin_slm)
 
             basin_map = self.harmonic.synthesis(shc_basin).data
@@ -412,27 +431,57 @@ class PostProcessing:
 
         return self
 
-    def __load_GRACE_shc_and_replace_low_degree(self, background="average"):
+    def __load_GRACE_shc(self):
         """
         :param background: average, None or class SHC
         """
 
-        '''load GRACE L2 SH products'''
-        begin_date, end_date = self.configuration.get_begin_date(), self.configuration.get_end_date()
+        load_gsm_from_custom_dir = self.configuration.get_gsm_local_dir()
+        if load_gsm_from_custom_dir == '':
+
+            begin_date, end_date = self.configuration.get_begin_date(), self.configuration.get_end_date()
+            institute = self.configuration.get_GRACE_institute()
+            lmax = self.configuration.get_lmax()
+
+            load = LoadL2SH()
+
+            load.configuration.set_begin_date(begin_date)
+            load.configuration.set_end_date(end_date)
+            load.configuration.set_institute(institute)
+            load.configuration.set_lmax(lmax)
+
+            shc, dates = load.get_shc(with_dates=True)
+            ave_dates_GRACE = TimeTool.get_average_dates(*dates)
+
+            self.dates = ave_dates_GRACE
+            self.dates_begin = dates[0]
+            self.dates_end = dates[1]
+            self.shc_GRACE = shc
+
+        else:
+            assert type(load_gsm_from_custom_dir) is pathlib.WindowsPath
+
+            file_path = list(pathlib.Path.iterdir(load_gsm_from_custom_dir))
+            lmax = self.configuration.get_lmax()
+            key = 'GRCOF2'
+
+            cqlm, sqlm = load_SHC(*file_path, key=key, lmax=lmax, lmcs_in_queue=(2, 3, 4, 5))
+
+            self.shc_GRACE = SHC(cqlm, sqlm)
+
+        return self
+
+    def update_dates(self, dates, dates_begin, dates_end):
+        """require if load SHCs with customized path"""
+        self.dates = dates
+        self.dates_begin = dates_begin
+        self.dates_end = dates_end
+
+        return self
+
+    def replace_low_degree(self):
         institute = self.configuration.get_GRACE_institute()
-        lmax = self.configuration.get_lmax()
 
-        load = LoadL2SH()
-
-        load.configuration.set_begin_date(begin_date)
-        load.configuration.set_end_date(end_date)
-        load.configuration.set_institute(institute)
-        load.configuration.set_lmax(lmax)
-
-        shc, dates = load.get_shc(with_dates=True)
-        ave_dates_GRACE = TimeTool.get_average_dates(*dates)
-
-        '''load and replace low degrees'''
         degree1_or_not = 'degree1' in self.configuration.get_replace_low_degree_coefficients()
         degree1_file_id = self.configuration.get_degree1_file_id()
 
@@ -463,14 +512,12 @@ class PostProcessing:
         rep.configuration.set_replace_deg1(degree1_or_not).set_replace_c20(c20_or_not).set_replace_c30(c30_or_not)
         rep.set_low_degrees(low_degs)
 
-        shc = rep.apply_to(shc, dates[0], dates[1])
+        self.shc_GRACE = rep.apply_to(self.shc_GRACE, self.dates_begin, self.dates_end)
 
-        '''deduct background'''
-        if background is not None:
-            shc.de_background(background=None if background == 'average' else background)
+        return self
 
-        self.times = ave_dates_GRACE
-        self.shc_GRACE = shc
+    def deduct_background(self, background="average"):
+        self.shc_GRACE.de_background(background=None if background == 'average' else background)
 
         return self
 
@@ -485,7 +532,7 @@ class PostProcessing:
         shc_gia_trend = load_gia.get_shc()
 
         gia = GIACorrectionSpectral()
-        gia.configuration.set_times(self.times)
+        gia.configuration.set_times(self.dates)
         gia.configuration.set_gia_trend(shc_gia_trend)
 
         self.shc_GRACE = gia.apply_to(self.shc_GRACE)
@@ -591,7 +638,7 @@ class PostProcessing:
             leakage.configuration.set_model(noah_model)
             leakage.configuration.set_model_times(model_times)
 
-            leakage.configuration.set_GRACE_times(self.times)
+            leakage.configuration.set_GRACE_times(self.dates)
 
             for i in range(len(self.basin_map)):
                 this_basin_map = self.basin_map[i]
@@ -692,7 +739,7 @@ class PostProcessing:
         return self
 
     def get_year_fraction(self):
-        return TimeTool.convert_date_format(self.times,
+        return TimeTool.convert_date_format(self.dates,
                                             input_type=TimeTool.DateFormat.ClassDate,
                                             output_type=TimeTool.DateFormat.YearFraction)
 
@@ -704,15 +751,49 @@ class PostProcessing:
 
 
 def demo():
+    dates = [
+        datetime.date(2002, 4, 15),
+        datetime.date(2002, 5, 15),
+        datetime.date(2002, 8, 15),
+        datetime.date(2002, 9, 15),
+        datetime.date(2002, 10, 15),
+        datetime.date(2002, 11, 15),
+        datetime.date(2002, 12, 15),
+    ]
+
+    dates_begin = [
+        datetime.date(2002, 4, 1),
+        datetime.date(2002, 5, 1),
+        datetime.date(2002, 8, 1),
+        datetime.date(2002, 9, 1),
+        datetime.date(2002, 10, 1),
+        datetime.date(2002, 11, 1),
+        datetime.date(2002, 12, 1),
+    ]
+
+    dates_end = [
+        datetime.date(2002, 4, 28),
+        datetime.date(2002, 5, 28),
+        datetime.date(2002, 8, 28),
+        datetime.date(2002, 9, 28),
+        datetime.date(2002, 10, 28),
+        datetime.date(2002, 11, 28),
+        datetime.date(2002, 12, 28),
+    ]
+
     pp = PostProcessing()
     jsonpath = FileTool.get_project_dir() / 'setting/post_processing/PostProcessing.json'
     pp.configuration.set_from_json(jsonpath)
 
     pp.prepare()
-    pp.load_files()  # load GRACE SHC, and replace low-degrees
-    pp.correct_gia()  # GIA correction
-    pp.de_correlation()  # de-correlation filter
-    pp.filter()  # low-pass filter
+    pp.load_files()
+    pp.update_dates(dates, dates_begin, dates_end)  # require if load SHCs with customized path
+
+    pp.replace_low_degree()
+    pp.deduct_background()
+    pp.correct_gia()
+    pp.de_correlation()
+    pp.filter()
     pp.shc_to_grid(field_type=FieldPhysicalQuantity.EWH)  # synthesis harmonic to (EWH) grid
 
     pp.basin_average()
@@ -734,14 +815,14 @@ def demo_temp():
 
     pp.prepare()
 
-    c_cra, s_cra = load_SH_simple(FileTool.get_project_dir('temp/zwh/CRA.gfc'), key='gfc', lmcs_in_queue=(2, 3, 4, 5),
-                                  lmax=60)
-    c_csr, s_csr = load_SH_simple(FileTool.get_project_dir('temp/zwh/CSR.gfc'), key='gfc', lmcs_in_queue=(2, 3, 4, 5),
-                                  lmax=60)
+    c_cra, s_cra = load_SHC(FileTool.get_project_dir('temp/zwh/CRA.gfc'), key='gfc', lmcs_in_queue=(2, 3, 4, 5),
+                            lmax=60)
+    c_csr, s_csr = load_SHC(FileTool.get_project_dir('temp/zwh/CSR.gfc'), key='gfc', lmcs_in_queue=(2, 3, 4, 5),
+                            lmax=60)
 
-    c_gif48, s_gif48 = load_SH_simple(FileTool.get_project_dir('data/auxiliary/GIF48.gfc'), key='gfc',
-                                      lmcs_in_queue=(2, 3, 4, 5),
-                                      lmax=60)
+    c_gif48, s_gif48 = load_SHC(FileTool.get_project_dir('data/auxiliary/GIF48.gfc'), key='gfc',
+                                lmcs_in_queue=(2, 3, 4, 5),
+                                lmax=60)
 
     cqlm, sqlm = np.array([c_cra, c_csr]), np.array([s_cra, s_csr])
     shc = SHC(cqlm, sqlm)
@@ -800,6 +881,6 @@ def demo_temp():
 
 
 if __name__ == '__main__':
-    demo_temp()
+    demo()
     # a = np.load(FileTool.get_project_dir('temp/zwh/geoid_height_GS300.npz'))
     pass

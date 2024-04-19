@@ -4,7 +4,7 @@ import numpy as np
 
 from pysrc.data_class.DataClass import GRID
 from pysrc.data_class.DataClass import SHC
-from pysrc.auxiliary.load_file.LoadL2SH import load_SH_simple
+from pysrc.auxiliary.load_file.LoadL2SH import load_SHC
 from pysrc.auxiliary.aux_tool.MathTool import MathTool
 from pysrc.post_processing.filter.Base import SHCFilter
 from pysrc.post_processing.harmonic.Harmonic import Harmonic
@@ -31,7 +31,7 @@ class BufferZoneConfig:
 
         if type(basin) is pathlib.WindowsPath:
             lmax = self.harmonic.lmax
-            basin_clm, basin_slm = load_SH_simple(basin, key='', lmax=lmax, lmcs_in_queue=(1, 2, 3, 4))
+            basin_clm, basin_slm = load_SHC(basin, key='', lmax=lmax, lmcs_in_queue=(1, 2, 3, 4))
             self.basin_map = har.synthesis(SHC(basin_clm, basin_slm)).data[0]
 
         elif type(basin) is np.ndarray:

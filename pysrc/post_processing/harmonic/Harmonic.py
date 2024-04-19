@@ -156,14 +156,14 @@ class Harmonic:
 def demo1():
     """synthesis/analysis for once"""
 
-    from pysrc.auxiliary.load_file.LoadL2SH import load_SH_simple
+    from pysrc.auxiliary.load_file.LoadL2SH import load_SHC
     from pysrc.auxiliary.aux_tool.FileTool import FileTool
 
     '''load shc'''
     lmax = 96
     spatial_resolution = 0.5
 
-    clm, slm = load_SH_simple(
+    clm, slm = load_SHC(
         FileTool.get_project_dir('data/auxiliary/GIF48.gfc'),
         key='gfc',
         lmax=lmax,
@@ -215,7 +215,7 @@ def demo2():
 def demo3():
     """synthesis/analysis for multi times"""
 
-    from pysrc.auxiliary.load_file.LoadL2SH import load_SH_simple
+    from pysrc.auxiliary.load_file.LoadL2SH import load_SHC
     from pysrc.auxiliary.aux_tool.FileTool import FileTool
 
     multi_times = 218
@@ -224,7 +224,7 @@ def demo3():
 
     '''load shc'''
 
-    clm, slm = load_SH_simple(
+    clm, slm = load_SHC(
         FileTool.get_project_dir('data/auxiliary/GIF48.gfc'),
         key='gfc',
         lmax=lmax,

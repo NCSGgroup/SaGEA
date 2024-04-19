@@ -6,7 +6,7 @@ import numpy as np
 from pysrc.data_class.DataClass import GRID
 from pysrc.data_class.DataClass import SHC
 from pysrc.auxiliary.aux_tool.MathTool import MathTool
-from pysrc.auxiliary.load_file.LoadL2SH import load_SH_simple
+from pysrc.auxiliary.load_file.LoadL2SH import load_SHC
 from pysrc.post_processing.filter.Base import SHCFilter
 from pysrc.post_processing.filter.Gaussian import Gaussian
 from pysrc.post_processing.harmonic.Harmonic import Harmonic
@@ -80,7 +80,7 @@ class ForwardModelingConfig:
 
         if type(basin) is pathlib.WindowsPath:
             lmax = self.__harmonic.lmax
-            basin_clm, basin_slm = load_SH_simple(basin, key='', lmax=lmax, lmcs_in_queue=(1, 2, 3, 4))
+            basin_clm, basin_slm = load_SHC(basin, key='', lmax=lmax, lmcs_in_queue=(1, 2, 3, 4))
             basin = har.synthesis(SHC(basin_clm, basin_slm)).data[0]
             basin[np.where(basin >= 0.5)] = 1
             basin[np.where(basin < 0.5)] = 0
@@ -101,7 +101,7 @@ class ForwardModelingConfig:
 
         if type(basin) is pathlib.WindowsPath:
             lmax = self.__harmonic.lmax
-            basin_clm, basin_slm = load_SH_simple(basin, key='', lmax=lmax, lmcs_in_queue=(1, 2, 3, 4))
+            basin_clm, basin_slm = load_SHC(basin, key='', lmax=lmax, lmcs_in_queue=(1, 2, 3, 4))
             basin = har.synthesis(SHC(basin_clm, basin_slm)).data[0]
             basin[np.where(basin >= 0.5)] = 1
             basin[np.where(basin < 0.5)] = 0
@@ -190,7 +190,7 @@ class ForwardModeling(Leakage):
 def demo1():
     """synthesis/analysis for once"""
     import time
-    from pysrc.auxiliary.load_file.LoadL2SH import load_SH_simple
+    from pysrc.auxiliary.load_file.LoadL2SH import load_SHC
     from pysrc.auxiliary.aux_tool.FileTool import FileTool
 
     '''load shc'''
@@ -198,7 +198,7 @@ def demo1():
     lmax = 60
     spatial_resolution = 1
 
-    clm, slm = load_SH_simple(
+    clm, slm = load_SHC(
         FileTool.get_project_dir('data/auxiliary/GIF48.gfc'),
         key='gfc',
         lmax=lmax,

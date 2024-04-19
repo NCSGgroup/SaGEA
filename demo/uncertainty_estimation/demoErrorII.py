@@ -9,7 +9,7 @@ from pysrc.auxiliary.aux_tool.MathTool import MathTool
 from pysrc.auxiliary.aux_tool.TimeTool import TimeTool
 from pysrc.auxiliary.load_file.LoadGIA import LoadGIA
 from pysrc.auxiliary.load_file.LoadL2LowDeg import LoadLowDegree
-from pysrc.auxiliary.load_file.LoadL2SH import LoadL2SH, load_SH_simple
+from pysrc.auxiliary.load_file.LoadL2SH import LoadL2SH, load_SHC
 from pysrc.auxiliary.preference.EnumClasses import L2InstituteType, L2LowDegreeType, L2LowDegreeFileID, \
     FieldPhysicalQuantity
 from pysrc.auxiliary.scripts.PlotGrids import plot_grids
@@ -87,7 +87,7 @@ def demo():
     shc = rep.apply_to(shc, dates[0], dates[1])
 
     '''deduct background'''
-    clm_bg, slm_bg = load_SH_simple(
+    clm_bg, slm_bg = load_SHC(
         FileTool.get_project_dir('data/auxiliary/GIF48.gfc'),
         key='gfc',
         lmax=60,

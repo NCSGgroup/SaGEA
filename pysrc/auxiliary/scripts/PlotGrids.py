@@ -299,8 +299,8 @@ def demo():
     lat, lon = MathTool.get_global_lat_lon_range(0.5)
     plot_grids(
         grid=np.array([grid1, grid1, grid1, grid1]), lat=lat, lon=lon,
-        vmin=[0, 0, -1, -1],
-        vmax=[30, 30, 1, 1],
+        vmin=(0,),
+        vmax=(1,),
         subtitle=('(a) Yang', '(b) Liu', '(a)-(b)', '(a)-(b)'),
         title='sigma EWH 200906 diag matrix GS300',
         projection=ccrs.Robinson(),
