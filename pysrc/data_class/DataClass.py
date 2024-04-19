@@ -1,3 +1,5 @@
+import pathlib
+
 import h5py
 import matplotlib.pyplot as plt
 import numpy as np
@@ -29,7 +31,7 @@ class SHC(CoreSHC):
 
 
 class GRID(CoreGRID):
-    def __init__(self, grid, lat, lon, option=0):
+    def __init__(self, grid, lat, lon, option=1):
         super().__init__(grid, lat, lon, option)
 
     def to_SHC(self, lmax=None):
@@ -47,6 +49,39 @@ class GRID(CoreGRID):
         shc = SHC(cqlm, sqlm)
 
         return shc
+
+    def to_file_xyz(self, filepath: pathlib.Path, overwrite=False, mask=None):
+        if not overwrite:
+            assert not filepath.exists()
+
+        assert filepath.name.endswith('.txt')
+
+        mask_flag = False
+        if mask is not None:
+            assert np.shape(mask) == np.shape(self.data)[1:]
+            assert len(mask[np.where(mask == 1)]) + len(mask[np.where(mask == 0)]) == len(mask.flatten())
+
+            mask_flag = True
+
+        grid_space = self.get_grid_space()
+
+        with open(filepath, 'w') as f:
+            for i in range(len(self.lat)):
+                lat = self.lat[i]
+                for j in range(len(self.lon)):
+                    lon = self.lon[j]
+
+                    lat_index, lon_index = MathTool.getGridIndex(lat, lon, grid_space)
+                    if mask_flag and mask[lat_index, lon_index] != 0:
+                        continue
+
+                    this_line = f'{round(lat, 3)} {round(lon, 3)}'
+                    for k in range(len(self.data)):
+                        this_line += f' {self.data[k][lat_index, lon_index]}'
+
+                    f.write(this_line + '\n')
+
+        return self
 
 
 if __name__ == '__main__':

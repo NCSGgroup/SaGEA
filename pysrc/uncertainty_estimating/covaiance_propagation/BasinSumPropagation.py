@@ -35,7 +35,7 @@ class BasinSumPropagation(ExtractSpectral):
         """
         basin_cs1d = MathTool.cs_combine_to_triangle_1d(self.basin_clm, self.basin_slm)
 
-        return (self.radius_earth ** 2) ** 2 * basin_cs1d @ self.cov_cs @ basin_cs1d.T
+        return (self.radius_earth ** 4) * basin_cs1d @ self.cov_cs @ basin_cs1d.T
 
     def get_average(self):
         """

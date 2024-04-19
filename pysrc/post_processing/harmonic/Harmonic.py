@@ -43,10 +43,10 @@ class Harmonic:
         # self.si = np.sin(self.lat) * np.pi / (2 * self.lmax + 1)
 
         # get Neumann weights
-        x_mat = np.array([np.cos(self.lat) ** i for i in range(self.nlat)])
-        r_vec = np.ones(self.nlat) * 2 / np.arange(1, self.nlat + 1, 1)
-        r_vec[np.arange(1, self.nlat + 1, 2)] = 0
-        self.wi = np.linalg.pinv(x_mat) @ r_vec
+        # x_mat = np.array([np.cos(self.lat) ** i for i in range(self.nlat)])
+        # r_vec = np.ones(self.nlat) * 2 / np.arange(1, self.nlat + 1, 1)
+        # r_vec[np.arange(1, self.nlat + 1, 2)] = 0
+        # self.wi = np.linalg.pinv(x_mat) @ r_vec
 
         m = np.arange(self.lmax + 1)
         self.g = m[:, None] @ self.lon[None, :]

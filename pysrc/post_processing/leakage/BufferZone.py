@@ -19,13 +19,13 @@ class BufferZoneConfig:
         self.harmonic = None
         self.basin_acreage = None
 
-    def set_harmonic(self, har: Harmonic):
-        self.harmonic = har
+    def set_harmonic(self, harmonic: Harmonic):
+        self.harmonic = harmonic
         return self
 
-    def set_basin(self, basin: SHC or pathlib.WindowsPath or np.ndarray):
+    def set_basin(self, basin: SHC or GRID or pathlib.WindowsPath or np.ndarray):
         assert self.harmonic is not None, "set harmonic before setting basin."
-
+        assert type(basin) in (SHC, GRID, pathlib.WindowsPath, np.ndarray)
 
         har = self.harmonic
 
@@ -38,8 +38,14 @@ class BufferZoneConfig:
             assert basin.ndim == 2
             self.basin_map = basin
 
-        else:
+        elif type(basin) is SHC:
             self.basin_map = har.synthesis(basin).data[0]
+
+        elif type(basin) is GRID:
+            self.basin_map = basin.data[0]
+
+        else:
+            assert False
 
         self.basin_acreage = MathTool.get_acreage(self.basin_map)
 
@@ -56,13 +62,20 @@ class BufferZone(Leakage):
         super().__init__()
         self.configuration = BufferZoneConfig()
 
-        self.buffered_basin_map = None
-
     def apply_to(self, grids):
-        self.buffered_basin_map = self.__get_buffered_basin()
+        buffered_basin_map = self.__get_buffered_basin()
 
-        f_filtered_in_buffer_zone = MathTool.global_integral(grids.data * self.buffered_basin_map)
+        f_filtered_in_buffer_zone = MathTool.global_integral(grids.data * buffered_basin_map)
         return f_filtered_in_buffer_zone
+
+    def get_buffer(self):
+        buffered_basin_map = self.__get_buffered_basin()
+        colat_rad, lon_rad = self.configuration.harmonic.lat, self.configuration.harmonic.lon
+        lat, lon = MathTool.get_lat_lon_degree(colat_rad, lon_rad)
+
+        buffered_basin_grid = GRID(buffered_basin_map, lat, lon)
+
+        return buffered_basin_grid
 
     def __get_buffered_basin(self):
         basin_bar = 1 - self.configuration.basin_map
@@ -107,9 +120,10 @@ if __name__ == '__main__':
     bfz.configuration.set_filter(shc_filter)
     bfz.configuration.set_basin(FileTool.get_project_dir('data/auxiliary/ocean360_grndline.sh'))
 
-    ocean = bfz.apply_to(0).buffered_basin_map
+    # ocean = bfz.apply_to(0).buffered_basin_map
+    ocean = bfz.get_buffer()
 
     plot_grids(
-        ocean,
+        ocean.data,
         lat, lon, 0, 1
     )

@@ -363,6 +363,19 @@ class MathTool:
         return theta, phi
 
     @staticmethod
+    def get_lat_lon_degree(theta, phi):
+        """
+        :param theta: co-latitude, geophysical coordinate in rad
+        :param phi: longitude, geophysical coordinate in rad
+        :return: latitude and longitude in degree
+        """
+
+        lat = 90. - theta * 180. / np.pi
+        lon = phi * 180. / np.pi
+
+        return lat, lon
+
+    @staticmethod
     def get_global_lat_lon_range(resolution):
         """
         get geophysical latitude and longitude range with a given spatial resolution, i.e., the grid space.
@@ -511,7 +524,8 @@ class MathTool:
             y = D @ y
 
         AT = A.T
-        ATA_I = np.linalg.inv(np.dot(AT, A))
+        # ATA_I = np.linalg.inv(np.dot(AT, A))
+        ATA_I = np.linalg.pinv(np.dot(AT, A))
         A_ginv = np.dot(ATA_I, AT)
         A_ginv_A_ginv_T = np.dot(A_ginv, A_ginv.T)
 
@@ -527,7 +541,7 @@ class MathTool:
         return results.T, var
 
     @staticmethod
-    def global_integral(grids, lat=None, lon=None):
+    def global_integral(grids, lat=None, lon=None, for_square=False):
         is_single = False
         if len(np.shape(grids)) == 2:
             grids = np.array([grids])
@@ -551,7 +565,10 @@ class MathTool:
 
         domega = np.sin(colat_rad) * dlat * dlon * radius_e ** 2
 
-        integral = np.einsum('pij,i->p', grids, domega)
+        if for_square:
+            integral = np.einsum('pij,i->p', grids, domega ** 2)
+        else:
+            integral = np.einsum('pij,i->p', grids, domega)
 
         if is_single:
             return integral[0]
@@ -581,7 +598,7 @@ class MathTool:
         return grid
 
     @staticmethod
-    def getGridIndex(lon, lat, gs):
+    def getGridIndex(lat, lon, gs):
         return int((lat + 90) / gs), int((lon + 180) / gs)
 
     @staticmethod
@@ -595,6 +612,10 @@ class MathTool:
         assert m <= n
 
         return int(n * (n + 1) / 2 + m)
+
+    @staticmethod
+    def shrink(data, rows, cols):
+        return data.reshape(rows, int(data.shape[0] / rows), cols, int(data.shape[1] / cols)).sum(axis=1).sum(axis=2)
 
 
 if __name__ == '__main__':

@@ -8,15 +8,17 @@ class CoreGRID:
     Attribute grid is the gridded signal, lat and lon are stored in unit [degree]
     """
 
-    def __init__(self, grid, lat, lon, option=0):
+    def __init__(self, grid, lat, lon, option=1):
         """
         To create a GRID object,
         one needs to specify the data (grid) and corresponding latitude range (lat) and longitude range (lon).
-        :param grid: 2d- or 3d-array gridded signal, index ((num) ,lat, lon)
+        :param grid: 2d- or 3d-array gridded signal, index ([num] ,lat, lon)
         :param lat: co-latitude in [rad] if option=0 else latitude in [degree]
         :param lon: longitude in [rad] if option=0 else longitude in [degree]
         :param option: 0 if colat and lon are in [rad]
         """
+        if np.ndim(grid) == 2:
+            grid = [grid]
 
         assert np.shape(grid)[-2:] == (len(lat), len(lon))
 
@@ -29,6 +31,8 @@ class CoreGRID:
         else:
             self.lat = lat
             self.lon = lon
+
+        pass
 
     def append(self, grid, lat=None, lon=None, option=0):
         """

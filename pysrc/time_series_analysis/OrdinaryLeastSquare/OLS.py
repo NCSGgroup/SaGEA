@@ -36,6 +36,9 @@ class OLSFor1d:
     def __init__(self):
         self.configuration = OLSConfig()
 
+        self.__times = None
+        self.__z = None
+
         self.__trend = None
 
         self.__annual_amplitude = None
@@ -64,8 +67,12 @@ class OLSFor1d:
         else:
             fit_function = fit_function_without_semiannual
 
-        fit_result = curve_fit(fit_function, times - times[0], values)
+        self.__times = times
+        fit_result = curve_fit(fit_function, times, values)
+        # fit_result = curve_fit(fit_function, times - times[0], values)
         z = fit_result[0][0]
+        self.__z = z
+
         sigma_z = fit_result[1]
 
         self.__trend = z[1]
@@ -124,6 +131,13 @@ class OLSFor1d:
             return self.__semiannual_phase, self.__sigma_semiannual_phase
         else:
             return self.__semiannual_phase
+
+    def get_fitting_signal(self):
+        if self.configuration.get_semiannual_switch():
+            return fit_function_with_semiannual(self.__times, *self.__z)
+
+        else:
+            return fit_function_without_semiannual(self.__times, *self.__z)
 
 
 class OLSForGrid:

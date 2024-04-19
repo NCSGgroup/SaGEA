@@ -113,13 +113,19 @@ class ExtractSpatial:
         lon2d, lat2d = np.meshgrid(self.configuration.lon_range, self.configuration.lat_range)
         sin_theta = np.sin(lat2d)
 
-        if self.weight is None:
-            weight = np.ones_like(self.signal)
-        else:
-            weight = self.weight
+        # if self.weight is None:
+        #     weight = np.ones_like(self.signal)
+        # else:
+        #     weight = self.weight
 
-        return np.sum(self.signal * sin_theta * weight * self.basin, axis=(1, 2)) / np.sum(
-            sin_theta * weight * self.basin, axis=(1, 2))
+        if self.weight is None:
+            return np.sum(self.signal * sin_theta * self.basin, axis=(1, 2)) / np.sum(
+                sin_theta * self.basin)
+        else:
+            # return np.sum(self.signal * sin_theta * self.weight * self.basin, axis=(1, 2)) / np.sum(
+            #     sin_theta * self.weight * self.basin, axis=(1, 2))
+            return np.sum(self.signal * sin_theta * self.weight * self.basin, axis=(1, 2)) / np.sum(
+                sin_theta * self.weight * self.basin, axis=(1, 2))
 
     def get_area(self):
         """calculate area of basin"""

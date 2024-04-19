@@ -37,6 +37,9 @@ class WLSFor1d:
     def __init__(self):
         self.configuration = WLSConfig()
 
+        self.__times = None
+        self.__z = None
+
         self.__trend = None
 
         self.__annual_amplitude = None
@@ -66,9 +69,12 @@ class WLSFor1d:
         else:
             fit_function = fit_function_without_semiannual
 
-        fit_result = curve_fit(fit_function, times - times[0], values, weight=weight)
+        fit_result = curve_fit(fit_function, times, values, weight=weight)
+        # fit_result = curve_fit(fit_function, times - times[0], values, weight=weight)
         z = fit_result[0][0]
+        self.__z = z
         sigma_z = fit_result[1]
+        self.__times = times
 
         self.__trend = z[1]
         self.__sigma_trend = np.sqrt(sigma_z[1, 1])
@@ -126,6 +132,13 @@ class WLSFor1d:
             return self.__semiannual_phase, self.__sigma_semiannual_phase
         else:
             return self.__semiannual_phase
+
+    def get_fitting_signal(self):
+        if self.configuration.get_semiannual_switch():
+            return fit_function_with_semiannual(self.__times, *self.__z)
+
+        else:
+            return fit_function_without_semiannual(self.__times, *self.__z)
 
 
 def demo():
