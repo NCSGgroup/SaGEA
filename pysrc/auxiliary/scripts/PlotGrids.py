@@ -8,17 +8,26 @@ import cmaps
 import matplotlib
 from matplotlib import pyplot as plt
 
+config = {
+    "font.family": 'serif',
+    "font.size": 16,
+    "mathtext.fontset": 'stix',
+    "font.serif": ['Times New Roman'],
+}
+matplotlib.rcParams.update(config)
 
-def plot_grids(grid: np.ndarray, lat, lon, vmin=None, vmax=None, central_longitude=None,
+
+def plot_grids(grid: np.ndarray, lat, lon, common_colorbar=False, projection=None, vmin=None, vmax=None,
                extent=None, subtitle=None, title=None, save=None):
     """
 
     :param grid: 2-d array grid or 3-d array grids
     :param lat: array, geophysical latitude in unit[degree]
     :param lon: array, geophysical longitude in unit[degree]
+    :param common_colorbar:
+    :param projection:
     :param vmin: num or list of num. num for single grid, list of same length with grids for multiple grids
     :param vmax: num or list of num. num for single grid, list of same length with grids for multiple grids
-    :param central_longitude:
     :param extent:
     :param subtitle: str or list of str. str for single grid, list of same length with grids for multiple grids
     :param title: str or list of str. str for single grid, list of same length with grids for multiple grids
@@ -33,7 +42,7 @@ def plot_grids(grid: np.ndarray, lat, lon, vmin=None, vmax=None, central_longitu
         grid = np.array([grid])
     ngrid = np.shape(grid)[0]
 
-    if type(vmin) in (list,):
+    if type(vmin) in (list, tuple,):
         pass
     else:
         vmin = [vmin] * ngrid
@@ -42,18 +51,17 @@ def plot_grids(grid: np.ndarray, lat, lon, vmin=None, vmax=None, central_longitu
     if subtitle is None:
         subtitle = ''
 
-    if type(subtitle) in (list,):
+    if type(subtitle) in (list, tuple,):
         pass
     else:
         subtitle = [subtitle] * ngrid
-
-    if central_longitude is None:
-        central_longitude = 0
 
     if grid.ndim == 3:
         assert len(grid) == len(subtitle) == len(vmin) == len(vmax)
 
     if ngrid == 1:
+        assert not common_colorbar, "not support yet"
+
         fig = plt.figure(figsize=(6, 4))
 
         axes_loc = (
@@ -77,6 +85,8 @@ def plot_grids(grid: np.ndarray, lat, lon, vmin=None, vmax=None, central_longitu
         )
 
     elif ngrid == 3:
+        assert not common_colorbar, "not support yet"
+
         fig = plt.figure(figsize=(10, 3))
 
         axes_loc = (
@@ -111,20 +121,110 @@ def plot_grids(grid: np.ndarray, lat, lon, vmin=None, vmax=None, central_longitu
             (0.4, 0.1),  # plot title
         )
 
+    elif ngrid == 4:
+        fig = plt.figure(figsize=(9, 6))
+
+        if common_colorbar:
+            axes_loc = (
+                (0.025, 0.5 + 0.1),  # plot grids
+                (0.5 + 0.025, 0.5 + 0.1),
+                (0.025, 0.175),
+                (0.5 + 0.025, 0.175),
+
+                (0.1, 0.05),  # plot colorbar
+
+                (0., 0.5 - 0.025),  # plot subtitles
+                (0.5 + 0., 0.5 - 0.025),
+                (0., 0.05),
+                (0.5 + 0., 0.05),
+
+                (0.3, 0.85),  # plot title
+            )
+
+            axes_size = (
+                (0.45, 0.35),  # plot grids
+                (0.45, 0.35),
+                (0.45, 0.35),
+                (0.45, 0.35),
+
+                (0.8, 0.05),  # plot colorbar
+
+                (0.5, 0.2),  # plot subtitles
+                (0.5, 0.2),
+                (0.5, 0.2),
+                (0.5, 0.2),
+
+                (0.4, 0.1),  # plot title
+            )
+
+        else:
+            axes_loc = (
+                (0.025, 0.5 + 0.1),  # plot grids
+                (0.5 + 0.025, 0.5 + 0.1),  # plot grids
+                (0.025, 0.125),
+                (0.5 + 0.025, 0.125),
+
+                (0.025, 0.5 - 0.125),  # plot colorbars
+                (0.5 + 0.025, 0.5 - 0.125),
+                (0.025, 0. - 0.1),
+                (0.5 + 0.025, 0. - 0.1),
+
+                (0., 0.5 - 0.1),  # plot subtitles
+                (0.5 + 0., 0.5 - 0.1),
+                (0., 0. - 0.075),
+                (0.5 + 0., 0. - 0.075),
+
+                (0.3, 0.85),  # plot title
+            )
+
+            axes_size = (
+                (0.45, 0.35),  # plot grids
+                (0.45, 0.35),
+                (0.45, 0.35),
+                (0.45, 0.35),
+
+                (0.45, 0.2),  # plot colorbars
+                (0.45, 0.2),
+                (0.45, 0.2),
+                (0.45, 0.2),
+
+                (0.5, 0.2),  # plot subtitles
+                (0.5, 0.2),
+                (0.5, 0.2),
+                (0.5, 0.2),
+
+                (0.4, 0.1),  # plot title
+            )
+
     else:
         return -1
 
+    if projection is None:
+        projection = ccrs.PlateCarree()
+
     axes_grids = [
-        fig.add_axes([*axes_loc[i], *axes_size[i]], projection=ccrs.PlateCarree(central_longitude=central_longitude))
+        fig.add_axes([*axes_loc[i], *axes_size[i]], projection=projection)
         for i in range(ngrid)]
-    axes_cbs = [fig.add_axes([*axes_loc[i + ngrid], *axes_size[i + ngrid]]) for i in range(ngrid)]
-    axes_subtitles = [fig.add_axes([*axes_loc[i + 2 * ngrid], *axes_size[i + 2 * ngrid]]) for i in range(ngrid)]
+
+    if common_colorbar:
+        axes_cbs = [fig.add_axes([*axes_loc[i + ngrid], *axes_size[i + ngrid]]) for i in range(1)]
+        axes_subtitles = [fig.add_axes([*axes_loc[i + 1 + ngrid], *axes_size[i + 1 + ngrid]]) for i in range(ngrid)]
+
+    else:
+        axes_cbs = [fig.add_axes([*axes_loc[i + ngrid], *axes_size[i + ngrid]]) for i in range(ngrid)]
+        axes_subtitles = [fig.add_axes([*axes_loc[i + 2 * ngrid], *axes_size[i + 2 * ngrid]]) for i in range(ngrid)]
+
     ax_title = fig.add_axes([*axes_loc[-1], *axes_size[-1]])
 
     lon2d, lat2d = np.meshgrid(lon, lat)
     for i in range(ngrid):
         ax_grid = axes_grids[i]
-        ax_cb = axes_cbs[i]
+
+        if common_colorbar:
+            ax_cb = axes_cbs[0]
+        else:
+            ax_cb = axes_cbs[i]
+
         ax_subtitle = axes_subtitles[i]
 
         if vmin[i] is None or vmax[i] is None:
@@ -149,6 +249,18 @@ def plot_grids(grid: np.ndarray, lat, lon, vmin=None, vmax=None, central_longitu
 
         ax_grid.add_feature(cfeature.COASTLINE)
 
+        ax_subtitle.axis('off')
+        ax_subtitle.set_xlim(-1, 1)
+        ax_subtitle.set_ylim(-1, 1)
+        ax_subtitle.text(
+            0, 0, subtitle[i],
+            verticalalignment='center',
+            horizontalalignment='center'
+        )
+
+        if common_colorbar and i > 0:
+            continue
+
         ax_cb.axis('off')
         ax_cb.set_xlim(-1, 1)
         ax_cb.set_ylim(-1, 1)
@@ -160,15 +272,6 @@ def plot_grids(grid: np.ndarray, lat, lon, vmin=None, vmax=None, central_longitu
                           extend='both',
                           )
         cb.ax.tick_params(direction='in')
-
-        ax_subtitle.axis('off')
-        ax_subtitle.set_xlim(-1, 1)
-        ax_subtitle.set_ylim(-1, 1)
-        ax_subtitle.text(
-            0, 0, subtitle[i],
-            verticalalignment='center',
-            horizontalalignment='center'
-        )
 
     ax_title.axis('off')
     ax_title.set_xlim(-1, 1)
@@ -186,20 +289,23 @@ def plot_grids(grid: np.ndarray, lat, lon, vmin=None, vmax=None, central_longitu
 
 def demo():
     from pysrc.auxiliary.aux_tool.MathTool import MathTool
-    grid1 = np.load('../../../results/spatial_std/2009-06_1.npy') * 1000
+    # grid1 = np.load('../../../results/spatial_std/2009-06_1.npy') * 1000
+    grid1 = np.load('../../../temp/ocean_300km-buffer(360,720))_Uebbing.npy')
 
-    grid2 = np.load('../../../results/spatial_std/sigmaEWH_200906_ITSG_lmax60_diag_GS300.npy') * 1000
+    # grid2 = np.load('../../../results/spatial_std/sigmaEWH_200906_ITSG_lmax60_diag_GS300.npy') * 1000
 
-    grid3 = grid1 - grid2
+    # grid3 = grid1 - grid2
 
-    lat, lon = MathTool.get_global_lat_lon_range(1)
+    lat, lon = MathTool.get_global_lat_lon_range(0.5)
     plot_grids(
-        grid=np.array([grid1, grid2, grid3]), lat=lat, lon=lon,
-        vmin=[0, 0, -1],
-        vmax=[30, 30, 1],
-        subtitle=('(a) Yang', '(b) Liu', '(a)-(b)'),
+        grid=np.array([grid1, grid1, grid1, grid1]), lat=lat, lon=lon,
+        vmin=[0, 0, -1, -1],
+        vmax=[30, 30, 1, 1],
+        subtitle=('(a) Yang', '(b) Liu', '(a)-(b)', '(a)-(b)'),
         title='sigma EWH 200906 diag matrix GS300',
-        save='../../../results/spatial_std/compare_sigmaEWH_200906_diag.pdf'
+        projection=ccrs.Robinson(),
+        common_colorbar=True
+        # save='../../../results/spatial_std/compare_sigmaEWH_200906_diag.pdf'
     )
 
 
