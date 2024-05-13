@@ -8,6 +8,8 @@ class TCH:
         self.xn = None
         self.xm = None
 
+        self.__r_mat = None
+
         pass
 
     def set_datasets(self, *x):
@@ -18,12 +20,12 @@ class TCH:
         self.xm = len(x[0])  # ...
         assert self.xn >= 3  # ensure that ...
 
-        self.datasets = x
+        self.datasets = np.array(x)
 
         return self
 
-    def run(self):
-        x_mat = np.array(self.datasets).T  # M * N matrix: M denotes ...; N denotes ...
+    def __run(self):
+        x_mat = self.datasets.T  # M * N matrix: M denotes ...; N denotes ...
         x_mat -= np.mean(x_mat, axis=0)  # de-average
 
         y_mat = x_mat[:, :-1] - x_mat[:, -1][:, None]  # M * (N-1) matrix; the final N-index is the reference...
@@ -37,7 +39,6 @@ class TCH:
         s_mat_inv = np.linalg.pinv(s_mat)
 
         '''KKT to solve vector r[:, n]'''
-
         def objective(x):
             """length of 1-d array x should be equal to self.xn"""
             r_hat = s_mat - x[-1] * u[:, None] @ u[None, :] + u[:, None] @ x[None, :-1] + x[:-1, None] @ u[None, :]
@@ -66,7 +67,16 @@ class TCH:
         r_mat[:-1, -1] = r
         r_mat[-1, -1] = rnn
 
+        self.__r_mat = r_mat
+
         return r_mat
+
+    def get_var_epsilon(self):
+        r_mat = self.__run()
+
+        var = np.diag(r_mat)  # cov
+
+        return var
 
 
 def demo():
@@ -107,14 +117,14 @@ def demo():
     shc_jpl = load.get_shc()
     shc_jpl.de_background(shc_bg)
 
-    # shc_csr.cs[:, :6] = 0
-    # shc_gfz.cs[:, :6] = 0
-    # shc_jpl.cs[:, :6] = 0
+    shc_csr.cs[:, :6] = 0
+    shc_gfz.cs[:, :6] = 0
+    shc_jpl.cs[:, :6] = 0
 
     '''convert to ewh'''
     ln = LoveNumber().get_Love_number()
     convert = ConvertSHC()
-    convert.set_Love_number(ln)
+    convert.configuration.set_Love_number(ln)
     shc_csr = convert.apply_to(shc_csr)
     shc_gfz = convert.apply_to(shc_gfz)
     shc_jpl = convert.apply_to(shc_jpl)
@@ -150,9 +160,7 @@ def demo():
         # rs = [grids_flatten_gfz[:, i], grids_flatten_jpl[:, i], grids_flatten_csr[:, i]]
         tch.set_datasets(grids_flatten_jpl[:, i], grids_flatten_gfz[:, i], grids_flatten_csr[:, i])
 
-        sol = tch.run()
-
-        grids_tch_1d[:, i] = np.diag(sol)  # cov
+        grids_tch_1d[:, i] = tch.get_var_epsilon()
 
     # grids_tch = np.sqrt(grids_tch_1d).reshape((3, *grid_shape))
     grids_tch = np.sqrt(np.abs(grids_tch_1d)).reshape((3, *grid_shape))
@@ -163,7 +171,6 @@ def demo():
         lon=lon,
         vmin=0.,
         vmax=20.,
-        central_longitude=180,
         subtitle=['JPL', 'GFZ', 'CSR']
     )
 

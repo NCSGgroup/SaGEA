@@ -3,6 +3,7 @@ import datetime
 import json
 from pathlib import Path, WindowsPath
 
+import h5py
 import numpy as np
 
 from pysrc.auxiliary.preference.EnumClasses import L2ProductType, L2InstituteType, L2Release
@@ -452,5 +453,51 @@ def demo():
     )
 
 
+def demo_2():
+    from pysrc.auxiliary.scripts.PlotGrids import plot_grids
+    from pysrc.auxiliary.aux_tool.MathTool import MathTool
+
+    # ocean_cs = load_SHC(FileTool.get_project_dir("data/auxiliary/ocean360_grndline.sh"), lmax=360, key="",
+    #                     lmcs_in_queue=(1, 2, 3, 4))
+    # ocean_shc = SHC(*ocean_cs)
+    # ocean_grid = ocean_shc.to_grid(0.5)
+    #
+    # ocean = ocean_grid.data[0]
+    # ocean[np.where((ocean >= 0.5))] = 1
+    # ocean[np.where((ocean < 0.5))] = 0
+
+    # ocean_buffer = np.load(
+    #     FileTool.get_project_dir("temp/ocean_300km-buffer(360,720))_Uebbing.npy")
+    # )
+    # ocean_buffer[np.where((ocean_buffer >= 0.5))] = 1
+    # ocean_buffer[np.where((ocean_buffer < 0.5))] = 0
+    #
+    #
+    # with h5py.File(FileTool.get_project_dir("temp/ocean_mask.hdf5"), "w") as f:
+    #     f.create_dataset("lat", data=ocean_grid.lat)
+    #     f.create_dataset("lon", data=ocean_grid.lon)
+    #     f.create_dataset("ocean_without_buffer", data=ocean)
+    #     f.create_dataset("ocean_with_buffer300km", data=ocean_buffer)
+
+    with h5py.File(FileTool.get_project_dir("temp/ocean_mask.hdf5"), "r") as f:
+        ocean = np.array(f["ocean_without_buffer"])
+        ocean_buffer = np.array(f["ocean_with_buffer300km"])
+        lat = np.array(f["lat"])
+        lon = np.array(f["lon"])
+
+    plot_grids(
+        np.array([ocean, ocean_buffer, ocean - ocean_buffer]),
+        lat, lon
+    )
+
+    FileTool.get_hdf5_structure(FileTool.get_project_dir("temp/ocean_mask.hdf5"))
+
+    # with h5py.File(FileTool.get_project_dir("temp/ocean_mask.hdf5"), "w") as f:
+    #     f.create_dataset("lat", data=lat)
+    #     f.create_dataset("lon", data=lon)
+    #     f.create_dataset("ocean_without_buffer", data=ocean)
+    #     f.create_dataset("ocean_with_buffer300km", data=ocean_buffer)
+
+
 if __name__ == '__main__':
-    demo()
+    demo_2()

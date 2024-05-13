@@ -36,6 +36,7 @@ from pysrc.post_processing.harmonic.Harmonic import Harmonic
 import datetime
 
 from pysrc.post_processing.replace_low_deg.ReplaceLowDegree import ReplaceLowDegree
+from pysrc.time_series_analysis.OrdinaryLeastSquare.OLS import OLSFor1d
 
 
 class PostProcessingConfig:
@@ -806,16 +807,21 @@ def demo():
         *MathTool.get_lat_lon_degree(pp.harmonic.lat, pp.harmonic.lon),
     )
 
-    # pp.basin_average()
+    pp.basin_average()
     # pp.correct_leakage()
-    #
-    # times = pp.get_year_fraction()
-    # ewh = pp.get_ewh()
-    #
+
+    times = pp.get_year_fraction()
+    ewh = pp.get_ewh()
+
     # plt.plot(times, ewh[0], label='uncorrected')
     # plt.plot(times, ewh[1], label='corrected')
-    # plt.legend()
-    # plt.show()
+    plt.plot(times, ewh[0])
+    plt.legend()
+    plt.show()
+
+    ols = OLSFor1d()
+    ols.setSignals(times, ewh[0])
+    print(ols.get_trend())
 
 
 def demo_temp():
