@@ -31,7 +31,7 @@ class DDKPropagation(DDK):
         shc_unit = get_shc_unit()
         shc_filtered = self.apply_to(shc_unit)
 
-        return shc_filtered.cs
+        return shc_filtered.value
 
     def apply_to(self, cov_cs):
         """

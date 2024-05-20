@@ -46,13 +46,13 @@ class GIACorrectionSpectral:
         return year_frac
 
     def apply_to(self, shc):
-        cs_gia_trend = self.configuration.get_gia_trend().cs[0]
+        cs_gia_trend = self.configuration.get_gia_trend().value[0]
         year_frac = self.__get_year_fractions()
         year_frac -= np.mean(year_frac)
 
         cs_each_times = year_frac[:, None] @ cs_gia_trend[None, :]
 
         shc_new = copy.deepcopy(shc)
-        shc_new.cs -= cs_each_times
+        shc_new.value -= cs_each_times
 
         return shc_new

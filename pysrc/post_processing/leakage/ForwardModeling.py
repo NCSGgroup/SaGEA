@@ -81,13 +81,13 @@ class ForwardModelingConfig:
         if type(basin) is pathlib.WindowsPath:
             lmax = self.__harmonic.lmax
             basin_clm, basin_slm = load_SHC(basin, key='', lmax=lmax, lmcs_in_queue=(1, 2, 3, 4))
-            basin = har.synthesis(SHC(basin_clm, basin_slm)).data[0]
+            basin = har.synthesis(SHC(basin_clm, basin_slm)).value[0]
             basin[np.where(basin >= 0.5)] = 1
             basin[np.where(basin < 0.5)] = 0
             self.__basin_to_maintain_global_conservation = basin
 
         else:
-            self.__basin_to_maintain_global_conservation = har.synthesis(basin).data[0]
+            self.__basin_to_maintain_global_conservation = har.synthesis(basin).value[0]
 
         return self
 
@@ -102,13 +102,13 @@ class ForwardModelingConfig:
         if type(basin) is pathlib.WindowsPath:
             lmax = self.__harmonic.lmax
             basin_clm, basin_slm = load_SHC(basin, key='', lmax=lmax, lmcs_in_queue=(1, 2, 3, 4))
-            basin = har.synthesis(SHC(basin_clm, basin_slm)).data[0]
+            basin = har.synthesis(SHC(basin_clm, basin_slm)).value[0]
             basin[np.where(basin >= 0.5)] = 1
             basin[np.where(basin < 0.5)] = 0
             self.__basin = basin
 
         elif type(basin) is SHC:
-            self.__basin = har.synthesis(basin).data[0]
+            self.__basin = har.synthesis(basin).value[0]
 
         elif type(basin) is np.ndarray:
             self.__basin = basin
@@ -138,9 +138,9 @@ class ForwardModeling(Leakage):
 
     def apply_to(self, grid: GRID, get_grid=False):
         if self.configuration.get_observed_grid() is not None:
-            observed_model = self.configuration.get_observed_grid().data
+            observed_model = self.configuration.get_observed_grid().value
         else:
-            observed_model = copy.deepcopy(grid.data)
+            observed_model = copy.deepcopy(grid.value)
 
         basin = self.configuration.get_basin()
         reverse_basin_mode = self.configuration.get_reverse_basin_mode()
@@ -153,7 +153,7 @@ class ForwardModeling(Leakage):
         acceleration_factor = self.configuration.get_acceleration_factor()
         max_iter_times = self.configuration.get_max_iteration()
 
-        true_model = keep_signals_in_basin(grid.data, basin, basin_to_conservation)
+        true_model = keep_signals_in_basin(grid.value, basin, basin_to_conservation)
         iter_times = 0
         while True:
             iter_times += 1

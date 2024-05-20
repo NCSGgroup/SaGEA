@@ -129,7 +129,7 @@ class VariableScale:
         else:
             grid = shc
 
-        Gqij = grid.data
+        Gqij = grid.value
         grid_space = grid.get_grid_space()
         lat, lon = grid.lat, grid.lon
 
@@ -200,7 +200,7 @@ def demo():
     FileTool.get_project_dir('results/20231128/vgc_spectral/').mkdir(parents=True)
     np.savez(
         FileTool.get_project_dir('results/20231128/vgc_spectral/vgc_spatial_results.npz'),
-        grids=grid.data,
+        grids=grid.value,
         description=f'r_min: {rmin}\n'
                     f'r_max: {rmax}\n'
                     f'r_varying: {vgc.vary_way.name}\n'
@@ -209,7 +209,7 @@ def demo():
     )
 
     plot_grids(
-        grid.data[0] * 100,
+        grid.value[0] * 100,
         lat, lon,
         -30, 30,
     )
@@ -267,14 +267,14 @@ def demo3():
         FileTool.get_project_dir('results/20231128/vgc_spectral/vgc_spectral_filtering_matrix.npz')
     )['grids']
 
-    shc.cs = (filtering_matrix @ shc.cs.T).T
+    shc.value = (filtering_matrix @ shc.value.T).T
 
     grid_space = 1
     lmax = 60
     lat, lon = MathTool.get_global_lat_lon_range(grid_space)
     har = Harmonic(lat, lon, lmax, option=1)
 
-    grids_spectral_filtering = har.synthesis(shc).data
+    grids_spectral_filtering = har.synthesis(shc).value
 
     grids_spatial_filtering = np.load(
         FileTool.get_project_dir('results/20231128/vgc_spectral/vgc_spatial_results.npz')

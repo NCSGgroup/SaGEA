@@ -407,7 +407,7 @@ class PostProcessing:
             basin_clm, basin_slm = load_SHC(basin_shc_filepath, key='', lmcs_in_queue=(1, 2, 3, 4), lmax=lmax)
             shc_basin = SHC(basin_clm, basin_slm)
 
-            basin_map = self.harmonic.synthesis(shc_basin).data
+            basin_map = self.harmonic.synthesis(shc_basin).value
 
         elif type(basin) is pathlib.WindowsPath:
             shp_filepath = FileTool.get_project_dir() / basin
@@ -735,7 +735,7 @@ class PostProcessing:
             this_basin_acreage = MathTool.get_acreage(this_basin_map)
 
             self.time_series_ewh.append(
-                MathTool.global_integral(grid_tobe_processed.data * this_basin_map) / this_basin_acreage)
+                MathTool.global_integral(grid_tobe_processed.value * this_basin_map) / this_basin_acreage)
 
         return self
 
@@ -803,7 +803,7 @@ def demo():
     grids = pp.get_filtered_grids()
 
     plot_grids(
-        grids.data[:4],
+        grids.value[:4],
         *MathTool.get_lat_lon_degree(pp.harmonic.lat, pp.harmonic.lon),
     )
 
@@ -877,7 +877,7 @@ def demo_temp():
 
     gs_radius = int(pp.shc_filter.configuration.filtering_radius / 1000)
     plot_grids(
-        np.array([pp.grid.data[0], pp.grid.data[1], pp.grid.data[0] - pp.grid.data[1]]),
+        np.array([pp.grid.value[0], pp.grid.value[1], pp.grid.value[0] - pp.grid.value[1]]),
         lat=pp.grid.lat,
         lon=pp.grid.lon,
         vmin=[-5e-3, -5e-3, -5e-4],
@@ -889,8 +889,8 @@ def demo_temp():
 
     np.savez(
         FileTool.get_project_dir(f'temp/zwh/geoid_height_GS{gs_radius}.npz'),
-        CSR=pp.grid.data[0],
-        CRA=pp.grid.data[1],
+        CSR=pp.grid.value[0],
+        CRA=pp.grid.value[1],
         lat=pp.grid.lat,
         lon=pp.grid.lon
     )

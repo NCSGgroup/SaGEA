@@ -102,7 +102,7 @@ class AnisotropicGaussianHan(SHCFilter):
         return gs_weight_cs1d
 
     def apply_to(self, shc: SHC):
-        cs1d_filtered = shc.cs * self.get_weight_cs1d()
+        cs1d_filtered = shc.value * self.get_weight_cs1d()
 
         return SHC(cs1d_filtered)
 

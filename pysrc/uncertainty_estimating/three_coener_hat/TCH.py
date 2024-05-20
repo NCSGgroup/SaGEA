@@ -1,12 +1,41 @@
+import itertools
+from enum import Enum
+
 import numpy as np
 from scipy.optimize import minimize
 
 
+class TCHMode(Enum):
+    KKT = 1
+    OLS = 2
+
+
+class TCHConfig:
+    def __init__(self):
+        self.__mode = TCHMode.KKT
+
+    def set_mode(self, mode: TCHMode):
+        """
+        :param mode: TCHMode
+
+        if param mode is TCHMode.KKT, using Karush-Kuhn-Tucker Condition to solve, see ...;
+        if param mode is TCHMode.OLS, using Ordinary Least Square to solve, see Chen. et al., 2019.
+        """
+
+        self.__mode = mode
+        return self
+
+    def get_mode(self):
+        return self.__mode
+
+
 class TCH:
     def __init__(self):
+        self.configuration = TCHConfig()
+
         self.datasets = None
-        self.xn = None
-        self.xm = None
+        self.xn = None  # number of datasets/institutes
+        self.xm = None  # length of each dataset
 
         self.__r_mat = None
 
@@ -24,7 +53,7 @@ class TCH:
 
         return self
 
-    def __run(self):
+    def __run_with_KKT(self):
         x_mat = self.datasets.T  # M * N matrix: M denotes ...; N denotes ...
         x_mat -= np.mean(x_mat, axis=0)  # de-average
 
@@ -39,6 +68,7 @@ class TCH:
         s_mat_inv = np.linalg.pinv(s_mat)
 
         '''KKT to solve vector r[:, n]'''
+
         def objective(x):
             """length of 1-d array x should be equal to self.xn"""
             r_hat = s_mat - x[-1] * u[:, None] @ u[None, :] + u[:, None] @ x[None, :-1] + x[:-1, None] @ u[None, :]
@@ -67,16 +97,39 @@ class TCH:
         r_mat[:-1, -1] = r
         r_mat[-1, -1] = rnn
 
-        self.__r_mat = r_mat
+        var_array = np.abs(np.diag(r_mat))  # cov
+        return var_array
 
-        return r_mat
+    def __run_with_OLS(self):
+        detasets_id = range(self.xn)
+        combination_of_index = list(itertools.combinations(detasets_id, 2))
+        length_of_combination = len(combination_of_index)
+
+        A_mat = np.zeros((length_of_combination, self.xn))
+        var_diff_array = np.zeros((length_of_combination, 1))
+
+        for i in range(length_of_combination):
+            A_mat[i, combination_of_index[i]] = 1
+
+            diff_of_dataset = self.datasets[combination_of_index[i][0]] - self.datasets[combination_of_index[i][1]]
+
+            var_diff_array[i] = np.var(diff_of_dataset)
+
+        design_mat = np.linalg.inv(A_mat.T @ A_mat) @ A_mat.T
+        var_array = np.abs(design_mat @ var_diff_array)[:, 0]
+        return var_array
 
     def get_var_epsilon(self):
-        r_mat = self.__run()
+        mode = self.configuration.get_mode()
 
-        var = np.diag(r_mat)  # cov
+        if mode == TCHMode.KKT:
+            var_array = self.__run_with_KKT()
+        elif mode == TCHMode.OLS:
+            var_array = self.__run_with_OLS()
+        else:
+            assert False
 
-        return var
+        return var_array
 
 
 def demo():
@@ -93,8 +146,12 @@ def demo():
     from pysrc.post_processing.convert_field_physical_quantity.ConvertSHC import ConvertSHC
     from pysrc.post_processing.Love_number.LoveNumber import LoveNumber
     from pysrc.post_processing.harmonic.Harmonic import Harmonic
+    from pysrc.post_processing.filter.Gaussian import Gaussian
 
     from pysrc.auxiliary.scripts.PlotGrids import plot_grids
+
+    '''TCH config'''
+    tch_mode = TCHMode.OLS
 
     '''load gsm'''
     gif48_path = FileTool.get_project_dir() / 'data/auxiliary/GIF48.gfc'
@@ -117,9 +174,9 @@ def demo():
     shc_jpl = load.get_shc()
     shc_jpl.de_background(shc_bg)
 
-    shc_csr.cs[:, :6] = 0
-    shc_gfz.cs[:, :6] = 0
-    shc_jpl.cs[:, :6] = 0
+    shc_csr.value[:, :6] = 0
+    shc_gfz.value[:, :6] = 0
+    shc_jpl.value[:, :6] = 0
 
     '''convert to ewh'''
     ln = LoveNumber().get_Love_number()
@@ -129,12 +186,12 @@ def demo():
     shc_gfz = convert.apply_to(shc_gfz)
     shc_jpl = convert.apply_to(shc_jpl)
 
-    # '''gs filter'''
-    # gs = Gaussian()
-    # gs.configuration.set_filtering_radius(300)
-    # shc_csr = gs.apply_to(shc_csr)
-    # shc_gfz = gs.apply_to(shc_gfz)
-    # shc_jpl = gs.apply_to(shc_jpl)
+    '''gs filter'''
+    gs = Gaussian()
+    gs.configuration.set_filtering_radius(300)
+    shc_csr = gs.apply_to(shc_csr)
+    shc_gfz = gs.apply_to(shc_gfz)
+    shc_jpl = gs.apply_to(shc_jpl)
 
     '''harmonic synthesis to gridded signal'''
     grid_space = 1
@@ -146,32 +203,31 @@ def demo():
     grids_jpl = har.synthesis(shc_jpl)
 
     '''tch for grid'''
-    grid_shape = np.shape(grids_csr.data)[-2:]
+    grid_shape = np.shape(grids_csr.value)[-2:]
     grid_length = grid_shape[0] * grid_shape[1]
 
     grids_tch_1d = np.zeros((3, grid_length))
     tch = TCH()
+    tch.configuration.set_mode(mode=tch_mode)
 
-    grids_flatten_csr = np.array([grids_csr.data[i].flatten() for i in range(len(grids_csr.data))])
-    grids_flatten_gfz = np.array([grids_gfz.data[i].flatten() for i in range(len(grids_gfz.data))])
-    grids_flatten_jpl = np.array([grids_jpl.data[i].flatten() for i in range(len(grids_jpl.data))])
+    grids_flatten_csr = np.array([grids_csr.value[i].flatten() for i in range(len(grids_csr.value))])
+    grids_flatten_gfz = np.array([grids_gfz.value[i].flatten() for i in range(len(grids_gfz.value))])
+    grids_flatten_jpl = np.array([grids_jpl.value[i].flatten() for i in range(len(grids_jpl.value))])
 
     for i in trange(grid_length):
-        # rs = [grids_flatten_gfz[:, i], grids_flatten_jpl[:, i], grids_flatten_csr[:, i]]
         tch.set_datasets(grids_flatten_jpl[:, i], grids_flatten_gfz[:, i], grids_flatten_csr[:, i])
-
         grids_tch_1d[:, i] = tch.get_var_epsilon()
 
-    # grids_tch = np.sqrt(grids_tch_1d).reshape((3, *grid_shape))
-    grids_tch = np.sqrt(np.abs(grids_tch_1d)).reshape((3, *grid_shape))
+    grids_tch = np.sqrt(grids_tch_1d).reshape((3, *grid_shape))
 
     plot_grids(
         grids_tch * 100,  # cm
         lat=lat,
         lon=lon,
         vmin=0.,
-        vmax=20.,
-        subtitle=['JPL', 'GFZ', 'CSR']
+        vmax=6.,
+        subtitle=['JPL', 'GFZ', 'CSR'],
+        title="TCH with OLS"
     )
 
 

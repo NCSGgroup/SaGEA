@@ -25,24 +25,24 @@ class CoreSHC:
                 or None.
         """
         if s is None:
-            self.cs = np.array(c)
+            self.value = np.array(c)
         else:
             assert np.shape(c) == np.shape(s)
 
             if len(np.shape(c)) == 2:
-                self.cs = MathTool.cs_combine_to_triangle_1d(c, s)
+                self.value = MathTool.cs_combine_to_triangle_1d(c, s)
 
             elif len(np.shape(c)) == 3:
                 cs = []
                 for i in range(np.shape(c)[0]):
                     this_cs = MathTool.cs_combine_to_triangle_1d(c[i], s[i])
                     cs.append(this_cs)
-                self.cs = np.array(cs)
+                self.value = np.array(cs)
 
-        if len(np.shape(self.cs)) == 1:
-            self.cs = self.cs[None, :]
+        if len(np.shape(self.value)) == 1:
+            self.value = self.value[None, :]
 
-        assert len(np.shape(self.cs)) == 2
+        assert len(np.shape(self.value)) == 2
 
     def append(self, *params):
         """
@@ -62,9 +62,9 @@ class CoreSHC:
         else:
             shc = CoreSHC(*params)
 
-        assert np.shape(shc.cs)[-1] == np.shape(self.cs)[-1]
+        assert np.shape(shc.value)[-1] == np.shape(self.value)[-1]
 
-        self.cs = np.concatenate([self.cs, shc.cs])
+        self.value = np.concatenate([self.value, shc.value])
         return self
 
     def is_series(self):
@@ -72,14 +72,14 @@ class CoreSHC:
         To determine whether the spherical harmonic coefficients stored in this class are one group or multiple groups.
         :return: bool, True if it stores multiple groups, False if it stores only one group.
         """
-        return np.shape(self.cs)[0] != 1
+        return np.shape(self.value)[0] != 1
 
     def get_lmax(self):
         """
 
         :return: int, max degree/order of the spherical harmonic coefficients stored in this class.
         """
-        length_of_cs1d = np.shape(self.cs)[-1]
+        length_of_cs1d = np.shape(self.value)[-1]
         lmax = int(np.sqrt(length_of_cs1d) - 1)
 
         return lmax
@@ -90,12 +90,12 @@ class CoreSHC:
         """
         lmax = self.get_lmax()
 
-        num_of_series = np.shape(self.cs)[0]
+        num_of_series = np.shape(self.value)[0]
         cqlm = np.zeros((num_of_series, lmax + 1, lmax + 1))
         sqlm = np.zeros((num_of_series, lmax + 1, lmax + 1))
 
         for i in range(num_of_series):
-            this_cs = self.cs[i]
+            this_cs = self.value[i]
             this_clm, this_slm = MathTool.cs_decompose_triangle1d_to_cs2d(this_cs)
             cqlm[i, :, :] = this_clm
             sqlm[i, :, :] = this_slm
@@ -104,7 +104,7 @@ class CoreSHC:
 
     def __de_average(self):
         if self.is_series():
-            self.cs -= np.mean(self.cs, axis=0)
+            self.value -= np.mean(self.value, axis=0)
         else:
             raise Exception
 
@@ -117,7 +117,7 @@ class CoreSHC:
 
         else:
             assert issubclass(type(background), CoreSHC)
-            self.cs -= background.cs
+            self.value -= background.value
 
     @staticmethod
     def identity(lmax: int):

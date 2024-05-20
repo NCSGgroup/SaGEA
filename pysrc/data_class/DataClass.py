@@ -44,7 +44,7 @@ class GRID(CoreGRID):
 
         har = Harmonic(lat, lon, lmax, option=1)
 
-        grid_data = self.data
+        grid_data = self.value
         cqlm, sqlm = har.analysis_for_gqij(grid_data)
         shc = SHC(cqlm, sqlm)
 
@@ -58,7 +58,7 @@ class GRID(CoreGRID):
 
         mask_flag = False
         if mask is not None:
-            assert np.shape(mask) == np.shape(self.data)[1:]
+            assert np.shape(mask) == np.shape(self.value)[1:]
             assert len(mask[np.where(mask == 1)]) + len(mask[np.where(mask == 0)]) == len(mask.flatten())
 
             mask_flag = True
@@ -76,8 +76,8 @@ class GRID(CoreGRID):
                         continue
 
                     this_line = f'{round(lat, 3)} {round(lon, 3)}'
-                    for k in range(len(self.data)):
-                        this_line += f' {self.data[k][lat_index, lon_index]}'
+                    for k in range(len(self.value)):
+                        this_line += f' {self.value[k][lat_index, lon_index]}'
 
                     f.write(this_line + '\n')
 

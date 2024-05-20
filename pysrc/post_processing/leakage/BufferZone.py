@@ -32,17 +32,17 @@ class BufferZoneConfig:
         if type(basin) is pathlib.WindowsPath:
             lmax = self.harmonic.lmax
             basin_clm, basin_slm = load_SHC(basin, key='', lmax=lmax, lmcs_in_queue=(1, 2, 3, 4))
-            self.basin_map = har.synthesis(SHC(basin_clm, basin_slm)).data[0]
+            self.basin_map = har.synthesis(SHC(basin_clm, basin_slm)).value[0]
 
         elif type(basin) is np.ndarray:
             assert basin.ndim == 2
             self.basin_map = basin
 
         elif type(basin) is SHC:
-            self.basin_map = har.synthesis(basin).data[0]
+            self.basin_map = har.synthesis(basin).value[0]
 
         elif type(basin) is GRID:
-            self.basin_map = basin.data[0]
+            self.basin_map = basin.value[0]
 
         else:
             assert False
@@ -65,7 +65,7 @@ class BufferZone(Leakage):
     def apply_to(self, grids):
         buffered_basin_map = self.__get_buffered_basin()
 
-        f_filtered_in_buffer_zone = MathTool.global_integral(grids.data * buffered_basin_map)
+        f_filtered_in_buffer_zone = MathTool.global_integral(grids.value * buffered_basin_map)
         return f_filtered_in_buffer_zone
 
     def get_buffer(self):
@@ -87,7 +87,7 @@ class BufferZone(Leakage):
         shc_bar = self.configuration.harmonic.analysis(GRID(basin_bar, lat, lon))
 
         shc_bar_filtered = self.configuration.filter.apply_to(shc_bar)
-        basin_bar_filtered = self.configuration.harmonic.synthesis(shc_bar_filtered).data[0]
+        basin_bar_filtered = self.configuration.harmonic.synthesis(shc_bar_filtered).value[0]
 
         threshold = 0.1
         basin_bar_filtered[np.where(basin_bar_filtered > threshold)] = 1
@@ -124,6 +124,6 @@ if __name__ == '__main__':
     ocean = bfz.get_buffer()
 
     plot_grids(
-        ocean.data,
+        ocean.value,
         lat, lon, 0, 1
     )

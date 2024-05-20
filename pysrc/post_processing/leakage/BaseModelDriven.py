@@ -39,10 +39,10 @@ class ModelDrivenConfig:
             if type(basin) is pathlib.WindowsPath:
                 lmax = self.harmonic.lmax
                 basin_clm, basin_slm = load_SHC(basin, key='', lmax=lmax, lmcs_in_queue=(1, 2, 3, 4))
-                self.basin_map = har.synthesis(SHC(basin_clm, basin_slm)).data[0]
+                self.basin_map = har.synthesis(SHC(basin_clm, basin_slm)).value[0]
 
             else:
-                self.basin_map = har.synthesis(basin).data[0]
+                self.basin_map = har.synthesis(basin).value[0]
 
         self.basin_acreage = MathTool.get_acreage(self.basin_map)
 
@@ -87,14 +87,14 @@ class ModelDriven(Leakage):
         model_outside_filtered = filter_grids(model_outside_basin, self.configuration.filter,
                                               self.configuration.harmonic)
 
-        leakage_c_m = MathTool.global_integral(model_outside_filtered.data * self.configuration.basin_map)
+        leakage_c_m = MathTool.global_integral(model_outside_filtered.value * self.configuration.basin_map)
 
         return leakage_c_m
 
     def _get_multiplicative_scale(self):
         basin_mask_filtered = \
             filter_grids(np.array([self.configuration.basin_map]), self.configuration.filter,
-                         self.configuration.harmonic).data[0]
+                         self.configuration.harmonic).value[0]
 
         integral_basin_mask = MathTool.global_integral(self.configuration.basin_map)
         integral_basin_mask_filtered = MathTool.global_integral(basin_mask_filtered * self.configuration.basin_map)
@@ -104,7 +104,7 @@ class ModelDriven(Leakage):
     def _get_bias(self):
         basin_mask_filtered = \
             filter_grids(np.array([self.configuration.basin_map]), self.configuration.filter,
-                         self.configuration.harmonic).data[0]
+                         self.configuration.harmonic).value[0]
 
         bias_c_m = MathTool.global_integral(
             self.configuration.model * (self.configuration.basin_map - basin_mask_filtered))
@@ -119,7 +119,7 @@ class ModelDriven(Leakage):
         model_filtered = filter_grids(self.configuration.model, self.configuration.filter, self.configuration.harmonic)
 
         time_series_model = MathTool.global_integral(self.configuration.model * self.configuration.basin_map)
-        time_series_model_filtered = MathTool.global_integral(model_filtered.data * self.configuration.basin_map)
+        time_series_model_filtered = MathTool.global_integral(model_filtered.value * self.configuration.basin_map)
 
         z = MathTool.curve_fit(self._scale_function, time_series_model_filtered, time_series_model)
 
@@ -130,7 +130,7 @@ class ModelDriven(Leakage):
         model_shape = np.shape(self.configuration.model[0])
 
         model_1d = np.array([self.configuration.model[i].flatten() for i in range(len(self.configuration.model))])
-        model_filtered_1d = np.array([model_filtered.data[i].flatten() for i in range(len(model_filtered.data))])
+        model_filtered_1d = np.array([model_filtered.value[i].flatten() for i in range(len(model_filtered.value))])
 
         t = np.arange(len(model_1d))
         z1 = MathTool.curve_fit(self._scale_function, t, *model_1d)
