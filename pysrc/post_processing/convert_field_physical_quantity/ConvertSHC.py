@@ -46,7 +46,7 @@ class ConvertSHC:
         for i in range(lmax + 1):
             convert_weight_cs1d = np.concatenate([convert_weight_cs1d, [convert_array[i]] * (2 * i + 1)])
 
-        cs1d_converted = shc.cs * convert_weight_cs1d
+        cs1d_converted = shc.value * convert_weight_cs1d
 
         return SHC(cs1d_converted)
 

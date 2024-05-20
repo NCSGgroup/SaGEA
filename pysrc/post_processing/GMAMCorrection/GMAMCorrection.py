@@ -35,7 +35,7 @@ class GMAMCorrection:
         else:
             shc_gaa = self.__load_gaa()
 
-        shc.cs[:, 0] -= shc_gaa.cs[:0]
+        shc.value[:, 0] -= shc_gaa.cs[:0]
 
         return shc
 

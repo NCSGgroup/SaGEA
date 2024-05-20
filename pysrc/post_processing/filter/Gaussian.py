@@ -98,6 +98,6 @@ class Gaussian(SHCFilter):
         if self.configuration.filtering_radius == 0:
             return shc
 
-        cs1d_filtered = shc.cs * self.get_weight_cs1d()
+        cs1d_filtered = shc.value * self.get_weight_cs1d()
 
         return SHC(cs1d_filtered)

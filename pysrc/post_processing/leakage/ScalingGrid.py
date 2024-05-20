@@ -7,7 +7,7 @@ class ScalingGrid(ModelDriven):
     def apply_to(self, grids: GRID, get_grids=False):
         grid_factor = self._get_scaling_scale_grid()
 
-        scaled_grids = grids.data * grid_factor
+        scaled_grids = grids.value * grid_factor
 
         if get_grids:
             return scaled_grids

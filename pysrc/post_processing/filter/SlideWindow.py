@@ -200,7 +200,7 @@ def demo():
     grids_filtered = har.synthesis(shc_filtered)
 
     plot_grids(
-        np.array([grids.data[10], grids_filtered.data[10], grids_filtered.data[10]]),
+        np.array([grids.value[10], grids_filtered.value[10], grids_filtered.value[10]]),
         lat, lon,
         vmin=-0.2,
         vmax=0.2

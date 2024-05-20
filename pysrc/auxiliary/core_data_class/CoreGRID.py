@@ -22,7 +22,7 @@ class CoreGRID:
 
         assert np.shape(grid)[-2:] == (len(lat), len(lon))
 
-        self.data = np.array(grid)
+        self.value = np.array(grid)
 
         if option == 0:
             self.lat = 90 - np.degrees(lat)
@@ -56,10 +56,10 @@ class CoreGRID:
             assert np.shape(grid)[-2:] == (len(self.lat), len(self.lon))
             grid = CoreGRID(grid, self.lat, self.lon, option)
 
-        array_to_append = grid.data if grid.is_series() else np.array([grid.data])
-        array_self = self.data if self.is_series() else [self.data]
+        array_to_append = grid.value if grid.is_series() else np.array([grid.value])
+        array_self = self.value if self.is_series() else [self.value]
 
-        self.data = np.concatenate([array_self, array_to_append])
+        self.value = np.concatenate([array_self, array_to_append])
 
         return self
 
@@ -68,7 +68,7 @@ class CoreGRID:
         To determine whether the data stored in this class are one group or multiple groups.
         :return: bool, True if it stores multiple groups, False if it stores only one group.
         """
-        return len(np.shape(self.data)) == 3
+        return len(np.shape(self.value)) == 3
 
     def get_grid_space(self):
         """

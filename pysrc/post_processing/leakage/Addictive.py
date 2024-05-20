@@ -17,7 +17,7 @@ class Addictive(ModelDriven):
                 f'{np.array(self.configuration.GRACE_times)[indexes_uncorrected]}'
             )
 
-        f_filtered = MathTool.global_integral(grids.data * self.configuration.basin_map)
+        f_filtered = MathTool.global_integral(grids.value * self.configuration.basin_map)
 
         if leakage:
             leakage_c_m = self._get_leakage()

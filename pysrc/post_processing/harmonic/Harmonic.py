@@ -73,9 +73,9 @@ class Harmonic:
         # assert all(abs(colat_lon_of_grid[0] - self.lat) < 1e-14) and all(abs(colat_lon_of_grid[1] - self.lon) < 1e-14)
 
         if grid.is_series():
-            gqij = grid.data
+            gqij = grid.value
         else:
-            gqij = np.array([grid.data])
+            gqij = np.array([grid.value])
 
         cqlm, sqlm = self.analysis_for_gqij(gqij)
 

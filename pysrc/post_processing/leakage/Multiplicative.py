@@ -13,7 +13,7 @@ class Multiplicative(ModelDriven):
         :param leakage: if False, it will not reduce the leakage_c_m
         """
 
-        f_filtered = MathTool.global_integral(grids.data * self.configuration.basin_map)
+        f_filtered = MathTool.global_integral(grids.value * self.configuration.basin_map)
 
         if leakage:
             indexes_GRACE, indexes_model, indexes_uncorrected = self._get_indexes()

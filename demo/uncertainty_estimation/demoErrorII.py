@@ -51,7 +51,7 @@ def demo():
 
     sigma_shc = load.get_shc(get_sigma=True)
 
-    cov_matrices_list = [np.diag((sigma_shc.cs[i])) ** 2 for i in range(len(sigma_shc.cs))]
+    cov_matrices_list = [np.diag((sigma_shc.value[i])) ** 2 for i in range(len(sigma_shc.value))]
 
     '''load and replace low degrees'''
     degree1_or_not = True
@@ -411,7 +411,7 @@ def demo2():
     '''error-scaled'''
     pass
     # scale = sigma_weight / (np.sum(sigma_weight[:, 29:31, :], axis=1)[:, None, :] / 2)
-    grid.data *= smoothing_scale
+    grid.value *= smoothing_scale
 
     extract.set_signal(grid)
     ewha_se_weighted = extract.get_average()

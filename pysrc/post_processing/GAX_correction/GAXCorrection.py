@@ -45,7 +45,7 @@ class GAXCorrection:
 
             shc_gax = self.__load_gax(lmax)
 
-        shc.cs += shc_gax.cs
+        shc.value += shc_gax.cs
 
         return shc
 

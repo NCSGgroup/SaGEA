@@ -443,9 +443,9 @@ def demo():
     index = 0
     plot_grids(
         np.array([
-            grid_ITSG.data[index],
-            grid_ITSG_gc.data[index],
-            grid_ITSG.data[index] - grid_ITSG_gc.data[index]
+            grid_ITSG.value[index],
+            grid_ITSG_gc.value[index],
+            grid_ITSG.value[index] - grid_ITSG_gc.value[index]
         ]),
         grid_ITSG.lat, grid_ITSG.lon,
         # [None, None, -0.1], [None, None, 0.1]

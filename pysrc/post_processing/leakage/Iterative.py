@@ -30,7 +30,7 @@ class IterativeConfig:
         if type(basin) is pathlib.WindowsPath:
             lmax = self.harmonic.lmax
             basin_clm, basin_slm = load_SHC(basin, key='', lmax=lmax, lmcs_in_queue=(1, 2, 3, 4))
-            self.basin_map = har.synthesis(SHC(basin_clm, basin_slm)).data[0]
+            self.basin_map = har.synthesis(SHC(basin_clm, basin_slm)).value[0]
 
         else:
             self.basin_map = basin
@@ -61,7 +61,7 @@ class Iterative(Leakage):
         self.configuration = IterativeConfig()
 
     def apply_to(self, grids: GRID):
-        f_filtered = MathTool.global_integral(grids.data * self.configuration.basin_map)
+        f_filtered = MathTool.global_integral(grids.value * self.configuration.basin_map)
 
         leakage_c = self.__get_leakage()
 
@@ -74,7 +74,7 @@ class Iterative(Leakage):
         shc_prefiltered = self.configuration.prefilter.apply_to(self.configuration.shc_unfiltered)
 
         grids_prefiltered = self.configuration.harmonic.synthesis(shc_prefiltered)
-        grids_prefiltered_outside = grids_prefiltered.data * (1 - self.configuration.basin_map)
+        grids_prefiltered_outside = grids_prefiltered.value * (1 - self.configuration.basin_map)
 
         shc_prefiltered = self.configuration.harmonic.analysis(
             GRID(grids_prefiltered_outside, self.configuration.harmonic.lat, self.configuration.harmonic.lon)
@@ -83,7 +83,7 @@ class Iterative(Leakage):
         shc_iter_filtered = self.configuration.filter.apply_to(shc_prefiltered)
         grids_iter_filtered = self.configuration.harmonic.synthesis(shc_iter_filtered)
 
-        leakage_c = MathTool.global_integral(grids_iter_filtered.data * self.configuration.basin_map)
+        leakage_c = MathTool.global_integral(grids_iter_filtered.value * self.configuration.basin_map)
 
         return leakage_c
 

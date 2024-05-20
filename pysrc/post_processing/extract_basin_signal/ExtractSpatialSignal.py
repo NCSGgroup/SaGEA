@@ -60,7 +60,7 @@ class ExtractSpatial:
         :param grid: 2d-array of gridded signal or 3d-array for series
         """
         if issubclass(type(grid), CoreGRID):
-            grid = grid.data
+            grid = grid.value
 
         if grid.ndim == 2:
             grid = np.array([grid])
@@ -70,7 +70,7 @@ class ExtractSpatial:
 
     def set_weight(self, grid: np.ndarray or GRID):
         if issubclass(type(grid), CoreGRID):
-            grid = grid.data
+            grid = grid.value
 
         if grid.ndim == 2:
             grid = np.array([grid])

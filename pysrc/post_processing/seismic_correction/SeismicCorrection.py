@@ -108,7 +108,7 @@ class SeismicCorrection:
 
                 sigs = []
                 for t in range(len(year_fractions)):
-                    sigs.append(grid.data[t, j, i])
+                    sigs.append(grid.value[t, j, i])
                 sigs = np.array(sigs)
 
                 times_before = []
@@ -139,7 +139,7 @@ class SeismicCorrection:
                     else:
                         seismic[t] = c2 + p * (1 - np.exp(-(year_fractions[t] - teq) / tau))
 
-                grid.data[:, j, i] -= seismic
+                grid.value[:, j, i] -= seismic
 
         pass
 
@@ -160,7 +160,7 @@ class SeismicCorrection:
 
                 sigs = []
                 for t in range(len(time_points)):
-                    sigs.append(grid.data[t, j, i])
+                    sigs.append(grid.value[t, j, i])
                 sigs = np.array(sigs)
 
                 times_before = []
@@ -205,7 +205,7 @@ class SeismicCorrection:
                     else:
                         seismic[t] = c3 + p2 * (1 - np.exp(-(time_points[t] - teq2) / tau2))
 
-                grid.data[:, j, i] -= seismic
+                grid.value[:, j, i] -= seismic
                 pass
 
         pass
@@ -246,9 +246,9 @@ if __name__ == '__main__':
     seis.configuration.set_times(ave_dates_GRACE)
     seis.configuration.set_earthquakes(FileTool.get_project_dir('data/earthquake/earthquakes.json'))
 
-    grid_data_before = grid.data.copy()
+    grid_data_before = grid.value.copy()
     seis.apply_to(grid)
-    grid_data_after = grid.data.copy()
+    grid_data_after = grid.value.copy()
 
     plt.plot(grid_data_before[:, 125, 315])
     plt.plot(grid_data_after[:, 125, 315])

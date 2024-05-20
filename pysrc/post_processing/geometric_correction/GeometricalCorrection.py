@@ -60,10 +60,10 @@ class GeometricalCorrection:
 
     def apply_to(self, shc: CoreSHC):
         cqlm, sqlm = [], []
-        for i in range(len(shc.cs)):
-            print(f'geometric correction for the {i + 1}-th / {len(shc.cs)}')
+        for i in range(len(shc.value)):
+            print(f'geometric correction for the {i + 1}-th / {len(shc.value)}')
 
-            clm, slm = MathTool.cs_decompose_triangle1d_to_cs2d(shc.cs[i])
+            clm, slm = MathTool.cs_decompose_triangle1d_to_cs2d(shc.value[i])
 
             gc = GC().configure(
                 Nmax=self.configuration.get_lmax(),
