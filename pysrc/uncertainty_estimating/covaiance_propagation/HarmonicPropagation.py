@@ -76,17 +76,11 @@ class HarmonicPropagation(Harmonic):
         """
         hs_mat = self.get_synthesis_propagation_matrix()
 
-        print('Calculating gridded variance...', end='')
         '''var_grid = diag(A X AT)'''
-        diag_array = np.zeros((self.nlat * self.nlon,))
+        ax = hs_mat @ cov_cs
+        axat_diag = np.sum(ax * hs_mat, axis=1)
 
-        for i in trange(len(diag_array)):
-            # print(f'\rCalculating gridded variance {int((i + 1) / len(diag_array) * 100)}%...', end='')
-
-            diag_array[i] = hs_mat[i] @ cov_cs @ hs_mat[i].T
-        # print('done!')
-
-        return diag_array.reshape((self.nlat, self.nlon))
+        return axat_diag.reshape((self.nlat, self.nlon))
 
     def get_synthesis_propagation_matrix(self):
         if self.synthesis_mat is None:
@@ -99,7 +93,6 @@ class HarmonicPropagation(Harmonic):
             '''get harmonic synthesis matrix'''
             hs_mat = np.zeros((self.nlat * self.nlon, (self.lmax + 1) ** 2))
             for i in range(len(lat2dto1d_index)):
-                print(f'\rGenerating harmonic synthesis matrix {int((i + 1) / len(lat2dto1d_index) * 100)}%...', end='')
                 lat_index = lat2dto1d_index[i]
                 # lon_index = lat2dto1d_index[i]
                 lon_index = lon2dto1d_index[i]
@@ -124,7 +117,6 @@ class HarmonicPropagation(Harmonic):
                 p_vec = Legendre_sincos_tri[index_tri]
 
                 hs_mat[i, :] = p_vec
-            print('done!')
 
             self.synthesis_mat = hs_mat
 
