@@ -13,13 +13,14 @@ from pysrc.auxiliary.aux_tool.TimeTool import TimeTool
 from pysrc.data_class.DataClass import SHC
 
 
-def load_SHC(*filepath, key: str, lmax: int, lmcs_in_queue=None):
+def load_SHC(*filepath, key: str, lmax: int, lmcs_in_queue=None, get_date=False):
     """
 
     :param filepath: path of SH file
     :param key: '' if there is not any key.
     :param lmax: max degree and order.
     :param lmcs_in_queue: iter, Number of columns where degree l, order m, coefficient clm, and slm are located.
+    :param get_date: bool, if True, return date_begin, date_end in datetime format. Filename should contain date information like "2005001-2005031"
     :return: 2d tuple, whose elements are clm and slm in form of 2d array.
     """
     if len(filepath) == 1:
@@ -65,17 +66,53 @@ def load_SHC(*filepath, key: str, lmax: int, lmcs_in_queue=None):
                     else:
                         continue
 
-        return clm, slm
+        if not get_date:
+            return clm, slm
+
+        else:
+            filename = filepath[0].name
+            re_pattern = r"\d{7}-\d{7}"
+
+            search = re.search(re_pattern, filename)
+
+            assert search is not None
+
+            search_result = search.group()
+            begin_year = int(search_result[0:4])
+            begin_day = int(search_result[4:7])
+            begin_date = datetime.date(begin_year, 1, 1) + datetime.timedelta(days=begin_day - 1)
+
+            end_year = int(search_result[8:12])
+            end_day = int(search_result[12:15])
+            end_date = datetime.date(end_year, 1, 1) + datetime.timedelta(days=end_day - 1)
+
+            return clm, slm, begin_date, end_date
+
 
     else:
         cqlm, sqlm = [], []
+        dates_begin = []
+        dates_end = []
         for i in range(len(filepath)):
-            clm, slm = load_SHC(filepath[i], key=key, lmax=lmax, lmcs_in_queue=lmcs_in_queue)
 
-            cqlm.append(clm)
-            sqlm.append(slm)
+            if not get_date:
+                clm, slm = load_SHC(filepath[i], key=key, lmax=lmax, lmcs_in_queue=lmcs_in_queue, get_date=False)
+                cqlm.append(clm)
+                sqlm.append(slm)
 
-        return np.array(cqlm), np.array(sqlm)
+            else:
+                clm, slm, d_begin, d_end = load_SHC(filepath[i], key=key, lmax=lmax, lmcs_in_queue=lmcs_in_queue,
+                                                    get_date=True)
+                cqlm.append(clm)
+                sqlm.append(slm)
+                dates_begin.append(d_begin)
+                dates_end.append(d_end)
+
+        if not get_date:
+            return np.array(cqlm), np.array(sqlm)
+
+        else:
+            return np.array(cqlm), np.array(sqlm), dates_begin, dates_end
 
 
 class LoadL2SHSingleFile:
@@ -500,4 +537,21 @@ def demo_2():
 
 
 if __name__ == '__main__':
-    demo_2()
+    filepath = FileTool.get_project_dir(
+        "data/L2_SH_products/GSM/CSR/RL06/BA01/2002/GSM-2_2002095-2002120_GRAC_UTCSR_BA01_0600"
+    )
+    filepath_list = [
+        FileTool.get_project_dir(
+            "data/L2_SH_products/GSM/CSR/RL06/BA01/2002/GSM-2_2002095-2002120_GRAC_UTCSR_BA01_0600"
+        ),
+        FileTool.get_project_dir(
+            "data/L2_SH_products/GSM/CSR/RL06/BA01/2002/GSM-2_2002123-2002137_GRAC_UTCSR_BA01_0600"
+        ),
+
+    ]
+
+    load = load_SHC(
+        *filepath_list, key="GRCOF2", lmax=60, lmcs_in_queue=(2, 3, 4, 5), get_date=True
+    )
+
+    pass

@@ -3,6 +3,7 @@ import json
 import pathlib
 import re
 
+import h5py
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -460,15 +461,23 @@ class PostProcessing:
             self.shc_GRACE = shc
 
         else:
+            if type(load_gsm_from_custom_dir) is str:
+                load_gsm_from_custom_dir = pathlib.Path(load_gsm_from_custom_dir)
+
             assert type(load_gsm_from_custom_dir) is pathlib.WindowsPath
 
             file_path = list(pathlib.Path.iterdir(load_gsm_from_custom_dir))
             lmax = self.configuration.get_lmax()
-            key = 'GRCOF2'
+            # key = 'GRCOF2'
+            key = 'gfc'
 
-            cqlm, sqlm = load_SHC(*file_path, key=key, lmax=lmax, lmcs_in_queue=(2, 3, 4, 5))
+            cqlm, sqlm, dates_begin, dates_end = load_SHC(*file_path, key=key, lmax=lmax, lmcs_in_queue=(2, 3, 4, 5),
+                                                          get_date=True)
 
             self.shc_GRACE = SHC(cqlm, sqlm)
+            self.dates_begin = dates_begin
+            self.dates_end = dates_end
+            self.dates = TimeTool.get_average_dates(dates_begin, dates_end)
 
         return self
 
@@ -614,10 +623,10 @@ class PostProcessing:
             grid = har.synthesis(shc_tobe_processed_list[i], special_type=special)
 
             if i == 0:
-                self.filtered_grid = grid
+                self.grid = grid
 
             else:
-                self.grid = grid
+                self.filtered_grid = grid
 
         return self
 
@@ -756,34 +765,27 @@ class PostProcessing:
 
 def demo():
     dates = [
-        datetime.date(2002, 4, 15),
-        datetime.date(2002, 5, 15),
-        datetime.date(2002, 8, 15),
-        datetime.date(2002, 9, 15),
-        datetime.date(2002, 10, 15),
-        datetime.date(2002, 11, 15),
-        datetime.date(2002, 12, 15),
+        datetime.date(2007, 7, 15),
+        datetime.date(2007, 7, 15),
     ]
 
     dates_begin = [
-        datetime.date(2002, 4, 1),
-        datetime.date(2002, 5, 1),
-        datetime.date(2002, 8, 1),
-        datetime.date(2002, 9, 1),
-        datetime.date(2002, 10, 1),
-        datetime.date(2002, 11, 1),
-        datetime.date(2002, 12, 1),
+        datetime.date(2007, 7, 1),
+        datetime.date(2007, 7, 1),
     ]
 
     dates_end = [
-        datetime.date(2002, 4, 28),
-        datetime.date(2002, 5, 28),
-        datetime.date(2002, 8, 28),
-        datetime.date(2002, 9, 28),
-        datetime.date(2002, 10, 28),
-        datetime.date(2002, 11, 28),
-        datetime.date(2002, 12, 28),
+        datetime.date(2007, 7, 31),
+        datetime.date(2007, 7, 31),
     ]
+
+    c_gif48, s_gif48 = load_SHC(FileTool.get_project_dir('data/auxiliary/GIF48.gfc'), key='gfc',
+                                lmcs_in_queue=(2, 3, 4, 5),
+                                lmax=60)
+    # c_gif48[0, 0] = 0
+    shc_bg = SHC(c_gif48, s_gif48)
+
+    # ===
 
     pp = PostProcessing()
     jsonpath = FileTool.get_project_dir() / 'setting/post_processing/PostProcessing.json'
@@ -793,35 +795,45 @@ def demo():
     pp.load_files()
     pp.update_dates(dates, dates_begin, dates_end)  # require if load SHCs with customized path
 
-    pp.replace_low_degree()
-    pp.deduct_background()
-    pp.correct_gia()
-    pp.de_correlation()
+    # pp.replace_low_degree()
+    pp.deduct_background(shc_bg)
+    # pp.correct_gia()
+    # pp.de_correlation()
     pp.filter()
-    pp.shc_to_grid(field_type=FieldPhysicalQuantity.EWH)  # synthesis harmonic to (EWH) grid
+    pp.shc_to_grid(field_type=FieldPhysicalQuantity.Geoid)  # synthesis harmonic to (EWH) grid
 
     grids = pp.get_filtered_grids()
 
     plot_grids(
-        grids.value[:4],
-        *MathTool.get_lat_lon_degree(pp.harmonic.lat, pp.harmonic.lon),
+        grids.value[0] - grids.value[1],
+        grids.lat, grids.lon,
     )
 
-    pp.basin_average()
+    filepath = FileTool.get_project_dir("temp/ZWH20240524/grids.hdf5")
+    if not filepath.exists():
+        with h5py.File(filepath, "w") as f:
+            f.create_dataset("grid_AOD", data=grids.value[0])
+            f.create_dataset("grid_HUST_CRA", data=grids.value[1])
+            f.create_dataset("latitude", data=grids.lat)
+            f.create_dataset("longitude", data=grids.lon)
+
+    print(FileTool.get_hdf5_structure(filepath))
+
+    # pp.basin_average()
     # pp.correct_leakage()
 
-    times = pp.get_year_fraction()
-    ewh = pp.get_ewh()
+    # times = pp.get_year_fraction()
+    # ewh = pp.get_ewh()
 
     # plt.plot(times, ewh[0], label='uncorrected')
     # plt.plot(times, ewh[1], label='corrected')
-    plt.plot(times, ewh[0])
-    plt.legend()
-    plt.show()
+    # plt.plot(times, ewh[0])
+    # plt.legend()
+    # plt.show()
 
-    ols = OLSFor1d()
-    ols.setSignals(times, ewh[0])
-    print(ols.get_trend())
+    # ols = OLSFor1d()
+    # ols.setSignals(times, ewh[0])
+    # print(ols.get_trend())
 
 
 def demo_temp():
@@ -873,7 +885,7 @@ def demo_temp():
 
     pp.filter()  # low-pass filter
 
-    pp.shc_to_grid(field_type=FieldPhysicalQuantity.Geoid)
+    pp.shc_to_grid(field_type=FieldPhysicalQuantity.EWH)
 
     gs_radius = int(pp.shc_filter.configuration.filtering_radius / 1000)
     plot_grids(
@@ -894,6 +906,8 @@ def demo_temp():
         lat=pp.grid.lat,
         lon=pp.grid.lon
     )
+
+    pass
 
 
 if __name__ == '__main__':
