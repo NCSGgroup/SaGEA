@@ -820,7 +820,4 @@ def demo():
 
 
 if __name__ == '__main__':
-    # demo()
-
-    with h5py.File(FileTool.get_project_dir("results/test1.hdf5")) as h5:
-        pass
+    demo()
