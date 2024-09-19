@@ -1,6 +1,9 @@
 {
-  "GSM_from_local_dir": "",
+  "GSM_from_local_dir": "data/L2_SH_products/GSM/custom3",
   "?GSM_from_local_dir": "relative dir, like data/L2_SH_products/GSM/CSR/RL06/BA01/2002, or empty string",
+
+  "GSM_key": "gfc",
+  "?GSM_key": "required if GSM_from_local_dir is not empty",
 
   "begin_date": "2005-04-01",
   "?begin_date": "yyyy-mm(-dd), specifying day does not have an impact in general, as GRACE TVG products are usually given with time resolution of a month.",
@@ -33,7 +36,7 @@
   "?low_degree_c30_file_id": "",
 
   "de_correlation": "PnMm",
-  "?de_correlation": "",
+  "?de_correlation": "PnMm",
 
   "de_correlation_sliding_window_type": "Wahr2006",
   "?de_correlation_sliding_window_type": "",
@@ -44,7 +47,7 @@
   "shc_filter": "Gaussian",
   "?shc_filter": "",
 
-  "shc_filter_params": [500],
+  "shc_filter_params": [300],
   "?shc_filter_params": "",
 
   "leakage_method": "Iterative",

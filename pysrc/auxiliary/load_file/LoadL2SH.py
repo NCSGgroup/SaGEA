@@ -13,13 +13,14 @@ from pysrc.auxiliary.aux_tool.TimeTool import TimeTool
 from pysrc.data_class.DataClass import SHC
 
 
-def load_SHC(*filepath, key: str, lmax: int, lmcs_in_queue=None):
+def load_SHC(*filepath, key: str, lmax: int, lmcs_in_queue=None, get_dates=False):
     """
 
     :param filepath: path of SH file
     :param key: '' if there is not any key.
     :param lmax: max degree and order.
     :param lmcs_in_queue: iter, Number of columns where degree l, order m, coefficient clm, and slm are located.
+    :param get_dates: bool, if True return dates.
     :return: 2d tuple, whose elements are clm and slm in form of 2d array.
     """
     if len(filepath) == 1:
@@ -44,6 +45,15 @@ def load_SHC(*filepath, key: str, lmax: int, lmcs_in_queue=None):
 
         mat_shape = (lmax + 1, lmax + 1)
         clm, slm = np.zeros(mat_shape), np.zeros(mat_shape)
+        date_begin, date_end = None, None
+
+        if get_dates:
+            date_begin_end_pattern = r"(\d{4})-?(\d{2})-?(\d{2})-(\d{4})-?(\d{2})-?(\d{2})"
+            date_begin_end_searched = re.search(date_begin_end_pattern, filepath[0].name)
+            assert date_begin_end_searched is not None
+            date_begin_end = date_begin_end_searched.groups()
+            date_begin = datetime.date(*list(map(int, date_begin_end[:3])))
+            date_end = datetime.date(*list(map(int, date_begin_end[3:])))
 
         with open(filepath[0]) as f:
             txt_list = f.readlines()
@@ -65,17 +75,36 @@ def load_SHC(*filepath, key: str, lmax: int, lmcs_in_queue=None):
                     else:
                         continue
 
-        return clm, slm
+        if get_dates:
+            return clm, slm, [date_begin], [date_end]
+
+        else:
+            return clm, slm
 
     else:
         cqlm, sqlm = [], []
-        for i in range(len(filepath)):
-            clm, slm = load_SHC(filepath[i], key=key, lmax=lmax, lmcs_in_queue=lmcs_in_queue)
+        dates_begin, dates_end = [], []
 
-            cqlm.append(clm)
-            sqlm.append(slm)
+        if get_dates:
+            for i in range(len(filepath)):
+                clm, slm, d_begin, d_end = load_SHC(filepath[i], key=key, lmax=lmax, lmcs_in_queue=lmcs_in_queue,
+                                                    get_dates=get_dates)
 
-        return np.array(cqlm), np.array(sqlm)
+                cqlm.append(clm)
+                sqlm.append(slm)
+                dates_begin.append(d_begin[0])
+                dates_end.append(d_end[0])
+
+                return np.array(cqlm), np.array(sqlm), dates_begin, dates_end
+
+        else:
+            for i in range(len(filepath)):
+                clm, slm = load_SHC(filepath[i], key=key, lmax=lmax, lmcs_in_queue=lmcs_in_queue, get_dates=get_dates)
+
+                cqlm.append(clm)
+                sqlm.append(slm)
+
+            return np.array(cqlm), np.array(sqlm)
 
 
 class LoadL2SHSingleFile:
@@ -416,88 +445,12 @@ class LoadL2SH:
 
 
 def demo():
-    from pysrc.auxiliary.scripts.PlotGrids import plot_grids
-    from pysrc.post_processing.geometric_correction.GeometricalCorrection import GeometricalCorrection
+    filepath = FileTool.get_project_dir(
+        "data/L2_SH_products/GSM/custom1/HAE_HUST-Release-06_60x60_unfiltered_GSM-2_2010-07-01-2010-07-31_GRAC_HUST_BA01_0600.gfc")
 
-    load = LoadL2SH()
-    load.configuration.set_institute(L2InstituteType.ITSG)
-    load.configuration.set_release(L2Release.ITSGGrace2018)
-    load.configuration.set_lmax(60)
-    load.configuration.set_begin_date(datetime.date(2005, 1, 1))
-    load.configuration.set_end_date(datetime.date(2005, 12, 31))
-    shc_ITSG, dates_ITSG = load.get_shc(with_dates=True)
-    shc_ITSG.de_background()
-
-    # load.configuration.set_institute(L2InstituteType.CSR)
-    # load.configuration.set_release(L2Release.RL06)
-    # load.configuration.set_lmax(60)
-    # shc_CSR, dates_CSR = load.get_shc(with_dates=True)
-    # shc_CSR.de_background()
-
-    gc = GeometricalCorrection()
-    shc_ITSG_gc = gc.apply_to(shc_ITSG)
-
-    grid_ITSG = shc_ITSG.to_grid(grid_space=0.5)
-    grid_ITSG_gc = shc_ITSG_gc.to_grid(grid_space=0.5)
-
-    index = 0
-    plot_grids(
-        np.array([
-            grid_ITSG.value[index],
-            grid_ITSG_gc.value[index],
-            grid_ITSG.value[index] - grid_ITSG_gc.value[index]
-        ]),
-        grid_ITSG.lat, grid_ITSG.lon,
-        # [None, None, -0.1], [None, None, 0.1]
-        [None, None, -0.1], [None, None, 0.1]
-    )
-
-
-def demo_2():
-    from pysrc.auxiliary.scripts.PlotGrids import plot_grids
-    from pysrc.auxiliary.aux_tool.MathTool import MathTool
-
-    # ocean_cs = load_SHC(FileTool.get_project_dir("data/auxiliary/ocean360_grndline.sh"), lmax=360, key="",
-    #                     lmcs_in_queue=(1, 2, 3, 4))
-    # ocean_shc = SHC(*ocean_cs)
-    # ocean_grid = ocean_shc.to_grid(0.5)
-    #
-    # ocean = ocean_grid.data[0]
-    # ocean[np.where((ocean >= 0.5))] = 1
-    # ocean[np.where((ocean < 0.5))] = 0
-
-    # ocean_buffer = np.load(
-    #     FileTool.get_project_dir("temp/ocean_300km-buffer(360,720))_Uebbing.npy")
-    # )
-    # ocean_buffer[np.where((ocean_buffer >= 0.5))] = 1
-    # ocean_buffer[np.where((ocean_buffer < 0.5))] = 0
-    #
-    #
-    # with h5py.File(FileTool.get_project_dir("temp/ocean_mask.hdf5"), "w") as f:
-    #     f.create_dataset("lat", data=ocean_grid.lat)
-    #     f.create_dataset("lon", data=ocean_grid.lon)
-    #     f.create_dataset("ocean_without_buffer", data=ocean)
-    #     f.create_dataset("ocean_with_buffer300km", data=ocean_buffer)
-
-    with h5py.File(FileTool.get_project_dir("temp/ocean_mask.hdf5"), "r") as f:
-        ocean = np.array(f["ocean_without_buffer"])
-        ocean_buffer = np.array(f["ocean_with_buffer300km"])
-        lat = np.array(f["lat"])
-        lon = np.array(f["lon"])
-
-    plot_grids(
-        np.array([ocean, ocean_buffer, ocean - ocean_buffer]),
-        lat, lon
-    )
-
-    FileTool.get_hdf5_structure(FileTool.get_project_dir("temp/ocean_mask.hdf5"))
-
-    # with h5py.File(FileTool.get_project_dir("temp/ocean_mask.hdf5"), "w") as f:
-    #     f.create_dataset("lat", data=lat)
-    #     f.create_dataset("lon", data=lon)
-    #     f.create_dataset("ocean_without_buffer", data=ocean)
-    #     f.create_dataset("ocean_with_buffer300km", data=ocean_buffer)
+    load = load_SHC(filepath, key="gfc", lmax=60, lmcs_in_queue=(2, 3, 4, 5), get_dates=False)
+    pass
 
 
 if __name__ == '__main__':
-    demo_2()
+    demo()
