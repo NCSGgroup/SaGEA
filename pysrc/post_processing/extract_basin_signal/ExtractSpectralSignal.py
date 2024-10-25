@@ -6,7 +6,7 @@ import numpy as np
 from pysrc.data_class.DataClass import SHC
 from pysrc.post_processing.extract_basin_signal.ExtractSpectralSignalConfig import ExtractSpectralSignalConfig
 
-from pysrc.auxiliary.load_file.LoadL2SH import load_SHC
+from pysrc.auxiliary.load_file.LoadL2SH import load_cs
 from pysrc.auxiliary.preference.Constants import GeoConstants
 
 
@@ -39,7 +39,7 @@ class ExtractSpectral:
             if type(basin[0]) is pathlib.WindowsPath:
                 path = basin[0]
                 lmax = self._configuration.lmax
-                self.basin_clm, self.basin_slm = load_SHC(path, key='', lmax=lmax, lmcs_in_queue=(1, 2, 3, 4))
+                self.basin_clm, self.basin_slm = load_cs(path, key='', lmax=lmax, lmcs_in_queue=(1, 2, 3, 4))
 
             elif type(basin[0]) is SHC:
                 basin_cqlm, basin_sqlm = basin[0].get_cs2d()

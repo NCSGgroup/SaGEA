@@ -138,7 +138,7 @@ def demo():
 
     from pysrc.data_class.DataClass import SHC
 
-    from pysrc.auxiliary.load_file.LoadL2SH import LoadL2SH, load_SHC
+    from pysrc.auxiliary.load_file.LoadL2SH import LoadL2SH, load_cs
     from pysrc.auxiliary.aux_tool.MathTool import MathTool
     from pysrc.auxiliary.aux_tool.FileTool import FileTool
     from pysrc.auxiliary.preference.EnumClasses import L2InstituteType
@@ -155,7 +155,7 @@ def demo():
 
     '''load gsm'''
     gif48_path = FileTool.get_project_dir() / 'data/auxiliary/GIF48.gfc'
-    clm_bg, slm_bg = load_SHC(gif48_path, key='gfc', lmax=60)
+    clm_bg, slm_bg = load_cs(gif48_path, key='gfc', lmax=60)
     shc_bg = SHC(clm_bg, slm_bg)
 
     load = LoadL2SH()

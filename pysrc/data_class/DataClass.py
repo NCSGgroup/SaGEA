@@ -14,6 +14,16 @@ class SHC(CoreSHC):
     def __init__(self, c, s=None):
         super().__init__(c, s)
 
+    def __add__(self, other):
+        assert issubclass(type(other), CoreSHC)
+
+        return SHC(self.value + other.value)
+
+    def __sub__(self, other):
+        assert issubclass(type(other), CoreSHC)
+
+        return SHC(self.value - other.value)
+
     def to_grid(self, grid_space=None):
         if grid_space is None:
             grid_space = int(180 / self.get_lmax())

@@ -1,3 +1,5 @@
+import copy
+
 import numpy as np
 
 from pysrc.auxiliary.aux_tool.MathTool import MathTool
@@ -125,3 +127,39 @@ class CoreSHC:
         cs = np.eye(basis_num)
 
         return CoreSHC(cs)
+
+    def __add__(self, other):
+        assert issubclass(type(other), CoreSHC)
+
+        return CoreSHC(self.value + other.value)
+
+    def __sub__(self, other):
+        assert issubclass(type(other), CoreSHC)
+
+        return CoreSHC(self.value - other.value)
+
+    def add(self, shc, lmax=None):
+        if lmax is None:
+            self.value += shc.value
+            return self
+
+        else:
+            assert lmax <= self.get_lmax()
+
+            shc_copy = copy.deepcopy(shc)
+            shc_copy.value[:, (lmax + 1) ** 2:] = 0
+
+            return self.add(shc_copy)
+
+    def minus(self, shc, lmax=None):
+        if lmax is None:
+            self.value -= shc.value
+            return self
+
+        else:
+            assert lmax <= self.get_lmax()
+
+            shc_copy = copy.deepcopy(shc)
+            shc_copy.value[:, (lmax + 1) ** 2:] = 0
+
+            return self.minus(shc_copy)

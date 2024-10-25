@@ -13,7 +13,7 @@ from pysrc.auxiliary.aux_tool.TimeTool import TimeTool
 from pysrc.data_class.DataClass import SHC
 
 
-def load_SHC(*filepath, key: str, lmax: int, lmcs_in_queue=None, get_dates=False):
+def load_cs(*filepath, key: str, lmax: int, lmcs_in_queue=None, get_dates=False):
     """
 
     :param filepath: path of SH file
@@ -48,17 +48,54 @@ def load_SHC(*filepath, key: str, lmax: int, lmcs_in_queue=None, get_dates=False
         date_begin, date_end = None, None
 
         if get_dates:
-            date_begin_end_pattern = r"(\d{4})-?(\d{2})-?(\d{2})-(\d{4})-?(\d{2})-?(\d{2})"
-            date_begin_end_searched = re.search(date_begin_end_pattern, filepath[0].name)
+            date_begin_end_searched = None
+
+            '''date format: yyyymmdd-yyyymmdd or yyyy-mm-dd-yyyy-mm-dd'''
+            if date_begin_end_searched is None:
+                date_begin_end_pattern = r"(\d{4})-?(\d{2})-?(\d{2})-(\d{4})-?(\d{2})-?(\d{2})"
+                date_begin_end_searched = re.search(date_begin_end_pattern, filepath[0].name)
+
+                if date_begin_end_searched is not None:
+                    date_begin_end = date_begin_end_searched.groups()
+                    date_begin = datetime.date(*list(map(int, date_begin_end[:3])))
+                    date_end = datetime.date(*list(map(int, date_begin_end[3:])))
+
+            '''date format: yyyyddd-yyyyddd'''
+            if date_begin_end_searched is None:
+                date_begin_end_pattern = r"(\d{4})(\d{3})-(\d{4})(\d{3})"
+                date_begin_end_searched = re.search(date_begin_end_pattern, filepath[0].name)
+
+                if date_begin_end_searched is not None:
+                    date_begin_end = date_begin_end_searched.groups()
+                    date_begin = datetime.date(int(date_begin_end[0]), 1, 1) + datetime.timedelta(
+                        days=int(date_begin_end[1]) - 1)
+                    date_end = datetime.date(int(date_begin_end[2]), 1, 1) + datetime.timedelta(
+                        days=int(date_begin_end[3]) - 1)
+
+            '''date format: yyyymm'''
+            if date_begin_end_searched is None:
+                date_begin_end_pattern = r"_(\d{4})(\d{2})_"
+                date_begin_end_searched = re.search(date_begin_end_pattern, filepath[0].name)
+
+                if date_begin_end_searched is not None:
+                    year_month = date_begin_end_searched.groups()
+                    year = int(year_month[0])
+                    month = int(year_month[1])
+
+                    date_begin = datetime.date(int(year), month, 1)
+                    if month < 12:
+                        date_end = datetime.date(year, month + 1, 1) - datetime.timedelta(days=1)
+                    elif month == 12:
+                        date_end = datetime.date(year + 1, 1, 1) + datetime.timedelta(days=1)
+                    else:
+                        assert False
+
             assert date_begin_end_searched is not None
-            date_begin_end = date_begin_end_searched.groups()
-            date_begin = datetime.date(*list(map(int, date_begin_end[:3])))
-            date_end = datetime.date(*list(map(int, date_begin_end[3:])))
 
         with open(filepath[0]) as f:
             txt_list = f.readlines()
             for i in range(len(txt_list)):
-                if txt_list[i].startswith(key):
+                if txt_list[i].replace(" ", "").startswith(key):
                     this_line = txt_list[i].split()
 
                     # if len(this_line) == 4 and are_all_num(this_line):
@@ -87,19 +124,19 @@ def load_SHC(*filepath, key: str, lmax: int, lmcs_in_queue=None, get_dates=False
 
         if get_dates:
             for i in range(len(filepath)):
-                clm, slm, d_begin, d_end = load_SHC(filepath[i], key=key, lmax=lmax, lmcs_in_queue=lmcs_in_queue,
-                                                    get_dates=get_dates)
+                clm, slm, d_begin, d_end = load_cs(filepath[i], key=key, lmax=lmax, lmcs_in_queue=lmcs_in_queue,
+                                                   get_dates=get_dates)
 
                 cqlm.append(clm)
                 sqlm.append(slm)
                 dates_begin.append(d_begin[0])
                 dates_end.append(d_end[0])
 
-                return np.array(cqlm), np.array(sqlm), dates_begin, dates_end
+            return np.array(cqlm), np.array(sqlm), dates_begin, dates_end
 
         else:
             for i in range(len(filepath)):
-                clm, slm = load_SHC(filepath[i], key=key, lmax=lmax, lmcs_in_queue=lmcs_in_queue, get_dates=get_dates)
+                clm, slm = load_cs(filepath[i], key=key, lmax=lmax, lmcs_in_queue=lmcs_in_queue, get_dates=get_dates)
 
                 cqlm.append(clm)
                 sqlm.append(slm)
@@ -448,7 +485,7 @@ def demo():
     filepath = FileTool.get_project_dir(
         "data/L2_SH_products/GSM/custom1/HAE_HUST-Release-06_60x60_unfiltered_GSM-2_2010-07-01-2010-07-31_GRAC_HUST_BA01_0600.gfc")
 
-    load = load_SHC(filepath, key="gfc", lmax=60, lmcs_in_queue=(2, 3, 4, 5), get_dates=False)
+    load = load_cs(filepath, key="gfc", lmax=60, lmcs_in_queue=(2, 3, 4, 5), get_dates=False)
     pass
 
 

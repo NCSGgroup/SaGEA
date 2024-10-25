@@ -1,5 +1,5 @@
 {
-  "GSM_from_local_dir": "data/L2_SH_products/GSM/custom3",
+  "GSM_from_local_dir": "",
   "?GSM_from_local_dir": "relative dir, like data/L2_SH_products/GSM/CSR/RL06/BA01/2002, or empty string",
 
   "GSM_key": "gfc",

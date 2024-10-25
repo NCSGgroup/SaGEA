@@ -7,7 +7,7 @@ from pysrc.auxiliary.core_data_class.CoreGRID import CoreGRID
 from pysrc.data_class.DataClass import GRID
 from pysrc.post_processing.extract_basin_signal.ExtractSpatialSignalConfig import ExtractSpatialSignalConfig
 
-from pysrc.auxiliary.load_file.LoadL2SH import load_SHC
+from pysrc.auxiliary.load_file.LoadL2SH import load_cs
 from pysrc.auxiliary.preference.Constants import GeoConstants
 from pysrc.post_processing.harmonic.Harmonic import Harmonic
 
@@ -49,7 +49,7 @@ class ExtractSpatial:
 
     def __load_SHC_to_basin(self, path: Path):
         lmax = 60
-        clm_basin, slm_basin = load_SHC(path, key='', lmax=lmax, lmcs_in_queue=(1, 2, 3, 4))
+        clm_basin, slm_basin = load_cs(path, key='', lmax=lmax, lmcs_in_queue=(1, 2, 3, 4))
         har = Harmonic(self.configuration.lat_range, self.configuration.lon_range, lmax)
         grid_basin = har.synthesis_for_csqlm(np.array([clm_basin]), np.array([slm_basin]))[0]
 

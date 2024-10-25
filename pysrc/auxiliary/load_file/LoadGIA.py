@@ -1,8 +1,11 @@
 import pathlib
 import warnings
 
-from pysrc.data_class.DataClass import SHC
-from pysrc.auxiliary.load_file.LoadL2SH import load_SHC
+import numpy as np
+
+from pysrc.auxiliary.aux_tool.TimeTool import TimeTool
+from pysrc.auxiliary.core_data_class.CoreSHC import CoreSHC
+from pysrc.auxiliary.load_file.LoadL2SH import load_cs
 from pysrc.auxiliary.preference.EnumClasses import GIAModel
 from pysrc.auxiliary.aux_tool.FileTool import FileTool
 
@@ -10,7 +13,8 @@ from pysrc.auxiliary.aux_tool.FileTool import FileTool
 class LoadGIAConfig:
     def __init__(self):
         self.__lmax: int = 60
-        self.__filepath = None
+        self.__filepath = FileTool.get_project_dir() / 'data/GIA/GIA.ICE-6G_D.txt'
+        self.__dates = None
 
     def set_filepath(self, filepath: pathlib.WindowsPath):
         warnings.warn('This function is deprecated, use .set_GIA_model instead', DeprecationWarning)
@@ -46,6 +50,13 @@ class LoadGIAConfig:
     def get_lmax(self):
         return self.__lmax
 
+    def set_dates(self, dates: list):
+        self.__dates = dates
+        return self
+
+    def get_dates(self):
+        return self.__dates
+
 
 class LoadGIA:
     def __init__(self):
@@ -55,8 +66,20 @@ class LoadGIA:
         gia_filepath = self.configuration.get_filepath()
         lmax = self.configuration.get_lmax()
 
-        clm, slm = load_SHC(gia_filepath, key='', lmax=lmax, lmcs_in_queue=(1, 2, 3, 4))
-        shc = SHC(clm, slm)
+        clm_trend, slm_trend = load_cs(gia_filepath, key='', lmax=lmax, lmcs_in_queue=(1, 2, 3, 4))
+        shc_trend = CoreSHC(clm_trend, slm_trend)
+
+        times_list = self.configuration.get_dates()
+
+        year_frac = TimeTool.convert_date_format(times_list,
+                                                 input_type=TimeTool.DateFormat.ClassDate,
+                                                 output_type=TimeTool.DateFormat.YearFraction)
+
+        year_frac = np.array(year_frac)
+
+        cs_gia_trend = shc_trend.value[0]
+        cs_each_times = year_frac[:, None] @ cs_gia_trend[None, :]
+        shc = CoreSHC(cs_each_times)
 
         return shc
 
