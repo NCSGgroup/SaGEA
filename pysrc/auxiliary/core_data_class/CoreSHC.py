@@ -138,28 +138,38 @@ class CoreSHC:
 
         return CoreSHC(self.value - other.value)
 
-    def add(self, shc, lmax=None):
-        if lmax is None:
+    def add(self, shc, lbegin=None, lend=None):
+        if (lend is None) and (lbegin is None):
             self.value += shc.value
             return self
 
         else:
-            assert lmax <= self.get_lmax()
+            assert (lend is None) or (0 <= lend <= self.get_lmax())
+            assert (lbegin is None) or (0 <= lbegin <= self.get_lmax())
 
             shc_copy = copy.deepcopy(shc)
-            shc_copy.value[:, (lmax + 1) ** 2:] = 0
+
+            if lend is not None:
+                shc_copy.value[:, (lend + 1) ** 2:] = 0
+            if lbegin is not None:
+                shc_copy.value[:, :lbegin ** 2] = 0
 
             return self.add(shc_copy)
 
-    def minus(self, shc, lmax=None):
-        if lmax is None:
+    def subtract(self, shc, lbegin=None, lend=None):
+        if (lend is None) and (lbegin is None):
             self.value -= shc.value
             return self
 
         else:
-            assert lmax <= self.get_lmax()
+            assert (lend is None) or (0 <= lend <= self.get_lmax())
+            assert (lbegin is None) or (0 <= lbegin <= self.get_lmax())
 
             shc_copy = copy.deepcopy(shc)
-            shc_copy.value[:, (lmax + 1) ** 2:] = 0
 
-            return self.minus(shc_copy)
+            if lend is not None:
+                shc_copy.value[:, (lend + 1) ** 2:] = 0
+            if lbegin is not None:
+                shc_copy.value[:, :lbegin ** 2] = 0
+
+            return self.subtract(shc_copy)

@@ -69,7 +69,6 @@ class OLSFor1d:
 
         self.__times = times
         fit_result = curve_fit(fit_function, times, values)
-        # fit_result = curve_fit(fit_function, times - times[0], values)
         z = fit_result[0][0]
         self.__z = z
 

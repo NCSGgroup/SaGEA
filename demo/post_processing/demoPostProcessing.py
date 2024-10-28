@@ -23,7 +23,8 @@ from pysrc.auxiliary.aux_tool.TimeTool import TimeTool
 from pysrc.post_processing.GIA_correction.GIACorrectionSpectral import GIACorrectionSpectral
 from pysrc.post_processing.Love_number.LoveNumber import LoveNumber
 from pysrc.post_processing.convert_field_physical_quantity.ConvertSHC import ConvertSHC, FieldPhysicalQuantity
-from pysrc.auxiliary.load_file.LoadL2SH import LoadL2SH, load_SHC
+from pysrc.auxiliary.load_file.LoadL2SH import LoadL2SH, load_cs
+from pysrc.post_processing.filter.Gaussian import Gaussian
 from pysrc.post_processing.filter.GetSHCFilter import get_shc_decorrelation, get_shc_filter
 from pysrc.post_processing.leakage.BaseModelDriven import ModelDriven
 from pysrc.post_processing.leakage.BufferZone import BufferZone
@@ -415,7 +416,7 @@ class PostProcessing:
         if isinstance(basin, BasinName):
             basin_name = basin.name
             basin_shc_filepath = FileTool.get_project_dir() / f'data/basin_mask/{basin_name}_maskSH.dat'
-            basin_clm, basin_slm = load_SHC(basin_shc_filepath, key='', lmcs_in_queue=(1, 2, 3, 4), lmax=lmax)
+            basin_clm, basin_slm = load_cs(basin_shc_filepath, key='', lmcs_in_queue=(1, 2, 3, 4), lmax=lmax)
             shc_basin = SHC(basin_clm, basin_slm)
 
             basin_map = self.harmonic.synthesis(shc_basin).value
@@ -477,8 +478,8 @@ class PostProcessing:
             lmax = self.configuration.get_lmax()
             key = self.configuration.get_gsm_key()
 
-            cqlm, sqlm, dates_begin, dates_end = load_SHC(*file_path, key=key, lmax=lmax, lmcs_in_queue=(2, 3, 4, 5),
-                                                          get_dates=True)
+            cqlm, sqlm, dates_begin, dates_end = load_cs(*file_path, key=key, lmax=lmax, lmcs_in_queue=(2, 3, 4, 5),
+                                                         get_dates=True)
 
             self.dates_begin = dates_begin
             self.dates_end = dates_end
@@ -784,19 +785,20 @@ def demo():
     pp.replace_low_degree()
 
     gif48_path = FileTool.get_project_dir("data/auxiliary/GIF48.gfc")
-    cs_gif48 = load_SHC(gif48_path, key="gfc", lmax=pp.configuration.get_lmax(), lmcs_in_queue=(2, 3, 4, 5))
+    cs_gif48 = load_cs(gif48_path, key="gfc", lmax=pp.configuration.get_lmax(), lmcs_in_queue=(2, 3, 4, 5))
     shc_gif48 = SHC(*cs_gif48)
     pp.deduct_background(shc_gif48)
+    # pp.deduct_background()
 
-    # pp.correct_gia()
+    pp.correct_gia()
     # pp.de_correlation()
     pp.filter()
-    pp.shc_to_grid(field_type=FieldPhysicalQuantity.Geoid)  # synthesis harmonic to (EWH) grid
+    pp.shc_to_grid(field_type=FieldPhysicalQuantity.EWH)  # synthesis harmonic to (EWH) grid
 
     grids = pp.get_filtered_grids()
 
     plot_grids(
-        grids.value[0],
+        grids.value[1],
         *MathTool.get_lat_lon_degree(pp.harmonic.lat, pp.harmonic.lon),
     )
 
@@ -819,5 +821,115 @@ def demo():
     # print(ols.get_trend())
 
 
+def demo2():
+    """"""
+
+    lmax = 60
+
+    # gsm_paths = [
+    #     FileTool.get_project_dir("data/L2_SH_products/GSM/experimental/CRA_Licom_1007")
+    # ]
+    # gsm_key = "gfc"
+    #
+    # gad_paths = [
+    #     FileTool.get_project_dir("data/L2_SH_products/GAD/experimental/CRA_Licom_2009_2010")
+    # ]
+    # gad_key = "gfc"
+
+    gsm_paths = [
+        FileTool.get_project_dir("data/L2_SH_products/GSM/experimental/AOD_6h")
+    ]
+    gsm_key = "gfc"
+
+    gad_paths = [
+        FileTool.get_project_dir("data/L2_SH_products/GAD/GFZ/RL06/BC01/2009"),
+        FileTool.get_project_dir("data/L2_SH_products/GAD/GFZ/RL06/BC01/2010")
+    ]
+    gad_key = "GRCOF2"
+
+    '''load GSM'''
+    gsm_paths_list = []
+    for i in range(len(gsm_paths)):
+        gsm_paths_list += list(gsm_paths[i].iterdir())
+
+    cqlm, sqlm, dates_begin, dates_end = load_cs(*gsm_paths_list, key=gsm_key, lmax=lmax, lmcs_in_queue=(2, 3, 4, 5),
+                                                 get_dates=True)
+    shc = SHC(cqlm, sqlm)
+    dates_ave = TimeTool.get_average_dates(dates_begin, dates_end)
+
+    '''load low-degrees'''
+    low_degs = dict()
+
+    load_degree1 = LoadLowDegree()
+    load_degree1.configuration.set_file_id(L2LowDegreeFileID.TN13)
+    deg1 = load_degree1.get_degree1()
+    low_degs.update(deg1)
+
+    load_c20 = LoadLowDegree()
+    load_c20.configuration.set_file_id(L2LowDegreeFileID.TN14)
+    c20 = load_c20.get_c20()
+    low_degs.update(c20)
+
+    load_c30 = LoadLowDegree()
+    load_c30.configuration.set_file_id(L2LowDegreeFileID.TN14)
+    c30 = load_c30.get_c30()
+    low_degs.update(c30)
+
+    '''load GAD'''
+    gad_paths_list = []
+    for i in range(len(gad_paths)):
+        gad_paths_list += list(gad_paths[i].iterdir())
+
+    cqlm_gad, sqlm_gad, _, _ = load_cs(*gad_paths_list, key=gad_key, lmax=lmax, lmcs_in_queue=(2, 3, 4, 5),
+                                       get_dates=True)
+    shc_gad = SHC(cqlm_gad, sqlm_gad)
+
+    '''load GIA'''
+    load_gia = LoadGIA()
+    load_gia.configuration.set_lmax(lmax)
+    load_gia.configuration.set_dates(dates_ave)
+    shc_gia = load_gia.get_shc()
+
+    '''replace low degrees'''
+    replace_low_degs = ReplaceLowDegree()
+    replace_low_degs.configuration.set_replace_deg1(True).set_replace_c20(True).set_replace_c30(True)
+
+    replace_low_degs.set_low_degrees(low_degs)
+    shc = replace_low_degs.apply_to(shc, begin_dates=dates_begin, end_dates=dates_end)
+
+    '''add gad'''
+    shc += shc_gad
+
+    '''minus gia'''
+    shc -= shc_gia
+    shc.de_background()  # de-average
+
+    '''filtering'''
+    gs = Gaussian()
+    gs.configuration.set_lmax(lmax)
+    gs.configuration.set_filtering_radius(300)
+    shc = gs.apply_to(shc)
+
+    '''convert to EWH'''
+    LN = LoveNumber()
+    LN.configuration.set_lmax(lmax)
+
+    ln = LN.get_Love_number()
+
+    convert = ConvertSHC()
+    convert.configuration.set_Love_number(ln).set_input_type(FieldPhysicalQuantity.Dimensionless).set_output_type(
+        FieldPhysicalQuantity.EWH)
+    shc = convert.apply_to(shc)
+
+    '''harmonic synthesis to grid'''
+    grid_space = 1
+    grid = shc.to_grid(grid_space)
+
+    '''plot'''
+    plot_grids(grid.value[:3], grid.lat, grid.lon, vmin=-0.2, vmax=0.2)
+
+    pass
+
+
 if __name__ == '__main__':
-    demo()
+    demo2()
