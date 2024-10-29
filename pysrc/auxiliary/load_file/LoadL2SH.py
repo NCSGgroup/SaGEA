@@ -509,22 +509,3 @@ class LoadL2SH:
 
         return filepath_list
 
-
-def demo():
-    filepath0 = FileTool.get_project_dir(
-        "data/L2_SH_products/GSM/CSR/RL06/BA01")
-    filepath1 = filepath0 / "2004"
-    filepath2 = filepath1 / "GSM-2_2004001-2004013_GRAC_UTCSR_BA01_0600"
-
-    file_list = FileTool.get_files_in_dir(filepath1, sub=True)
-
-    load = load_SHC(
-        filepath0, key="GRCOF2", lmax=60, lmcs_in_queue=(2, 3, 4, 5), get_dates=True,
-        begin_date=datetime.date(2004, 4, 1), end_date=datetime.date(2004, 6, 30)
-    )
-
-    pass
-
-
-if __name__ == '__main__':
-    demo()
