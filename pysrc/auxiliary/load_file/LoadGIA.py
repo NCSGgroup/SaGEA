@@ -5,7 +5,7 @@ import numpy as np
 
 from pysrc.auxiliary.aux_tool.TimeTool import TimeTool
 from pysrc.auxiliary.core_data_class.CoreSHC import CoreSHC
-from pysrc.auxiliary.load_file.LoadL2SH import load_cs
+from pysrc.auxiliary.load_file.LoadL2SH import load_SHC
 from pysrc.auxiliary.preference.EnumClasses import GIAModel
 from pysrc.auxiliary.aux_tool.FileTool import FileTool
 
@@ -66,8 +66,7 @@ class LoadGIA:
         gia_filepath = self.configuration.get_filepath()
         lmax = self.configuration.get_lmax()
 
-        clm_trend, slm_trend = load_cs(gia_filepath, key='', lmax=lmax, lmcs_in_queue=(1, 2, 3, 4))
-        shc_trend = CoreSHC(clm_trend, slm_trend)
+        shc_trend = load_SHC(gia_filepath, key='', lmax=lmax, lmcs_in_queue=(1, 2, 3, 4))
 
         times_list = self.configuration.get_dates()
 

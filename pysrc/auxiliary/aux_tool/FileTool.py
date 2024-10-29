@@ -107,6 +107,22 @@ class FileTool:
         return dir_up_to_year
 
     @staticmethod
+    def get_files_in_dir(fp, sub=False):
+        assert fp.is_dir, f"{fp} is not a directory."
+
+        file_list = []
+
+        iterlist = list(fp.iterdir())
+        for i in range(len(iterlist)):
+            if iterlist[i].is_file():
+                file_list.append(iterlist[i])
+
+            elif sub:
+                file_list += FileTool.get_files_in_dir(iterlist[i], sub=sub)
+
+        return file_list
+
+    @staticmethod
     def un_gz(gz_file_path: Path, target_path: Path = None):
 
         if target_path is None:

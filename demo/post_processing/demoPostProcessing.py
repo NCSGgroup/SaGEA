@@ -23,7 +23,7 @@ from pysrc.auxiliary.aux_tool.TimeTool import TimeTool
 from pysrc.post_processing.GIA_correction.GIACorrectionSpectral import GIACorrectionSpectral
 from pysrc.post_processing.Love_number.LoveNumber import LoveNumber
 from pysrc.post_processing.convert_field_physical_quantity.ConvertSHC import ConvertSHC, FieldPhysicalQuantity
-from pysrc.auxiliary.load_file.LoadL2SH import LoadL2SH, load_cs
+from pysrc.auxiliary.load_file.LoadL2SH import LoadL2SH, load_SHC
 from pysrc.post_processing.filter.Gaussian import Gaussian
 from pysrc.post_processing.filter.GetSHCFilter import get_shc_decorrelation, get_shc_filter
 from pysrc.post_processing.leakage.BaseModelDriven import ModelDriven
@@ -416,7 +416,7 @@ class PostProcessing:
         if isinstance(basin, BasinName):
             basin_name = basin.name
             basin_shc_filepath = FileTool.get_project_dir() / f'data/basin_mask/{basin_name}_maskSH.dat'
-            basin_clm, basin_slm = load_cs(basin_shc_filepath, key='', lmcs_in_queue=(1, 2, 3, 4), lmax=lmax)
+            basin_clm, basin_slm = load_SHC(basin_shc_filepath, key='', lmcs_in_queue=(1, 2, 3, 4), lmax=lmax)
             shc_basin = SHC(basin_clm, basin_slm)
 
             basin_map = self.harmonic.synthesis(shc_basin).value
@@ -478,8 +478,8 @@ class PostProcessing:
             lmax = self.configuration.get_lmax()
             key = self.configuration.get_gsm_key()
 
-            cqlm, sqlm, dates_begin, dates_end = load_cs(*file_path, key=key, lmax=lmax, lmcs_in_queue=(2, 3, 4, 5),
-                                                         get_dates=True)
+            cqlm, sqlm, dates_begin, dates_end = load_SHC(*file_path, key=key, lmax=lmax, lmcs_in_queue=(2, 3, 4, 5),
+                                                          get_dates=True)
 
             self.dates_begin = dates_begin
             self.dates_end = dates_end
@@ -785,7 +785,7 @@ def demo():
     pp.replace_low_degree()
 
     gif48_path = FileTool.get_project_dir("data/auxiliary/GIF48.gfc")
-    cs_gif48 = load_cs(gif48_path, key="gfc", lmax=pp.configuration.get_lmax(), lmcs_in_queue=(2, 3, 4, 5))
+    cs_gif48 = load_SHC(gif48_path, key="gfc", lmax=pp.configuration.get_lmax(), lmcs_in_queue=(2, 3, 4, 5))
     shc_gif48 = SHC(*cs_gif48)
     pp.deduct_background(shc_gif48)
     # pp.deduct_background()
@@ -852,8 +852,8 @@ def demo2():
     for i in range(len(gsm_paths)):
         gsm_paths_list += list(gsm_paths[i].iterdir())
 
-    cqlm, sqlm, dates_begin, dates_end = load_cs(*gsm_paths_list, key=gsm_key, lmax=lmax, lmcs_in_queue=(2, 3, 4, 5),
-                                                 get_dates=True)
+    cqlm, sqlm, dates_begin, dates_end = load_SHC(*gsm_paths_list, key=gsm_key, lmax=lmax, lmcs_in_queue=(2, 3, 4, 5),
+                                                  get_dates=True)
     shc = SHC(cqlm, sqlm)
     dates_ave = TimeTool.get_average_dates(dates_begin, dates_end)
 
@@ -880,8 +880,8 @@ def demo2():
     for i in range(len(gad_paths)):
         gad_paths_list += list(gad_paths[i].iterdir())
 
-    cqlm_gad, sqlm_gad, _, _ = load_cs(*gad_paths_list, key=gad_key, lmax=lmax, lmcs_in_queue=(2, 3, 4, 5),
-                                       get_dates=True)
+    cqlm_gad, sqlm_gad, _, _ = load_SHC(*gad_paths_list, key=gad_key, lmax=lmax, lmcs_in_queue=(2, 3, 4, 5),
+                                        get_dates=True)
     shc_gad = SHC(cqlm_gad, sqlm_gad)
 
     '''load GIA'''

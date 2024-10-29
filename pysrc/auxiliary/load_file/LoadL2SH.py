@@ -3,7 +3,6 @@ import datetime
 import json
 from pathlib import Path, WindowsPath
 
-import h5py
 import numpy as np
 
 from pysrc.auxiliary.preference.EnumClasses import L2ProductType, L2InstituteType, L2Release
@@ -13,7 +12,62 @@ from pysrc.auxiliary.aux_tool.TimeTool import TimeTool
 from pysrc.data_class.DataClass import SHC
 
 
-def load_cs(*filepath, key: str, lmax: int, lmcs_in_queue=None, get_dates=False):
+def match_dates_from_filename(filename):
+    match_flag = False
+    this_date_begin, this_date_end = None, None
+
+    '''date format: yyyymmdd-yyyymmdd or yyyy-mm-dd-yyyy-mm-dd'''
+    if not match_flag:
+        date_begin_end_pattern = r"(\d{4})-?(\d{2})-?(\d{2})-(\d{4})-?(\d{2})-?(\d{2})"
+        date_begin_end_searched = re.search(date_begin_end_pattern, filename)
+
+        if date_begin_end_searched is not None:
+            date_begin_end = date_begin_end_searched.groups()
+            this_date_begin = datetime.date(*list(map(int, date_begin_end[:3])))
+            this_date_end = datetime.date(*list(map(int, date_begin_end[3:])))
+
+            match_flag = True
+
+    '''date format: yyyyddd-yyyyddd'''
+    if not match_flag:
+        date_begin_end_pattern = r"(\d{4})(\d{3})-(\d{4})(\d{3})"
+        date_begin_end_searched = re.search(date_begin_end_pattern, filename)
+
+        if date_begin_end_searched is not None:
+            date_begin_end = date_begin_end_searched.groups()
+            this_date_begin = datetime.date(int(date_begin_end[0]), 1, 1) + datetime.timedelta(
+                days=int(date_begin_end[1]) - 1)
+            this_date_end = datetime.date(int(date_begin_end[2]), 1, 1) + datetime.timedelta(
+                days=int(date_begin_end[3]) - 1)
+
+            match_flag = True
+
+    '''date format: yyyymm'''
+    if not match_flag:
+        date_begin_end_pattern = r"_(\d{4})(\d{2})_"
+        date_begin_end_searched = re.search(date_begin_end_pattern, filename)
+
+        if date_begin_end_searched is not None:
+            year_month = date_begin_end_searched.groups()
+            year = int(year_month[0])
+            month = int(year_month[1])
+
+            this_date_begin = datetime.date(int(year), month, 1)
+            if month < 12:
+                this_date_end = datetime.date(year, month + 1, 1) - datetime.timedelta(days=1)
+            elif month == 12:
+                this_date_end = datetime.date(year + 1, 1, 1) + datetime.timedelta(days=1)
+            else:
+                assert False
+
+            match_flag = True
+
+    assert match_flag, f"illegal date format in filename: {filename}"
+
+    return this_date_begin, this_date_end
+
+
+def load_SHC(*filepath, key: str, lmax: int, lmcs_in_queue=None, get_dates=False, begin_date=None, end_date=None):
     """
 
     :param filepath: path of SH file
@@ -21,127 +75,102 @@ def load_cs(*filepath, key: str, lmax: int, lmcs_in_queue=None, get_dates=False)
     :param lmax: max degree and order.
     :param lmcs_in_queue: iter, Number of columns where degree l, order m, coefficient clm, and slm are located.
     :param get_dates: bool, if True return dates.
-    :return: 2d tuple, whose elements are clm and slm in form of 2d array.
+    :param begin_date: beginning date to load
+    :param end_date: ending date to load
+    :return: if get_dates:
+                cqlm, sqlm, dates_begin, dates_end
+            else:
+                cqlm, sqlm
     """
+
+    def are_all_num(x: list):
+        for i in lmcs_in_queue:
+            if x[i - 1].replace('e', '').replace('E', '').replace('E', '').replace('E', '').replace('-',
+                                                                                                    '').replace(
+                '+', '').replace('.', '').isnumeric():
+                pass
+            else:
+                return False
+
+        return True
+
     if len(filepath) == 1:
-        def are_all_num(x: list):
-            for i in lmcs_in_queue:
-                if x[i - 1].replace('e', '').replace('E', '').replace('E', '').replace('E', '').replace('-',
-                                                                                                        '').replace(
-                    '+', '').replace('.', '').isnumeric():
-                    pass
-                else:
-                    return False
+        if filepath[0].is_file():
 
-            return True
+            if lmcs_in_queue is None:
+                lmcs_in_queue = [2, 3, 4, 5]
 
-        if lmcs_in_queue is None:
-            lmcs_in_queue = [2, 3, 4, 5]
+            l_queue = lmcs_in_queue[0]
+            m_queue = lmcs_in_queue[1]
+            c_queue = lmcs_in_queue[2]
+            s_queue = lmcs_in_queue[3]
 
-        l_queue = lmcs_in_queue[0]
-        m_queue = lmcs_in_queue[1]
-        c_queue = lmcs_in_queue[2]
-        s_queue = lmcs_in_queue[3]
+            mat_shape = (lmax + 1, lmax + 1)
+            clm, slm = np.zeros(mat_shape), np.zeros(mat_shape)
 
-        mat_shape = (lmax + 1, lmax + 1)
-        clm, slm = np.zeros(mat_shape), np.zeros(mat_shape)
-        date_begin, date_end = None, None
+            with open(filepath[0]) as f:
+                txt_list = f.readlines()
+                for i in range(len(txt_list)):
+                    if txt_list[i].replace(" ", "").startswith(key):
+                        this_line = txt_list[i].split()
 
-        if get_dates:
-            date_begin_end_searched = None
+                        # if len(this_line) == 4 and are_all_num(this_line):
+                        if are_all_num(this_line):
+                            l = int(this_line[l_queue - 1])
+                            if l > lmax:
+                                continue
 
-            '''date format: yyyymmdd-yyyymmdd or yyyy-mm-dd-yyyy-mm-dd'''
-            if date_begin_end_searched is None:
-                date_begin_end_pattern = r"(\d{4})-?(\d{2})-?(\d{2})-(\d{4})-?(\d{2})-?(\d{2})"
-                date_begin_end_searched = re.search(date_begin_end_pattern, filepath[0].name)
+                            m = int(this_line[m_queue - 1])
 
-                if date_begin_end_searched is not None:
-                    date_begin_end = date_begin_end_searched.groups()
-                    date_begin = datetime.date(*list(map(int, date_begin_end[:3])))
-                    date_end = datetime.date(*list(map(int, date_begin_end[3:])))
+                            clm[l, m] = float(this_line[c_queue - 1])
+                            slm[l, m] = float(this_line[s_queue - 1])
 
-            '''date format: yyyyddd-yyyyddd'''
-            if date_begin_end_searched is None:
-                date_begin_end_pattern = r"(\d{4})(\d{3})-(\d{4})(\d{3})"
-                date_begin_end_searched = re.search(date_begin_end_pattern, filepath[0].name)
-
-                if date_begin_end_searched is not None:
-                    date_begin_end = date_begin_end_searched.groups()
-                    date_begin = datetime.date(int(date_begin_end[0]), 1, 1) + datetime.timedelta(
-                        days=int(date_begin_end[1]) - 1)
-                    date_end = datetime.date(int(date_begin_end[2]), 1, 1) + datetime.timedelta(
-                        days=int(date_begin_end[3]) - 1)
-
-            '''date format: yyyymm'''
-            if date_begin_end_searched is None:
-                date_begin_end_pattern = r"_(\d{4})(\d{2})_"
-                date_begin_end_searched = re.search(date_begin_end_pattern, filepath[0].name)
-
-                if date_begin_end_searched is not None:
-                    year_month = date_begin_end_searched.groups()
-                    year = int(year_month[0])
-                    month = int(year_month[1])
-
-                    date_begin = datetime.date(int(year), month, 1)
-                    if month < 12:
-                        date_end = datetime.date(year, month + 1, 1) - datetime.timedelta(days=1)
-                    elif month == 12:
-                        date_end = datetime.date(year + 1, 1, 1) + datetime.timedelta(days=1)
-                    else:
-                        assert False
-
-            assert date_begin_end_searched is not None
-
-        with open(filepath[0]) as f:
-            txt_list = f.readlines()
-            for i in range(len(txt_list)):
-                if txt_list[i].replace(" ", "").startswith(key):
-                    this_line = txt_list[i].split()
-
-                    # if len(this_line) == 4 and are_all_num(this_line):
-                    if are_all_num(this_line):
-                        l = int(this_line[l_queue - 1])
-                        if l > lmax:
+                        else:
                             continue
 
-                        m = int(this_line[m_queue - 1])
+            if get_dates:
+                this_date_begin, this_date_end = match_dates_from_filename(filepath[0].name)
+                # return clm, slm, [this_date_begin], [this_date_end]
+                return SHC(clm, slm), [this_date_begin], [this_date_end]
 
-                        clm[l, m] = float(this_line[c_queue - 1])
-                        slm[l, m] = float(this_line[s_queue - 1])
+            else:
+                return SHC(clm, slm)
 
-                    else:
-                        continue
+        elif filepath[0].is_dir():
+            file_list = FileTool.get_files_in_dir(filepath[0], sub=True)
+            files_to_load = []
+            for i in range(len(file_list)):
+                this_begin_date, this_end_date = match_dates_from_filename(file_list[i].name)
+                if this_begin_date >= begin_date and this_end_date <= end_date:
+                    files_to_load.append(file_list[i])
 
-        if get_dates:
-            return clm, slm, [date_begin], [date_end]
-
-        else:
-            return clm, slm
+            return load_SHC(*files_to_load, key=key, lmax=lmax, lmcs_in_queue=lmcs_in_queue,
+                            get_dates=get_dates, begin_date=begin_date, end_date=end_date)
 
     else:
-        cqlm, sqlm = [], []
+        shc = None
         dates_begin, dates_end = [], []
 
-        if get_dates:
-            for i in range(len(filepath)):
-                clm, slm, d_begin, d_end = load_cs(filepath[i], key=key, lmax=lmax, lmcs_in_queue=lmcs_in_queue,
-                                                   get_dates=get_dates)
+        for i in range(len(filepath)):
+            load = load_SHC(filepath[i], key=key, lmax=lmax, lmcs_in_queue=lmcs_in_queue,
+                            get_dates=get_dates, begin_date=begin_date, end_date=end_date)
 
-                cqlm.append(clm)
-                sqlm.append(slm)
+            assert len(load) in (1, 3)
+
+            if shc is None:
+                shc = load[0]
+            else:
+                shc.append(load[0])
+
+            if get_dates:
+                d_begin, d_end = load[1], load[2]
                 dates_begin.append(d_begin[0])
                 dates_end.append(d_end[0])
 
-            return np.array(cqlm), np.array(sqlm), dates_begin, dates_end
-
+        if get_dates:
+            return shc, dates_begin, dates_end
         else:
-            for i in range(len(filepath)):
-                clm, slm = load_cs(filepath[i], key=key, lmax=lmax, lmcs_in_queue=lmcs_in_queue, get_dates=get_dates)
-
-                cqlm.append(clm)
-                sqlm.append(slm)
-
-            return np.array(cqlm), np.array(sqlm)
+            return shc
 
 
 class LoadL2SHSingleFile:
@@ -482,10 +511,18 @@ class LoadL2SH:
 
 
 def demo():
-    filepath = FileTool.get_project_dir(
-        "data/L2_SH_products/GSM/custom1/HAE_HUST-Release-06_60x60_unfiltered_GSM-2_2010-07-01-2010-07-31_GRAC_HUST_BA01_0600.gfc")
+    filepath0 = FileTool.get_project_dir(
+        "data/L2_SH_products/GSM/CSR/RL06/BA01")
+    filepath1 = filepath0 / "2004"
+    filepath2 = filepath1 / "GSM-2_2004001-2004013_GRAC_UTCSR_BA01_0600"
 
-    load = load_cs(filepath, key="gfc", lmax=60, lmcs_in_queue=(2, 3, 4, 5), get_dates=False)
+    file_list = FileTool.get_files_in_dir(filepath1, sub=True)
+
+    load = load_SHC(
+        filepath0, key="GRCOF2", lmax=60, lmcs_in_queue=(2, 3, 4, 5), get_dates=True,
+        begin_date=datetime.date(2004, 4, 1), end_date=datetime.date(2004, 6, 30)
+    )
+
     pass
 
 

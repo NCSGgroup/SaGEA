@@ -4,7 +4,7 @@ import numpy as np
 
 from pysrc.data_class.DataClass import GRID
 from pysrc.data_class.DataClass import SHC
-from pysrc.auxiliary.load_file.LoadL2SH import load_cs
+from pysrc.auxiliary.load_file.LoadL2SH import load_SHC
 from pysrc.post_processing.leakage.Base import Leakage, filter_grids
 from pysrc.post_processing.filter.Base import SHCFilter
 from pysrc.post_processing.harmonic.Harmonic import Harmonic
@@ -30,7 +30,7 @@ class DataDrivenConfig:
 
         if type(basin) is pathlib.WindowsPath:
             lmax = self.harmonic.lmax
-            basin_clm, basin_slm = load_cs(basin, key='', lmax=lmax, lmcs_in_queue=(1, 2, 3, 4))
+            basin_clm, basin_slm = load_SHC(basin, key='', lmax=lmax, lmcs_in_queue=(1, 2, 3, 4))
             basin_map = har.synthesis(SHC(basin_clm, basin_slm)).value[0]
 
             self.basin_map = basin_map
