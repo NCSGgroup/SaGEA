@@ -1,6 +1,5 @@
 import numpy as np
 
-from pysrc.data_class.DataClass import SHC
 from pysrc.auxiliary.aux_tool.MathTool import MathTool
 from pysrc.post_processing.filter.Base import get_poly_func, SHCFilter
 
@@ -57,8 +56,18 @@ class PnMm(SHCFilter):
 
         return cqlm
 
-    def apply_to(self, shc: SHC):
-        cqlm, sqlm = shc.get_cs2d()
+    # def apply_to(self, shc: SHC):
+    #     cqlm, sqlm = shc.get_cs2d()
+    #
+    #     length_of_cqlm = np.shape(cqlm)[0]
+    #     csqlm = np.concatenate([cqlm, sqlm])
+    #     csqlm = self._apply_to_cqlm(csqlm)
+    #
+    #     cqlm_filtered = csqlm[:length_of_cqlm]
+    #     sqlm_filtered = csqlm[length_of_cqlm:]
+    #     return SHC(cqlm_filtered, sqlm_filtered)
+
+    def apply_to(self, cqlm, sqlm):
 
         length_of_cqlm = np.shape(cqlm)[0]
         csqlm = np.concatenate([cqlm, sqlm])
@@ -66,4 +75,4 @@ class PnMm(SHCFilter):
 
         cqlm_filtered = csqlm[:length_of_cqlm]
         sqlm_filtered = csqlm[length_of_cqlm:]
-        return SHC(cqlm_filtered, sqlm_filtered)
+        return cqlm_filtered, sqlm_filtered

@@ -2,13 +2,11 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 
-from pysrc.data_class.DataClass import SHC
-
 
 class SHCFilter(ABC):
     @abstractmethod
-    def apply_to(self, shc: SHC):
-        return shc
+    def apply_to(self, cqlm, sqlm):
+        return cqlm, sqlm
 
 
 def get_gaussian_weight_1d(lmax, radius_smooth, radius_earth):

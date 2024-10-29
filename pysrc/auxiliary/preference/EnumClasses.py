@@ -1,6 +1,19 @@
 from enum import Enum
 
 
+def match_string(name, obj, ignore_case=False):
+    obj_list = list(obj)
+    names = [obj_list[i].name for i in range(len(obj_list))]
+
+    if ignore_case:
+        names = [names[i].lower() for i in range(len(names))]
+        name = name.lower()
+
+    assert name in names
+
+    return obj_list[names.index(name)]
+
+
 class L2DataServer(Enum):
     GFZ = 1
     ITSG = 2

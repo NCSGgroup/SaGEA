@@ -2,7 +2,6 @@ from enum import Enum
 
 import numpy as np
 
-from pysrc.data_class.DataClass import SHC
 from pysrc.auxiliary.aux_tool.MathTool import MathTool
 from pysrc.post_processing.filter.Base import get_poly_func, SHCFilter
 
@@ -62,7 +61,7 @@ class SlideWindowConfig:
         return self
 
     def get_param_K(self):
-        return self.window_param_k
+        return self.__window_param_K
 
     def set_window_length(self, length):
         """
@@ -153,8 +152,8 @@ class SlideWindow(SHCFilter):
 
         return array_new.T
 
-    def apply_to(self, shc: SHC):
-        cqlm, sqlm = shc.get_cs2d()
+    def apply_to(self, cqlm, sqlm):
+        # cqlm, sqlm = shc.get_cs2d()
 
         length_of_cqlm = np.shape(cqlm)[0]
         csqlm = np.concatenate([cqlm, sqlm])
@@ -162,50 +161,5 @@ class SlideWindow(SHCFilter):
 
         cqlm_filtered = csqlm[:length_of_cqlm]
         sqlm_filtered = csqlm[length_of_cqlm:]
-        return SHC(cqlm_filtered, sqlm_filtered)
 
-
-def demo():
-    from pysrc.post_processing.Love_number.LoveNumber import LoveNumber
-    from pysrc.post_processing.convert_field_physical_quantity.ConvertSHC import ConvertSHC, FieldPhysicalQuantity
-    from pysrc.auxiliary.load_file.LoadL2SH import LoadL2SH
-    from pysrc.auxiliary.scripts.PlotGrids import plot_grids
-
-    from pysrc.post_processing.harmonic.Harmonic import Harmonic
-    import datetime
-
-    load = LoadL2SH()
-    load.configuration.set_begin_date(datetime.date(2005, 1, 1))
-    load.configuration.set_end_date(datetime.date(2015, 12, 31))
-    shc, dates = load.get_shc(with_dates=True)
-    shc.de_background()
-
-    convert = ConvertSHC()
-    convert.configuration.set_output_type(FieldPhysicalQuantity.EWH)
-    LN = LoveNumber()
-    LN.configuration.set_lmax(60)
-    ln = LN.get_Love_number()
-    convert.set_Love_number(ln)
-    shc = convert.apply_to(shc)
-
-    lat, lon = MathTool.get_global_lat_lon_range(1)
-    har = Harmonic(lat, lon, 60, option=1)
-    grids = har.synthesis(shc)
-
-    sw = SlideWindow()
-    sw.configuration.__window_mode = SlideWindowMode.Wahr2006
-
-    shc_filtered = sw.apply_to(shc)
-
-    grids_filtered = har.synthesis(shc_filtered)
-
-    plot_grids(
-        np.array([grids.value[10], grids_filtered.value[10], grids_filtered.value[10]]),
-        lat, lon,
-        vmin=-0.2,
-        vmax=0.2
-    )
-
-
-if __name__ == '__main__':
-    demo()
+        return cqlm_filtered, sqlm_filtered

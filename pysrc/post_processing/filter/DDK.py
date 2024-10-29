@@ -10,7 +10,6 @@ from scipy.linalg import block_diag
 
 from enum import Enum
 
-from pysrc.data_class.DataClass import SHC
 from pysrc.auxiliary.aux_tool.FileTool import FileTool
 from pysrc.auxiliary.aux_tool.MathTool import MathTool
 from pysrc.post_processing.filter.Base import SHCFilter
@@ -205,10 +204,7 @@ class DDK(SHCFilter):
         sqlm = np.array([cilms_filtered[i][1] for i in range(len(cilms_filtered))])
         return cqlm, sqlm
 
-    def apply_to(self, shc: SHC):
-        cqlm, sqlm = shc.get_cs2d()
+    def apply_to(self, cqlm, sqlm):
         cqlm_filtered, sqlm_filtered = self.__apply_to_csqlm(cqlm, sqlm)
 
-        cs1d_filtered = MathTool.cs_combine_to_triangle_1d(cqlm_filtered, sqlm_filtered)
-
-        return SHC(cs1d_filtered)
+        return cqlm_filtered, sqlm_filtered

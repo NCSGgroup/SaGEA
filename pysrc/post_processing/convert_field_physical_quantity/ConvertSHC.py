@@ -1,7 +1,6 @@
 import numpy as np
 
-from pysrc.data_class.DataClass import SHC
-from pysrc.auxiliary.preference.EnumClasses import FieldPhysicalQuantity, LoveNumberType
+from pysrc.auxiliary.preference.EnumClasses import FieldPhysicalQuantity, LoveNumberType, match_string
 from pysrc.auxiliary.preference.Constants import GeoConstants
 from pysrc.post_processing.Love_number.LoveNumber import LoveNumber
 
@@ -14,10 +13,16 @@ class ConvertSHCConfig:
         self.output_field_type = FieldPhysicalQuantity.EWH
 
     def set_input_type(self, field_type: FieldPhysicalQuantity):
+        if type(field_type) is str:
+            field_type = match_string(field_type, FieldPhysicalQuantity)
+
         self.input_field_type = field_type
         return self
 
     def set_output_type(self, field_type: FieldPhysicalQuantity):
+        if type(field_type) is str:
+            field_type = match_string(field_type, FieldPhysicalQuantity)
+
         self.output_field_type = field_type
         return self
 
@@ -34,9 +39,10 @@ class ConvertSHC:
         self.configuration = config
         return self
 
-    def apply_to(self, shc: SHC):
+    def apply_to(self, cs1d):
 
-        lmax = shc.get_lmax()
+        length_of_cs1d = np.shape(cs1d)[-1]
+        lmax = int(np.sqrt(length_of_cs1d) - 1)
 
         convert_array = self._get_convert_array_to_dimensionless(lmax) * self._get_convert_array_from_dimensionless_to(
             self.configuration.output_field_type, lmax)
@@ -46,9 +52,9 @@ class ConvertSHC:
         for i in range(lmax + 1):
             convert_weight_cs1d = np.concatenate([convert_weight_cs1d, [convert_array[i]] * (2 * i + 1)])
 
-        cs1d_converted = shc.value * convert_weight_cs1d
+        cs1d_converted = cs1d * convert_weight_cs1d
 
-        return SHC(cs1d_converted)
+        return cs1d_converted
 
     def _get_convert_array_to_dimensionless(self, lmax):
         """
@@ -154,3 +160,11 @@ class ConvertSHC:
             raise Exception
 
         return convert_mat
+
+
+if __name__ == '__main__':
+    a = "dimensionless"
+
+    list(FieldPhysicalQuantity)[0].name
+
+    print(list(FieldPhysicalQuantity)[0].name)

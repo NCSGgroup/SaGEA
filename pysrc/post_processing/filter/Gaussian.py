@@ -2,7 +2,6 @@ import numpy as np
 
 from pysrc.auxiliary.preference.Constants import GeoConstants
 
-from pysrc.data_class.DataClass import SHC
 from pysrc.auxiliary.aux_tool.MathTool import MathTool
 from pysrc.post_processing.filter.Base import get_gaussian_weight_1d, SHCFilter
 
@@ -53,7 +52,7 @@ class Gaussian(SHCFilter):
     def config(self, config: GaussianConfig):
         self.configuration = config
 
-    def _get_weight_matrix(self):
+    def __get_weight_matrix(self):
         """
         get C/S filtering weight sorted by degree, that is,
         [[w00,   0,   0, ...]
@@ -89,15 +88,16 @@ class Gaussian(SHCFilter):
         # for i in range(self.configuration.lmax + 1):
         #     gs_weight_cs1d = np.concatenate([gs_weight_cs1d, [gs_weight_array[i]] * (2 * i + 1)])
 
-        weight_mat = self._get_weight_matrix()
+        weight_mat = self.__get_weight_matrix()
         gs_weight_cs1d = MathTool.cs_combine_to_triangle_1d(weight_mat, weight_mat)
 
         return gs_weight_cs1d
 
-    def apply_to(self, shc: SHC):
+    def apply_to(self, cqlm, sqlm):
         if self.configuration.filtering_radius == 0:
-            return shc
+            return cqlm, sqlm
 
-        cs1d_filtered = shc.value * self.get_weight_cs1d()
+        weight_matrix = self.__get_weight_matrix()
+        cqlm_f, sqlm_f = cqlm * weight_matrix, sqlm * weight_matrix
 
-        return SHC(cs1d_filtered)
+        return cqlm_f, sqlm_f
