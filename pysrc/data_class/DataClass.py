@@ -30,13 +30,20 @@ class SHC(CoreSHC):
         return SHC(self.value - other.value)
 
     def to_grid(self, grid_space=None, from_type=None, to_type=None):
-        types = (
-            FieldPhysicalQuantity.Dimensionless, FieldPhysicalQuantity.EWH, FieldPhysicalQuantity.Geoid,
-            FieldPhysicalQuantity.Pressure,
-            "dimensionless", "Dimensionless", "EWH", "ewh", "geoid", "Geoid", "pressure", "Pressure"
-        )
-        assert from_type in types, f"from_type must be one of {types}"
-        assert to_type in types, f"to_type must be one of {types}"
+
+        types = list(FieldPhysicalQuantity)
+        types_string = [i.name.lower() for i in types]
+        types += types_string
+
+        assert (from_type.lower() if type(
+            from_type) is str else from_type) in types, f"from_type must be one of {types}"
+        assert (to_type.lower() if type(
+            to_type) is str else to_type) in types, f"to_type must be one of {types}"
+
+        if from_type is None:
+            from_type = FieldPhysicalQuantity.Dimensionless
+        if to_type is None:
+            to_type = FieldPhysicalQuantity.Dimensionless
 
         if type(from_type) is str:
             from_type = match_string(from_type, FieldPhysicalQuantity, ignore_case=True)
@@ -53,11 +60,6 @@ class SHC(CoreSHC):
         convert.configuration.set_Love_number(ln).set_input_type(from_type).set_output_type(to_type)
 
         self.value = convert.apply_to(self.value)
-
-        if from_type is None:
-            from_type = FieldPhysicalQuantity.Dimensionless
-        if to_type is None:
-            to_type = FieldPhysicalQuantity.Dimensionless
 
         if grid_space is None:
             grid_space = int(180 / self.get_lmax())
