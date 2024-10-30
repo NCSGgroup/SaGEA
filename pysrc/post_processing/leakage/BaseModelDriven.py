@@ -1,10 +1,7 @@
-import pathlib
 from abc import abstractmethod
 
 import numpy as np
 
-from pysrc.data_class.DataClass import SHC
-from pysrc.auxiliary.load_file.LoadL2SH import load_SHC
 from pysrc.post_processing.leakage.Base import Leakage, filter_grids
 from pysrc.post_processing.filter.Base import SHCFilter
 from pysrc.post_processing.harmonic.Harmonic import Harmonic
@@ -25,24 +22,10 @@ class ModelDrivenConfig:
         self.harmonic = har
         return self
 
-    def set_basin(self, basin: SHC or pathlib.WindowsPath or np.ndarray):
-
+    def set_basin(self, basin: np.ndarray):
         if type(basin) is np.ndarray:
             assert basin.ndim == 2
             self.basin_map = basin
-
-        else:
-            assert self.harmonic is not None, "set harmonic before setting basin."
-
-            har = self.harmonic
-
-            if type(basin) is pathlib.WindowsPath:
-                lmax = self.harmonic.lmax
-                basin_clm, basin_slm = load_SHC(basin, key='', lmax=lmax, lmcs_in_queue=(1, 2, 3, 4))
-                self.basin_map = har.synthesis(SHC(basin_clm, basin_slm)).value[0]
-
-            else:
-                self.basin_map = har.synthesis(basin).value[0]
 
         self.basin_acreage = MathTool.get_acreage(self.basin_map)
 
@@ -77,7 +60,7 @@ class ModelDriven(Leakage):
         self.configuration = ModelDrivenConfig()
 
     @abstractmethod
-    def apply_to(self, grids):
+    def apply_to(self, grids, get_grid=False):
         pass
 
     def _get_leakage(self):

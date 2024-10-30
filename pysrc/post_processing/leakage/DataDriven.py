@@ -1,10 +1,5 @@
-import pathlib
-
 import numpy as np
 
-from pysrc.data_class.DataClass import GRID
-from pysrc.data_class.DataClass import SHC
-from pysrc.auxiliary.load_file.LoadL2SH import load_SHC
 from pysrc.post_processing.leakage.Base import Leakage, filter_grids
 from pysrc.post_processing.filter.Base import SHCFilter
 from pysrc.post_processing.harmonic.Harmonic import Harmonic
@@ -17,27 +12,35 @@ class DataDrivenConfig:
         self.basin_acreage = None
         self.filter = None
         self.harmonic = None
-        self.shc_unfiltered = None
+
+        self.cqlm_unfiltered = None
+        self.sqlm_unfiltered = None
 
     def set_harmonic(self, har: Harmonic):
         self.harmonic = har
         return self
 
-    def set_basin(self, basin: np.ndarray or pathlib.WindowsPath):
-        assert self.harmonic is not None, "set harmonic before setting basin."
+    def set_basin(self, basin: np.ndarray):
+        # assert self.harmonic is not None, "set harmonic before setting basin."
 
-        har = self.harmonic
+        types = (np.ndarray,)
+        assert type(basin) in types, "basin should be a numpy array."
 
-        if type(basin) is pathlib.WindowsPath:
-            lmax = self.harmonic.lmax
-            basin_clm, basin_slm = load_SHC(basin, key='', lmax=lmax, lmcs_in_queue=(1, 2, 3, 4))
-            basin_map = har.synthesis(SHC(basin_clm, basin_slm)).value[0]
+        # har = self.harmonic
 
-            self.basin_map = basin_map
+        # if type(basin) is pathlib.WindowsPath:
+        #     lmax = self.harmonic.lmax
+        #     basin_clm, basin_slm = load_SHC(basin, key='', lmax=lmax, lmcs_in_queue=(1, 2, 3, 4))
+        #     # basin_map = har.synthesis(SHC(basin_clm, basin_slm)).value[0]
+        #     basin_map = har.synthesis_for_csqlm(basin_clm, basin_slm)
+        #
+        #     self.basin_map = basin_map
+        #
+        # else:
+        #     # self.basin_map = har.synthesis(basin).data[0]
+        #     self.basin_map = basin
 
-        else:
-            # self.basin_map = har.synthesis(basin).data[0]
-            self.basin_map = basin
+        self.basin_map = basin
 
         self.basin_acreage = MathTool.get_acreage(self.basin_map)
 
@@ -48,8 +51,9 @@ class DataDrivenConfig:
 
         return self.filter
 
-    def set_shc_unfiltered(self, shc: SHC):
-        self.shc_unfiltered = shc
+    def set_cs_unfiltered(self, cqlm, sqlm):
+        self.cqlm_unfiltered = cqlm
+        self.sqlm_unfiltered = sqlm
 
         return self
 
@@ -59,43 +63,55 @@ class DataDriven(Leakage):
         super().__init__()
         self.configuration = DataDrivenConfig()
 
-    def apply_to(self, grids: GRID):
-        f_filtered = MathTool.global_integral(grids.value * self.configuration.basin_map)
+    def apply_to(self, gqij, get_grid=False):
+        basin_map = self.configuration.basin_map
+        f_filtered = MathTool.global_integral(gqij * basin_map) / MathTool.get_acreage(basin_map)
 
-        leakage_c = self.__get_leakage()
-        deviation = self.__get_deviation()
+        leakage_c = self.__get_leakage() / MathTool.get_acreage(basin_map)
+        deviation = self.__get_deviation() / MathTool.get_acreage(basin_map)
 
-        return f_filtered - deviation - leakage_c
+        f_predicted = f_filtered - deviation - leakage_c
+
+        if get_grid:
+            return f_predicted[:, None, None] * self.configuration.basin_map
+        else:
+            return f_predicted
 
     def __get_leakage(self):
-        grids_unf = self.configuration.harmonic.synthesis(self.configuration.shc_unfiltered)
-        grids_outside_unf = grids_unf.value * (1 - self.configuration.basin_map)
+        har = self.configuration.harmonic
+        cqlm_unf, sqlm_unf = self.configuration.cqlm_unfiltered, self.configuration.sqlm_unfiltered
+        gqij_unf = har.synthesis_for_csqlm(cqlm_unf, sqlm_unf)
+        cs_filter = self.configuration.filter
+        basin = self.configuration.basin_map
 
-        shc_outside_unfiltered = self.configuration.harmonic.analysis(
-            GRID(grids_outside_unf, self.configuration.harmonic.lat, self.configuration.harmonic.lon)
-        )
-        shc_outside_filtered = self.configuration.filter.apply_to(shc_outside_unfiltered)
+        gqij_outside_unf = gqij_unf * (1 - basin)
 
-        grids_outside_filtered = self.configuration.harmonic.synthesis(shc_outside_filtered)
+        cqlm_outside_unf, sqlm_outside_unf = har.analysis_for_gqij(gqij_outside_unf)
 
-        leakage_c = MathTool.global_integral(grids_outside_filtered.value * self.configuration.basin_map)
+        cqlm_outside_f, sqlm_outside_f = cs_filter.apply_to(cqlm_outside_unf, sqlm_outside_unf)
+
+        gqij_outside_f = har.synthesis_for_csqlm(cqlm_outside_f, sqlm_outside_f)
+
+        leakage_c = MathTool.global_integral(gqij_outside_f * basin)
 
         return leakage_c
 
     def __get_deviation(self):
-        grids_unf = self.configuration.harmonic.synthesis(self.configuration.shc_unfiltered)
+        har = self.configuration.harmonic
+        cqlm_unf, sqlm_unf = self.configuration.cqlm_unfiltered, self.configuration.sqlm_unfiltered
+        gqij_unf = har.synthesis_for_csqlm(cqlm_unf, sqlm_unf)
+        basin = self.configuration.basin_map
+        cs_filter = self.configuration.filter
 
         basin_acreage = self.configuration.basin_acreage
 
-        basin_average = MathTool.global_integral(grids_unf.value * self.configuration.basin_map) / basin_acreage
+        basin_average = MathTool.global_integral(gqij_unf * self.configuration.basin_map) / basin_acreage
 
-        deviation_field = grids_unf.value * self.configuration.basin_map - np.einsum('ijk,i->ijk',
-                                                                                     np.ones_like(grids_unf.value),
-                                                                                     basin_average)
+        deviation_field = gqij_unf * basin - np.einsum('ijk,i->ijk', np.ones_like(gqij_unf), basin_average)
 
-        grids_dev_f = filter_grids(deviation_field, self.configuration.filter, self.configuration.harmonic)
+        grids_dev_f = filter_grids(deviation_field, cs_filter, har)
 
-        deviation_filtered = MathTool.global_integral(grids_dev_f.value * self.configuration.basin_map)
+        deviation_filtered = MathTool.global_integral(grids_dev_f * basin)
 
         return deviation_filtered
 

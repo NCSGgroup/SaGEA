@@ -1,14 +1,14 @@
+import copy
 import warnings
 
 import numpy as np
 
-from pysrc.data_class.DataClass import GRID
 from pysrc.auxiliary.aux_tool.MathTool import MathTool
 from pysrc.post_processing.leakage.BaseModelDriven import ModelDriven
 
 
 class Addictive(ModelDriven):
-    def apply_to(self, grids: GRID, leakage=True, bias=True):
+    def apply_to(self, gqij, leakage=True, bias=True, get_grid=True):
         indexes_GRACE, indexes_model, indexes_uncorrected = self._get_indexes()
 
         if indexes_uncorrected:
@@ -17,26 +17,23 @@ class Addictive(ModelDriven):
                 f'{np.array(self.configuration.GRACE_times)[indexes_uncorrected]}'
             )
 
-        f_filtered = MathTool.global_integral(grids.value * self.configuration.basin_map)
+        basin_map = self.configuration.basin_map
+        f_filtered = MathTool.global_integral(gqij * basin_map) / MathTool.get_acreage(basin_map)
+
+        f_predicted = copy.deepcopy(f_filtered)
 
         if leakage:
             leakage_c_m = self._get_leakage()
-            f_filtered[indexes_GRACE] -= leakage_c_m[indexes_model]
+            f_predicted[indexes_GRACE] -= leakage_c_m[indexes_model]
 
         if bias:
             bias_c_m = self._get_bias()
-            f_filtered[indexes_GRACE] += bias_c_m[indexes_model]
+            f_predicted[indexes_GRACE] += bias_c_m[indexes_model]
 
-        return f_filtered
+        if get_grid:
+            return f_predicted[:, None, None] * self.configuration.basin_map
+        else:
+            return f_predicted
 
     def format(self):
         return 'addictive'
-
-
-if __name__ == '__main__':
-    a = np.arange(20)
-
-    # indexes = np.arange((len(a)))
-    indexes = np.arange(1, 10, 2)
-
-    print(a[indexes])

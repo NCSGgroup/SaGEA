@@ -205,6 +205,12 @@ class DDK(SHCFilter):
         return cqlm, sqlm
 
     def apply_to(self, cqlm, sqlm):
-        cqlm_filtered, sqlm_filtered = self.__apply_to_csqlm(cqlm, sqlm)
+        cqlm, sqlm, single = self._cs_to_3d_array(cqlm, sqlm)
 
-        return cqlm_filtered, sqlm_filtered
+        cqlm_f, sqlm_f = self.__apply_to_csqlm(cqlm, sqlm)
+
+        if single:
+            assert cqlm_f.shape[0] == sqlm_f.shape[0] == 1
+            return cqlm_f[0], sqlm_f[0]
+        else:
+            return cqlm_f, sqlm_f

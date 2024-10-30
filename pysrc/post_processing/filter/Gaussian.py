@@ -97,7 +97,13 @@ class Gaussian(SHCFilter):
         if self.configuration.filtering_radius == 0:
             return cqlm, sqlm
 
+        cqlm, sqlm, single = self._cs_to_3d_array(cqlm, sqlm)
+
         weight_matrix = self.__get_weight_matrix()
         cqlm_f, sqlm_f = cqlm * weight_matrix, sqlm * weight_matrix
 
-        return cqlm_f, sqlm_f
+        if single:
+            assert cqlm_f.shape[0] == sqlm_f.shape[0] == 1
+            return cqlm_f[0], sqlm_f[0]
+        else:
+            return cqlm_f, sqlm_f

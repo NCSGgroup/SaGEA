@@ -153,13 +153,18 @@ class SlideWindow(SHCFilter):
         return array_new.T
 
     def apply_to(self, cqlm, sqlm):
-        # cqlm, sqlm = shc.get_cs2d()
+        cqlm, sqlm, single = self._cs_to_3d_array(cqlm, sqlm)
+
 
         length_of_cqlm = np.shape(cqlm)[0]
         csqlm = np.concatenate([cqlm, sqlm])
         csqlm = self._apply_to_cqlm(csqlm)
 
-        cqlm_filtered = csqlm[:length_of_cqlm]
-        sqlm_filtered = csqlm[length_of_cqlm:]
+        cqlm_f = csqlm[:length_of_cqlm]
+        sqlm_f = csqlm[length_of_cqlm:]
 
-        return cqlm_filtered, sqlm_filtered
+        if single:
+            assert cqlm_f.shape[0] == sqlm_f.shape[0] == 1
+            return cqlm_f[0], sqlm_f[0]
+        else:
+            return cqlm_f,

@@ -706,7 +706,7 @@ class PostProcessing:
 
             leakage.configuration.set_harmonic(self.harmonic)
             leakage.configuration.set_filter(self.shc_filter)
-            leakage.configuration.set_shc_unfiltered(self.shc_GRACE)
+            leakage.configuration.set_cs_unfiltered(self.shc_GRACE)
 
             for i in range(len(self.basin_map)):
                 this_basin_map = self.basin_map[i]
@@ -722,7 +722,7 @@ class PostProcessing:
 
             leakage.configuration.set_harmonic(self.harmonic)
             leakage.configuration.set_filter(self.shc_filter)
-            leakage.configuration.set_shc_unfiltered(self.shc_GRACE)
+            leakage.configuration.set_cs_unfiltered(self.shc_GRACE)
 
             for i in range(len(self.basin_map)):
                 this_basin_map = self.basin_map[i]

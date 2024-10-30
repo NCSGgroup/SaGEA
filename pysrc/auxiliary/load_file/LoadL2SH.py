@@ -155,14 +155,19 @@ def load_SHC(*filepath, key: str, lmax: int, lmcs_in_queue=None, get_dates=False
             load = load_SHC(filepath[i], key=key, lmax=lmax, lmcs_in_queue=lmcs_in_queue,
                             get_dates=get_dates, begin_date=begin_date, end_date=end_date)
 
-            assert len(load) in (1, 3)
+            if type(load) is tuple:
+                assert len(load) in (1, 3)
+                load_shc = load[0]
+            else:
+                load_shc = load
 
             if shc is None:
-                shc = load[0]
+                shc = load_shc
             else:
-                shc.append(load[0])
+                shc.append(load_shc)
 
             if get_dates:
+                assert len(load) == 3
                 d_begin, d_end = load[1], load[2]
                 dates_begin.append(d_begin[0])
                 dates_end.append(d_end[0])
@@ -508,4 +513,3 @@ class LoadL2SH:
                         filepath_list.append(this_filepath)
 
         return filepath_list
-

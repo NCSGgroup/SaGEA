@@ -1,12 +1,8 @@
 import copy
-import pathlib
 
 import numpy as np
 
-from pysrc.data_class.DataClass import GRID
-from pysrc.data_class.DataClass import SHC
 from pysrc.auxiliary.aux_tool.MathTool import MathTool
-from pysrc.auxiliary.load_file.LoadL2SH import load_SHC
 from pysrc.post_processing.filter.Base import SHCFilter
 from pysrc.post_processing.filter.Gaussian import Gaussian
 from pysrc.post_processing.harmonic.Harmonic import Harmonic
@@ -35,8 +31,8 @@ class ForwardModelingConfig:
         self.__filter = None
 
         self.__initial_grid = None
-        self.__observed_grid = None
-        self.__reverse_basin_mode = False
+        self.__observed_gqij = None
+        # self.__reverse_basin_mode = False
 
     def set_acceleration_factor(self, factor):
         self.__acceleration_factor = factor
@@ -52,15 +48,15 @@ class ForwardModelingConfig:
     def get_max_iteration(self):
         return self.__max_iteration
 
-    def set_observed_grid(self, grid: GRID):
-        self.__observed_grid = grid
+    def set_observed_grid(self, gqij: np.ndarray):
+        self.__observed_gqij = gqij
         return self
 
     def get_observed_grid(self):
-        return self.__observed_grid
+        return self.__observed_gqij
 
-    def set_filter(self, shc_filter: SHCFilter):
-        self.__filter = shc_filter
+    def set_filter(self, cs_filter: SHCFilter):
+        self.__filter = cs_filter
         return self
 
     def get_filter(self):
@@ -73,61 +69,61 @@ class ForwardModelingConfig:
     def get_harmonic(self):
         return self.__harmonic
 
-    def set_basin_conservation(self, basin: SHC or pathlib.WindowsPath):
-        assert self.__harmonic is not None, "set harmonic before setting basin."
+    def set_basin_conservation(self, basin: np.ndarray):
+        # assert self.__harmonic is not None, "set harmonic before setting basin."
+        #
+        # har = self.__harmonic
+        #
+        # if type(basin) is pathlib.WindowsPath:
+        #     lmax = self.__harmonic.lmax
+        #     basin_clm, basin_slm = load_SHC(basin, key='', lmax=lmax, lmcs_in_queue=(1, 2, 3, 4))
+        #     basin = har.synthesis(SHC(basin_clm, basin_slm)).value[0]
+        #     basin[np.where(basin >= 0.5)] = 1
+        #     basin[np.where(basin < 0.5)] = 0
+        #     self.__basin_to_maintain_global_conservation = basin
+        #
+        # else:
+        #     self.__basin_to_maintain_global_conservation = har.synthesis(basin).value[0]
 
-        har = self.__harmonic
-
-        if type(basin) is pathlib.WindowsPath:
-            lmax = self.__harmonic.lmax
-            basin_clm, basin_slm = load_SHC(basin, key='', lmax=lmax, lmcs_in_queue=(1, 2, 3, 4))
-            basin = har.synthesis(SHC(basin_clm, basin_slm)).value[0]
-            basin[np.where(basin >= 0.5)] = 1
-            basin[np.where(basin < 0.5)] = 0
-            self.__basin_to_maintain_global_conservation = basin
-
-        else:
-            self.__basin_to_maintain_global_conservation = har.synthesis(basin).value[0]
+        self.__basin_to_maintain_global_conservation = basin
 
         return self
 
     def get_basin_conservation(self):
         return self.__basin_to_maintain_global_conservation
 
-    def set_basin(self, basin: SHC or pathlib.WindowsPath):
-        assert self.__harmonic is not None, "set harmonic before setting basin."
+    def set_basin(self, basin: np.ndarray):
+        # if type(basin) is pathlib.WindowsPath:
+        #     lmax = self.__harmonic.lmax
+        #     basin_clm, basin_slm = load_SHC(basin, key='', lmax=lmax, lmcs_in_queue=(1, 2, 3, 4))
+        #     basin = har.synthesis(SHC(basin_clm, basin_slm)).value[0]
+        #     basin[np.where(basin >= 0.5)] = 1
+        #     basin[np.where(basin < 0.5)] = 0
+        #     self.__basin = basin
+        #
+        # elif type(basin) is SHC:
+        #     self.__basin = har.synthesis(basin).value[0]
+        #
+        # elif type(basin) is np.ndarray:
+        #     self.__basin = basin
+        #
+        # else:
+        #     print('Unsupported format of basin map.')
+        #     return -1
 
-        har = self.__harmonic
-
-        if type(basin) is pathlib.WindowsPath:
-            lmax = self.__harmonic.lmax
-            basin_clm, basin_slm = load_SHC(basin, key='', lmax=lmax, lmcs_in_queue=(1, 2, 3, 4))
-            basin = har.synthesis(SHC(basin_clm, basin_slm)).value[0]
-            basin[np.where(basin >= 0.5)] = 1
-            basin[np.where(basin < 0.5)] = 0
-            self.__basin = basin
-
-        elif type(basin) is SHC:
-            self.__basin = har.synthesis(basin).value[0]
-
-        elif type(basin) is np.ndarray:
-            self.__basin = basin
-
-        else:
-            print('Unsupported format of basin map.')
-            return -1
+        self.__basin = basin
 
         return self
 
     def get_basin(self):
         return self.__basin
 
-    def set_reverse_basin_mode(self, mode: bool):
-        self.__reverse_basin_mode = mode
-        return self
-
-    def get_reverse_basin_mode(self):
-        return self.__reverse_basin_mode
+    # def set_reverse_basin_mode(self, mode: bool):
+    #     self.__reverse_basin_mode = mode
+    #     return self
+    #
+    # def get_reverse_basin_mode(self):
+    #     return self.__reverse_basin_mode
 
 
 class ForwardModeling(Leakage):
@@ -136,16 +132,13 @@ class ForwardModeling(Leakage):
 
         self.configuration = ForwardModelingConfig()
 
-    def apply_to(self, grid: GRID, get_grid=False):
+    def apply_to(self, gqij: np.ndarray, get_grid=False):
         if self.configuration.get_observed_grid() is not None:
-            observed_model = self.configuration.get_observed_grid().value
+            observed_model = self.configuration.get_observed_grid()
         else:
-            observed_model = copy.deepcopy(grid.value)
+            observed_model = copy.deepcopy(gqij)
 
         basin = self.configuration.get_basin()
-        reverse_basin_mode = self.configuration.get_reverse_basin_mode()
-        if reverse_basin_mode:
-            basin = 1 - basin
 
         basin_to_conservation = self.configuration.get_basin_conservation()
         shc_filter = self.configuration.get_filter()
@@ -153,42 +146,37 @@ class ForwardModeling(Leakage):
         acceleration_factor = self.configuration.get_acceleration_factor()
         max_iter_times = self.configuration.get_max_iteration()
 
-        true_model = keep_signals_in_basin(grid.value, basin, basin_to_conservation)
+        true_model = keep_signals_in_basin(gqij, basin, basin_to_conservation)
         iter_times = 0
         while True:
             iter_times += 1
             print(f'\rforward modeling: iter {iter_times}...', end='')
 
             cqlm, sqlm = har.analysis_for_gqij(true_model)
-            cqlm_filtered, sqlm_filtered = shc_filter.apply_to(SHC(cqlm, sqlm)).get_cs2d()
+            cqlm_filtered, sqlm_filtered = shc_filter.apply_to(cqlm, sqlm)
 
             grids_predicted = har.synthesis_for_csqlm(cqlm_filtered, sqlm_filtered)
 
             grids_difference = (observed_model - grids_predicted) * basin
 
             true_model += grids_difference * acceleration_factor
-            # true_model = keep_signals_in_basin(true_model, basin, basin_to_conservation)
+            true_model = keep_signals_in_basin(true_model, basin, basin_to_conservation)
 
             if iter_times >= max_iter_times:
                 break
         print()
 
         if get_grid:
-            grid = GRID(true_model, har.lat, har.lon)
-            return grid
+            return true_model
 
         else:
-            if reverse_basin_mode:
-                return - MathTool.global_integral(true_model * basin)
-            else:
-                return MathTool.global_integral(true_model * basin)
+            return MathTool.global_integral(true_model * basin)
 
     def format(self):
         return 'Forward modeling'
 
 
 def demo1():
-    """synthesis/analysis for once"""
     import time
     from pysrc.auxiliary.load_file.LoadL2SH import load_SHC
     from pysrc.auxiliary.aux_tool.FileTool import FileTool
@@ -198,14 +186,23 @@ def demo1():
     lmax = 60
     spatial_resolution = 1
 
-    clm, slm = load_SHC(
+    cqlm, sqlm = load_SHC(
         FileTool.get_project_dir('data/auxiliary/GIF48.gfc'),
         key='gfc',
         lmax=lmax,
         lmcs_in_queue=(2, 3, 4, 5)
-    )
-    cqlm, sqlm = np.array([clm] * multi_times), np.array([slm] * multi_times)
-    shc = SHC(cqlm, sqlm)
+    ).get_cs2d()
+
+    cqlm, sqlm = np.array([cqlm[0]] * multi_times), np.array([sqlm[0]] * multi_times)
+
+    basin_path = FileTool.get_project_dir('data/basin_mask/Amazon_maskSH.dat')
+    basin_conservation_path = FileTool.get_project_dir('data/basin_mask/Ocean_maskSH.dat')
+
+    paths = [basin_path, basin_conservation_path]
+    basin_shc = load_SHC(*paths, key="", lmax=lmax, lmcs_in_queue=(1, 2, 3, 4))
+    basin_grid = basin_shc.to_grid(grid_space=spatial_resolution)
+
+    basins = basin_grid.value
 
     gs = Gaussian()
     gs.configuration.set_lmax(lmax)
@@ -214,16 +211,16 @@ def demo1():
     lat, lon = MathTool.get_global_lat_lon_range(spatial_resolution)
     har = Harmonic(lat, lon, lmax=lmax, option=1)
 
-    grid = har.synthesis(shc)
+    gqij = har.synthesis_for_csqlm(cqlm, sqlm)
 
     fm = ForwardModeling()
     fm.configuration.set_harmonic(har)
-    fm.configuration.set_basin(FileTool.get_project_dir('data/basin_mask/Amazon_maskSH.dat'))
-    fm.configuration.set_basin_conservation(FileTool.get_project_dir('data/basin_mask/Ocean_maskSH.dat'))
+    fm.configuration.set_basin(basins[0])
+    fm.configuration.set_basin_conservation(basins[1])
     fm.configuration.set_filter(gs)
 
     time1 = time.time()
-    fm.apply_to(grid)
+    fm.apply_to(gqij)
     time2 = time.time()
 
     return time2 - time1

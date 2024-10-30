@@ -93,6 +93,12 @@ class Harmonic:
         return CoreGRID(grids, self.lat, self.lon)
 
     def analysis_for_gqij(self, gqij: np.ndarray):
+        assert len(gqij.shape) in (2, 3)
+
+        single = (len(gqij.shape) == 2)
+        if single:
+            gqij = np.array([gqij])
+
         g = self.g
         co = np.cos(g)
         so = np.sin(g)
@@ -116,10 +122,21 @@ class Harmonic:
         # sqlm = np.einsum('pim,ilm->plm', bm * self.wi[:, None], self.pilm,
         #                  optimize='greedy') * self.factor3
 
-        return cqlm, sqlm
+        if single:
+            assert cqlm.shape[0] == 1 and sqlm.shape[0] == 1
+            return cqlm[0], sqlm[0]
 
-    def synthesis_for_csqlm(self, cqlm: iter, sqlm: iter, special_type: FieldPhysicalQuantity = None):
-        assert len(cqlm) == len(sqlm)
+        else:
+            return cqlm, sqlm
+
+    def synthesis_for_csqlm(self, cqlm: np.ndarray, sqlm: np.ndarray, special_type: FieldPhysicalQuantity = None):
+        assert cqlm.shape == sqlm.shape
+        assert len(cqlm.shape) in (2, 3)
+        single = (len(cqlm.shape) == 2)
+        if single:
+            cqlm = np.array([cqlm])
+            sqlm = np.array([sqlm])
+
         assert special_type in (
             FieldPhysicalQuantity.HorizontalDisplacementEast, FieldPhysicalQuantity.HorizontalDisplacementNorth, None)
 
@@ -150,7 +167,11 @@ class Harmonic:
 
         gqij = am @ co + bm @ so
 
-        return gqij
+        if single:
+            assert gqij.shape[0] == 1
+            return gqij[0]
+        else:
+            return gqij
 
 
 def demo1():

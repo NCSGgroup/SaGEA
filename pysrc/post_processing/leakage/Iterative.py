@@ -1,8 +1,5 @@
-import pathlib
+import numpy as np
 
-from pysrc.data_class.DataClass import GRID
-from pysrc.data_class.DataClass import SHC
-from pysrc.auxiliary.load_file.LoadL2SH import load_SHC
 from pysrc.post_processing.leakage.Base import Leakage
 from pysrc.post_processing.filter.Base import SHCFilter
 from pysrc.post_processing.harmonic.Harmonic import Harmonic
@@ -16,24 +13,25 @@ class IterativeConfig:
         self.filter = None
         self.prefilter = None
         self.harmonic = None
-        self.shc_unfiltered = None
+        self.cqlm_unfiltered = None
+        self.sqlm_unfiltered = None
 
     def set_harmonic(self, har: Harmonic):
         self.harmonic = har
         return self
 
-    def set_basin(self, basin: SHC or pathlib.WindowsPath):
-        assert self.harmonic is not None, "set harmonic before setting basin."
-
-        har = self.harmonic
-
-        if type(basin) is pathlib.WindowsPath:
-            lmax = self.harmonic.lmax
-            basin_clm, basin_slm = load_SHC(basin, key='', lmax=lmax, lmcs_in_queue=(1, 2, 3, 4))
-            self.basin_map = har.synthesis(SHC(basin_clm, basin_slm)).value[0]
-
-        else:
-            self.basin_map = basin
+    def set_basin(self, basin: np.ndarray):
+        # har = self.harmonic
+        #
+        # if type(basin) is pathlib.WindowsPath:
+        #     lmax = self.harmonic.lmax
+        #     basin_clm, basin_slm = load_SHC(basin, key='', lmax=lmax, lmcs_in_queue=(1, 2, 3, 4)).get_cs2d()
+        #     self.basin_map = har.synthesis(SHC(basin_clm, basin_slm)).value[0]
+        #     self.basin_map = har.synthesis(SHC(basin_clm, basin_slm)).value[0]
+        #
+        # else:
+        #     self.basin_map = basin
+        self.basin_map = basin
 
         self.basin_acreage = MathTool.get_acreage(self.basin_map)
 
@@ -49,8 +47,9 @@ class IterativeConfig:
 
         return self.filter
 
-    def set_shc_unfiltered(self, shc: SHC):
-        self.shc_unfiltered = shc
+    def set_cs_unfiltered(self, cqlm, sqlm):
+        self.cqlm_unfiltered = cqlm
+        self.sqlm_unfiltered = sqlm
 
         return self
 
@@ -60,30 +59,38 @@ class Iterative(Leakage):
         super().__init__()
         self.configuration = IterativeConfig()
 
-    def apply_to(self, grids: GRID):
-        f_filtered = MathTool.global_integral(grids.value * self.configuration.basin_map)
+    def apply_to(self, gqij, get_grid=False):
+        basin_map = self.configuration.basin_map
+        f_filtered = MathTool.global_integral(gqij * basin_map) / MathTool.get_acreage(basin_map)
 
-        leakage_c = self.__get_leakage()
+        leakage_c = self.__get_leakage() / MathTool.get_acreage(basin_map)
 
-        return f_filtered - leakage_c
+        f_predicted = f_filtered - leakage_c
+
+        if get_grid:
+            return f_predicted[:, None, None] * self.configuration.basin_map
+        else:
+            return f_predicted
 
     def __get_leakage(self):
         if self.configuration.prefilter is None:
             self.configuration.prefilter = self.configuration.filter
 
-        shc_prefiltered = self.configuration.prefilter.apply_to(self.configuration.shc_unfiltered)
+        basin_map = self.configuration.basin_map
 
-        grids_prefiltered = self.configuration.harmonic.synthesis(shc_prefiltered)
-        grids_prefiltered_outside = grids_prefiltered.value * (1 - self.configuration.basin_map)
+        cqlm_unf, sqlm_unf = self.configuration.cqlm_unfiltered, self.configuration.sqlm_unfiltered
+        cqlm_f, sqlm_f = self.configuration.prefilter.apply_to(cqlm_unf, sqlm_unf)
 
-        shc_prefiltered = self.configuration.harmonic.analysis(
-            GRID(grids_prefiltered_outside, self.configuration.harmonic.lat, self.configuration.harmonic.lon)
-        )
+        gqij_prefiltered = self.configuration.harmonic.synthesis_for_csqlm(cqlm_f, sqlm_f)
+        gqij_prefiltered_outside = gqij_prefiltered * (1 - basin_map)
 
-        shc_iter_filtered = self.configuration.filter.apply_to(shc_prefiltered)
-        grids_iter_filtered = self.configuration.harmonic.synthesis(shc_iter_filtered)
+        cqlm_pref, sqlm_pref = self.configuration.harmonic.analysis_for_gqij(gqij_prefiltered_outside)
 
-        leakage_c = MathTool.global_integral(grids_iter_filtered.value * self.configuration.basin_map)
+        cqlm_iter_filtered, sqlm_iter_filtered = self.configuration.filter.apply_to(cqlm_pref, sqlm_pref)
+
+        gqij_iter_filtered = self.configuration.harmonic.synthesis_for_csqlm(cqlm_iter_filtered, sqlm_iter_filtered)
+
+        leakage_c = MathTool.global_integral(gqij_iter_filtered * basin_map)
 
         return leakage_c
 

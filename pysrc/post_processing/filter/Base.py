@@ -8,6 +8,18 @@ class SHCFilter(ABC):
     def apply_to(self, cqlm, sqlm):
         return cqlm, sqlm
 
+    @staticmethod
+    def _cs_to_3d_array(cqlm, sqlm):
+        assert cqlm.shape == sqlm.shape
+        assert len(cqlm.shape) in (2, 3)
+
+        single = (len(cqlm.shape) == 2)
+
+        if single:
+            return np.array([cqlm]), np.array([sqlm]), single
+        else:
+            return cqlm, sqlm, single
+
 
 def get_gaussian_weight_1d(lmax, radius_smooth, radius_earth):
     """

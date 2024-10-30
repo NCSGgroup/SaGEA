@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 
-from pysrc.data_class.DataClass import GRID
 from pysrc.post_processing.filter.Base import SHCFilter
 from pysrc.post_processing.harmonic.Harmonic import Harmonic
 
@@ -10,7 +9,7 @@ class Leakage(ABC):
         pass
 
     @abstractmethod
-    def apply_to(self, grids):
+    def apply_to(self, gqij, get_grid=False):
         pass
 
     @abstractmethod
@@ -18,10 +17,10 @@ class Leakage(ABC):
         pass
 
 
-def filter_grids(grid, shc_filter: SHCFilter, harmonic: Harmonic):
-    shc = harmonic.analysis(GRID(grid, lat=harmonic.lat, lon=harmonic.lon))
+def filter_grids(gqij, shc_filter: SHCFilter, harmonic: Harmonic):
+    cqlm, sqlm = harmonic.analysis_for_gqij(gqij)
 
-    shc_filtered = shc_filter.apply_to(shc)
-    grid_filtered = harmonic.synthesis(shc_filtered)
+    cqlm_f, sqlm_f = shc_filter.apply_to(cqlm, sqlm)
+    gqij_filtered = harmonic.synthesis_for_csqlm(cqlm_f, sqlm_f)
 
-    return grid_filtered
+    return gqij_filtered
