@@ -1,11 +1,11 @@
 import numpy as np
 
 from pysrc.auxiliary.aux_tool.MathTool import MathTool
-from pysrc.auxiliary.preference.EnumClasses import SHCDecorrelationType, SHCDecorrelationSlidingWindowType, \
-    SHCFilterType, FieldPhysicalQuantity, match_string
+from pysrc.auxiliary.aux_tool.TimeTool import TimeTool
+from pysrc.auxiliary.preference.EnumClasses import FieldPhysicalQuantity, match_string
 from pysrc.post_processing.Love_number.LoveNumber import LoveNumber
 from pysrc.post_processing.convert_field_physical_quantity.ConvertSHC import ConvertSHC
-from pysrc.post_processing.filter.GetSHCFilter import get_shc_decorrelation, get_shc_filter
+from pysrc.post_processing.filter.get_filter import get_filter
 
 from pysrc.post_processing.harmonic.Harmonic import Harmonic, CoreSHC, CoreGRID
 from pysrc.post_processing.leakage.Addictive import Addictive
@@ -16,87 +16,7 @@ from pysrc.post_processing.leakage.Iterative import Iterative
 from pysrc.post_processing.leakage.Multiplicative import Multiplicative
 from pysrc.post_processing.leakage.Scaling import Scaling
 from pysrc.post_processing.leakage.ScalingGrid import ScalingGrid
-
-
-def _get_filter(method: str, param: tuple = None, lmax: int = None):
-    methods = (
-        "pnmm", "slidingwindow_wahr2006", "wahr2006", "slidingwindow_stable",
-        "gaussian", "gs", "fan", "ngs", "han", "ani", "ddk",
-    )
-
-    method = method.lower()
-    assert method in methods, f"method must be one of {methods}"
-    if method in ("pnmm",):
-        if param is None:
-            param = (3, 10)
-        assert len(param) == 2
-
-        filtering = get_shc_decorrelation(
-            method=SHCDecorrelationType.PnMm, params=param, sliding_window_mode=None
-        )
-
-    elif method == ("slidingwindow_wahr2006", "wahr2006"):
-        if param is None:
-            param = (3, 10, 10, 30, 5)
-
-        assert len(param) == 5
-
-        filtering = get_shc_decorrelation(
-            method=SHCDecorrelationType.SlideWindow, params=param,
-            sliding_window_mode=SHCDecorrelationSlidingWindowType.Wahr2006
-        )
-
-    elif method == ("slidingwindow_stable",):
-        if param is None:
-            param = (3, 10, 5)
-
-        assert len(param) == 3
-
-        filtering = get_shc_decorrelation(
-            method=SHCDecorrelationType.SlideWindow, params=param,
-            sliding_window_mode=SHCDecorrelationSlidingWindowType.Stable
-        )
-
-    elif method in ("gaussian", "gs",):
-        if param is None:
-            param = (300,)
-        assert len(param) == 1
-
-        filtering = get_shc_filter(
-            method=SHCFilterType.Gaussian, params=param, lmax=lmax
-        )
-
-    elif method in ("fan",):
-        if param is None:
-            param = (300, 300)
-        assert len(param) == 2
-
-        filtering = get_shc_filter(
-            method=SHCFilterType.Fan, params=param, lmax=lmax
-        )
-
-    elif method in ("ngs", "han", "ani"):
-        if param is None:
-            param = (300, 300, 25)
-        assert len(param) == 3
-
-        filtering = get_shc_filter(
-            method=SHCFilterType.AnisotropicGaussianHan, params=param, lmax=lmax
-        )
-
-    elif method in ("ddk",):
-        if param is None:
-            param = (3,)
-        assert len(param) == 1
-
-        filtering = get_shc_filter(
-            method=SHCFilterType.DDK, params=param, lmax=lmax
-        )
-
-    else:
-        assert False
-
-    return filtering
+from pysrc.post_processing.replace_low_deg.ReplaceLowDegree import ReplaceLowDegree
 
 
 class SHC(CoreSHC):
@@ -168,7 +88,7 @@ class SHC(CoreSHC):
 
         cqlm, sqlm = self.get_cs2d()
 
-        filtering = _get_filter(method, param, lmax=self.get_lmax())
+        filtering = get_filter(method, param, lmax=self.get_lmax())
         cqlm_f, sqlm_f = filtering.apply_to(cqlm, sqlm)
 
         cs_new = []
@@ -178,6 +98,43 @@ class SHC(CoreSHC):
         self.value = np.array(cs_new)
 
         return self
+
+    def replace_low(self, dates_begin, dates_end, low_deg: dict,
+                    deg1=True, c20=False, c30=False):
+        assert len(dates_begin) == len(dates_end) == len(self.value)
+        if deg1:
+            c10, c11, s11 = True, True, True
+        else:
+            c10, c11, s11 = False, False, False
+
+        replace_or_not = (c10, c11, s11, c20, c30)
+        low_ids = ("c10", "c11", "s11", "c20", "c30")
+        for i in range(len(low_ids)):
+            if replace_or_not:
+                assert low_ids[i] in low_deg.keys(), f"input low_deg should include key {low_ids[i]}"
+
+        replace_low_degs = ReplaceLowDegree()
+        replace_low_degs.configuration.set_replace_deg1(deg1).set_replace_c20(c20).set_replace_c30(c30)
+        replace_low_degs.set_low_degrees(low_deg)
+
+        cqlm, sqlm = replace_low_degs.apply_to(*self.get_cs2d(), begin_dates=dates_begin, end_dates=dates_end)
+
+        self.value = MathTool.cs_combine_to_triangle_1d(cqlm, sqlm)
+
+        return self
+
+    def expand(self, time):
+        assert not self.is_series()
+
+        year_frac = TimeTool.convert_date_format(time,
+                                                 input_type=TimeTool.DateFormat.ClassDate,
+                                                 output_type=TimeTool.DateFormat.YearFraction)
+
+        year_frac = np.array(year_frac)
+
+        trend = self.value[0]
+        value = year_frac[:, None] @ trend[None, :]
+        return SHC(value)
 
 
 class GRID(CoreGRID):
@@ -218,7 +175,7 @@ class GRID(CoreGRID):
         lat, lon = MathTool.get_global_lat_lon_range(grid_space)
         har = Harmonic(lat, lon, lmax, option=1)
 
-        filtering = _get_filter(filter_type, filter_params, lmax=lmax)
+        filtering = get_filter(filter_type, filter_params, lmax=lmax)
 
         if method in methods_of_model_driven:
             assert {"time", "model"}.issubset(set(reference.keys()))
@@ -267,7 +224,7 @@ class GRID(CoreGRID):
 
                 lk = Iterative()
 
-                prefilter = _get_filter(prefilter_type, prefilter_params, lmax=lmax)
+                prefilter = get_filter(prefilter_type, prefilter_params, lmax=lmax)
                 lk.configuration.set_prefilter(prefilter)
                 lk.configuration.set_cs_unfiltered(*shc_unfiltered.get_cs2d())
 

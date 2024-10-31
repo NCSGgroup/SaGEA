@@ -1,7 +1,5 @@
 import numpy as np
 
-from pysrc.data_class.DataClass import SHC
-
 
 class ReplaceLowDegreeConfig:
     def __init__(self):
@@ -63,15 +61,15 @@ class ReplaceLowDegree:
 
         return np.array(ymd_list)
 
-    def apply_to(self, shc: SHC, begin_dates, end_dates, dev=False):
+    def apply_to(self, cqlm, sqlm, begin_dates, end_dates, dev=False):
         """
-        :param shc: type SHC
+        :param cqlm:
+        :param sqlm:
         :param begin_dates: list of datetime.date
         :param end_dates: list of datetime.date
         :param dev: replace deviation or not
         :return:
         """
-        cqlm, sqlm = shc.get_cs2d()
         begin_times = self._get_ymd_array(begin_dates)
         end_times = self._get_ymd_array(end_dates)
 
@@ -143,7 +141,6 @@ class ReplaceLowDegree:
             sqlm[where[1], 1, 1] = replace_values[where[0]]
 
         if self.configuration.replace_c20:
-            # assert 'c20' in self.low_degrees.keys()
             if dev:
                 assert 'c20_dev' in self.low_degrees.keys()
 
@@ -178,8 +175,7 @@ class ReplaceLowDegree:
 
             cqlm[where[1], 3, 0] = replace_values[where[0]]
 
-        shc_replaced = SHC(cqlm, sqlm)
-        return shc_replaced
+        return cqlm, sqlm
 
 
 def demo():
@@ -203,7 +199,7 @@ def demo():
     rep = ReplaceLowDegree()
     rep.configuration.set_replace_c20()
     rep.set_low_degrees(low_degs)
-    rep.apply_to(shc, dates[0], dates[1])
+    rep.apply_to(*shc.get_cs2d(), dates[0], dates[1])
 
     pass
 
