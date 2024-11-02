@@ -197,14 +197,4 @@ class FileTool:
             else:
                 break
 
-        print('\n'.join(lines))
-
-
-def demo():
-    FileTool.get_hdf5_structure(FileTool.get_project_dir('temp/GlobalLandMask.hdf5'))
-    # print()
-    # FileTool.get_hdf5_structure(FileTool.get_project_dir('temp/make_h5_1.hdf5'))
-
-
-if __name__ == '__main__':
-    demo()
+        return '\n'.join(lines)

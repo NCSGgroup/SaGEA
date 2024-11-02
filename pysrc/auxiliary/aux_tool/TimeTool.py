@@ -11,9 +11,11 @@ class TimeTool:
         MJD = 3
         YMD = 4
         YearFraction = 5
+        TimeDelta = 6
 
     @staticmethod
-    def convert_date_format(date, input_type: DateFormat, output_type: DateFormat = DateFormat.ClassDate):
+    def convert_date_format(date, input_type: DateFormat, output_type: DateFormat = DateFormat.ClassDate,
+                            from_date: datetime.date = None):
         """
         get the date in format of datetime.date
         input/output_type restrict the type or format of param date and the return.
@@ -21,6 +23,7 @@ class TimeTool:
         DateFormat.YearDay -> str in format of 'yyyyddd', y: year; d: the d-th day of this year. e.g., '2002031'.
         DateFormat.MJD -> int, Modified Julian Day.
         DateFormat.YMD -> str in format of 'yyyymmdd', y: year; m:month; d: day. e.g., '20020131'.
+        DateFormat.TimeDelta -> int, days from from_date.
         :return:
         """
 
@@ -61,6 +64,10 @@ class TimeTool:
 
                 return _convert_to_class_date(year_day, i_type=TimeTool.DateFormat.YearDay)
 
+            elif i_type == TimeTool.DateFormat.TimeDelta:
+                assert from_date is not None
+                return from_date + datetime.timedelta(days=int(d))
+
             else:
                 raise Exception
 
@@ -99,6 +106,10 @@ class TimeTool:
 
                 else:
                     return year + days_of_year / 365
+
+            elif o_type == TimeTool.DateFormat.TimeDelta:
+                assert from_date is not None
+                return (d - from_date).days
 
             else:
                 raise Exception

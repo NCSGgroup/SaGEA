@@ -1,7 +1,13 @@
+import datetime
+import pathlib
+
+import h5py
+import netCDF4
 import numpy as np
 
 from pysrc.auxiliary.aux_tool.MathTool import MathTool
 from pysrc.auxiliary.aux_tool.TimeTool import TimeTool
+from pysrc.auxiliary.preference.Constants import GeoConstants
 from pysrc.auxiliary.preference.EnumClasses import FieldPhysicalQuantity, match_string
 from pysrc.post_processing.Love_number.LoveNumber import LoveNumber
 from pysrc.post_processing.convert_field_physical_quantity.ConvertSHC import ConvertSHC
@@ -243,6 +249,192 @@ class GRID(CoreGRID):
 
         return self
 
+    def integral(self, basin=None, average=True):
+        if average:
+            assert basin is not None
+
+        if basin is None:
+            grids = self.value
+        else:
+            grids = self.value * basin
+
+        lat, lon = self.lat, self.lon
+
+        # grid_shape = np.shape(grids[0])
+        #
+        # if lat is None:
+        #     lat = np.linspace(-90, 90, grid_shape[0])
+        #
+        # if lon is None:
+        #     lon = np.linspace(-180, 180, grid_shape[1])
+        #
+        # colat_rad, lon_rad = MathTool.get_colat_lon_rad(lat, lon)
+        #
+        # dlat = np.abs(colat_rad[1] - colat_rad[0])
+        # dlon = np.abs(lon_rad[1] - lon_rad[0])
+        #
+        # domega = np.sin(colat_rad) * dlat * dlon * radius_e ** 2
+        #
+        # # if for_square:
+        # #     integral = np.einsum('pij,i->p', grids, domega ** 2)
+        # # else:
+        # #     integral = np.einsum('pij,i->p', grids, domega)
+        # integral_result = np.einsum('pij,i->p', grids, domega)
+        integral_result = MathTool.global_integral(grids, lat, lon)
+
+        if average:
+            integral_result /= MathTool.get_acreage(basin)
+
+        return integral_result
+
+    def limiter(self, threshold=0, beyond=1, below=0):
+        index_beyond = np.where(self.value >= threshold)
+        index_below = np.where(self.value < threshold)
+
+        self.value[index_beyond] = beyond
+        self.value[index_below] = below
+        return self
+
+    def savefile(self, filepath: pathlib.Path, filetype=None, rewrite=False, time_dim=None, value_description=None):
+        if not filepath.parent.exists():
+            filepath.parent.mkdir(parents=True)
+        if filepath.exists() and not rewrite:
+            assert False, "file already exists"
+
+        filename = filepath.name
+        if "." in filename:
+            type_in_name = filename.split(".")[-1]
+        else:
+            type_in_name = None
+
+        if type_in_name is None:
+            if filetype is not None:
+                filename += "." + filetype
+            else:
+                filename += ".nc"
+
+        elif (type_in_name is not None) and (filetype is not None) and (type_in_name != filetype):
+            filename += "." + filetype
+
+        savetype = filename.split(".")[-1]
+
+        types = ("nc", "npz", "hdf5")
+        assert savetype in types, f"saving type must be one of {types}"
+
+        if savetype == "nc":
+            self.__save_nc(filepath, time_dim=time_dim, value_description=value_description)
+
+        elif savetype == "npz":
+            self.__save_npz(filepath, time_dim=time_dim, value_description=value_description)
+
+        elif savetype == "hdf5":
+            self.__save_hdf5(filepath, time_dim=time_dim, value_description=value_description)
+
+    def __save_nc(self, filepath: pathlib.Path, time_dim=None, from_date=None, value_description=None):
+        assert filepath.name.endswith(".nc")
+        assert time_dim is not None
+        assert len(time_dim) == np.shape(self.value)[0]
+
+        if from_date is None:
+            from_date = datetime.date(1900, 1, 1)
+
+        time_delta = TimeTool.convert_date_format(
+            time_dim,
+            input_type=TimeTool.DateFormat.ClassDate,
+            output_type=TimeTool.DateFormat.TimeDelta,
+            from_date=from_date,
+        )
+
+        with netCDF4.Dataset(filepath, 'w', format='NETCDF4') as ncfile:
+            ncfile.createDimension('time', size=len(time_delta))
+            ncfile.createDimension('lat', size=len(self.lat))
+            ncfile.createDimension('lon', size=len(self.lon))
+
+            times = ncfile.createVariable('time', int, ('time',))
+            latitudes = ncfile.createVariable('lat', np.float32, ('lat',))
+            longitudes = ncfile.createVariable('lon', np.float32, ('lon',))
+            values = ncfile.createVariable('value', np.float32, ('time', 'lat', 'lon'))
+
+            times[:] = time_delta
+            latitudes[:] = self.lat
+            longitudes[:] = self.lon
+            values[:] = self.value
+
+            times.description = f"days from {from_date}"
+            latitudes.description = f"geographical latitude in unit [degree]"
+            longitudes.description = f"geographical longitude in unit [degree]"
+            if value_description is not None:
+                values.description = value_description
+
+        return self
+
+    def __save_npz(self, filepath: pathlib.Path, time_dim=None, from_date=None, value_description=None):
+        assert filepath.name.endswith(".npz")
+        assert time_dim is not None
+        assert len(time_dim) == np.shape(self.value)[0]
+
+        if from_date is None:
+            from_date = datetime.date(1900, 1, 1)
+
+        time_delta = TimeTool.convert_date_format(
+            time_dim,
+            input_type=TimeTool.DateFormat.ClassDate,
+            output_type=TimeTool.DateFormat.TimeDelta,
+            from_date=from_date,
+        )
+
+        np.savez(
+            filepath,
+            lat=self.lat, lon=self.lon, value=self.value,
+            description=value_description,
+            date_begin=from_date, days=time_delta,
+        )
+
+    def __save_hdf5(self, filepath: pathlib.Path, time_dim=None, from_date=None, value_description=None):
+        assert filepath.name.endswith(".hdf5")
+        assert time_dim is not None
+        assert len(time_dim) == np.shape(self.value)[0]
+
+        if from_date is None:
+            from_date = datetime.date(1900, 1, 1)
+
+        time_delta = TimeTool.convert_date_format(
+            time_dim,
+            input_type=TimeTool.DateFormat.ClassDate,
+            output_type=TimeTool.DateFormat.TimeDelta,
+            from_date=from_date,
+        )
+
+        # np.savez(
+        #     filepath,
+        #     lat=self.lat, lon=self.lon, value=self.value,
+        #     description=value_description,
+        #     date_begin=from_date, days=time_delta,
+        # )
+
+        with h5py.File(filepath, "w") as h5file:
+            t_group = h5file.create_group("time")
+            t_description = t_group.create_dataset("description", data=f"days from {from_date}")
+            t_days = t_group.create_dataset("data", data=time_delta)
+
+            v_group = h5file.create_group("value")
+            if value_description is not None:
+                v_description = v_group.create_dataset("description", data=value_description)
+            v_data = v_group.create_dataset("data", data=self.value)
+
+            lat_group = h5file.create_group("lat")
+            lat_description = lat_group.create_dataset("description", data=f"geographical latitude in unit [degree]")
+            lat_value = lat_group.create_dataset("data", data=self.lat)
+
+            lon_group = h5file.create_group("lon")
+            lat_description = lon_group.create_dataset("description", data=f"geographical longitude in unit [degree]")
+            lat_value = lon_group.create_dataset("data", data=self.lon)
+
 
 if __name__ == '__main__':
+    # def f(a, *b, **c):
+    #     pass
+    #
+    #
+    # f(1, 2, 3, 4, 5, 6, r=7, m=8)
     pass
