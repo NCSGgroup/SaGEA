@@ -7,11 +7,11 @@ import numpy as np
 
 from pysrc.auxiliary.aux_tool.MathTool import MathTool
 from pysrc.auxiliary.aux_tool.TimeTool import TimeTool
-from pysrc.auxiliary.preference.Constants import GeoConstants
 from pysrc.auxiliary.preference.EnumClasses import FieldPhysicalQuantity, match_string
 from pysrc.post_processing.Love_number.LoveNumber import LoveNumber
 from pysrc.post_processing.convert_field_physical_quantity.ConvertSHC import ConvertSHC
 from pysrc.post_processing.filter.get_filter import get_filter
+from pysrc.post_processing.geometric_correction.GeometricalCorrection import GeometricalCorrection
 
 from pysrc.post_processing.harmonic.Harmonic import Harmonic, CoreSHC, CoreGRID
 from pysrc.post_processing.leakage.Addictive import Addictive
@@ -97,16 +97,21 @@ class SHC(CoreSHC):
         filtering = get_filter(method, param, lmax=self.get_lmax())
         cqlm_f, sqlm_f = filtering.apply_to(cqlm, sqlm)
 
-        cs_new = []
-        for i in range(np.shape(cqlm_f)[0]):
-            this_cs = MathTool.cs_combine_to_triangle_1d(cqlm_f[i], sqlm_f[i])
-            cs_new.append(this_cs)
-        self.value = np.array(cs_new)
+        self.value = MathTool.cs_combine_to_triangle_1d(cqlm_f, sqlm_f)
 
         return self
 
-    def replace_low(self, dates_begin, dates_end, low_deg: dict,
-                    deg1=True, c20=False, c30=False):
+    def geometric(self, grid_space, assumption: str):
+        gc = GeometricalCorrection()
+        cqlm, sqlm = self.get_cs2d()
+        cqlm_new, sqlm_new = gc.apply_to(cqlm, sqlm, grid_space=grid_space, assumption=assumption)
+
+        self.value = MathTool.cs_combine_to_triangle_1d(cqlm_new, sqlm_new)
+
+        return self
+
+    def replace_low_degs(self, dates_begin, dates_end, low_deg: dict,
+                         deg1=True, c20=False, c30=False):
         assert len(dates_begin) == len(dates_end) == len(self.value)
         if deg1:
             c10, c11, s11 = True, True, True
@@ -405,36 +410,24 @@ class GRID(CoreGRID):
             from_date=from_date,
         )
 
-        # np.savez(
-        #     filepath,
-        #     lat=self.lat, lon=self.lon, value=self.value,
-        #     description=value_description,
-        #     date_begin=from_date, days=time_delta,
-        # )
-
         with h5py.File(filepath, "w") as h5file:
             t_group = h5file.create_group("time")
-            t_description = t_group.create_dataset("description", data=f"days from {from_date}")
-            t_days = t_group.create_dataset("data", data=time_delta)
+            t_group.create_dataset("description", data=f"days from {from_date}")
+            t_group.create_dataset("data", data=time_delta)
 
             v_group = h5file.create_group("value")
             if value_description is not None:
-                v_description = v_group.create_dataset("description", data=value_description)
-            v_data = v_group.create_dataset("data", data=self.value)
+                v_group.create_dataset("description", data=value_description)
+            v_group.create_dataset("data", data=self.value)
 
             lat_group = h5file.create_group("lat")
-            lat_description = lat_group.create_dataset("description", data=f"geographical latitude in unit [degree]")
-            lat_value = lat_group.create_dataset("data", data=self.lat)
+            lat_group.create_dataset("description", data=f"geographical latitude in unit [degree]")
+            lat_group.create_dataset("data", data=self.lat)
 
             lon_group = h5file.create_group("lon")
-            lat_description = lon_group.create_dataset("description", data=f"geographical longitude in unit [degree]")
-            lat_value = lon_group.create_dataset("data", data=self.lon)
+            lon_group.create_dataset("description", data=f"geographical longitude in unit [degree]")
+            lon_group.create_dataset("data", data=self.lon)
 
 
 if __name__ == '__main__':
-    # def f(a, *b, **c):
-    #     pass
-    #
-    #
-    # f(1, 2, 3, 4, 5, 6, r=7, m=8)
     pass

@@ -295,7 +295,7 @@ class GeometricalCorrection:
         undulation = GeoidUndulation(elltype).getGeoid(self.__lat, self.__lon).flatten()
 
         LN = LoveNumber(FileTool.get_project_dir('data/auxiliary/'))
-        PHISFC = FileTool.get_project_dir('data/Topography/PHISFC_ERA5_invariant.nc', relative=True)
+        PHISFC = FileTool.get_project_dir('data/topography/PHISFC_ERA5_invariant.nc', relative=True)
         orography = ReadNC().setPar(PHISFC, DataType.PHISFC).read()[0].flatten()
         self.__Pnm = GeoMathKit.getPnm(self.__lat, self.__Nmax, 1)
 
@@ -325,7 +325,7 @@ class GeometricalCorrection:
         # CS.append([CnmT, SnmT])
 
         for iter in range(iterMax):
-            print('Iteration No: %s' % iter)
+            # print('Iteration No: %s' % iter)
             '''reference'''
             CnmR, SnmR = fm.getCS(lat=lat, lon=lon, field=gg.flatten(), maxDeg=self.__Nmax, kind=self.__kind)
 

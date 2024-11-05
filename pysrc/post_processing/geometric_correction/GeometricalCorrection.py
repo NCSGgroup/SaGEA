@@ -1,21 +1,20 @@
 import numpy as np
 
-from pysrc.auxiliary.aux_tool.MathTool import MathTool
-from pysrc.auxiliary.core_data_class.CoreSHC import CoreSHC
-from pysrc.data_class.DataClass import SHC
 from pysrc.post_processing.geometric_correction.original_files.GC import GeometricalCorrection as GC
 from pysrc.post_processing.geometric_correction.original_files.GeoMathKit import GeoMathKit
 from pysrc.post_processing.geometric_correction.original_files.Setting import Assumption, FieldType
 
+from pysrc.auxiliary.preference.EnumClasses import match_string
+
 
 class GeometricalCorrectionConfig:
     def __init__(self):
-        self.__assumption = Assumption.Sphere
+        self.__assumption = Assumption.ActualEarth
         self.__kind = FieldType.EWH
-        self.__lmax = 60
+        self.__lmax = None
 
-        self.__lat = np.arange(90, -90.1, -0.5)
-        self.__lon = np.arange(0, 360, 0.5)
+        self.__lat = None
+        self.__lon = None
 
         pass
 
@@ -58,12 +57,23 @@ class GeometricalCorrection:
     def __init__(self):
         self.configuration = GeometricalCorrectionConfig()
 
-    def apply_to(self, shc: CoreSHC):
-        cqlm, sqlm = [], []
-        for i in range(len(shc.value)):
-            print(f'geometric correction for the {i + 1}-th / {len(shc.value)}')
+    def apply_to(self, cqlm, sqlm, grid_space, assumption="Sphere"):
+        assert assumption.lower() in ("sphere", "ellipsoid", "actualEarth")
+        assumption = match_string(assumption, Assumption, ignore_case=True)
 
-            clm, slm = MathTool.cs_decompose_triangle1d_to_cs2d(shc.value[i])
+        lat = np.arange(-90, 90 + grid_space / 2, grid_space)
+        lon = np.arange(-180 + grid_space / 2, 180 + grid_space / 2, grid_space)
+        lmax = np.shape(cqlm)[1] - 1
+
+        self.configuration.set_lat_lon(lat, lon)
+        self.configuration.set_lmax(lmax)
+        self.configuration.set_assumption(assumption)
+
+        cqlm_new, sqlm_new = [], []
+        for i in range(len(cqlm)):
+            print(f"geometric correction for {i + 1}th/{len(cqlm)}...")
+
+            clm, slm = cqlm[i], sqlm[i]
 
             gc = GC().configure(
                 Nmax=self.configuration.get_lmax(),
@@ -80,7 +90,10 @@ class GeometricalCorrection:
             clm_corrected, slm_corrected = GeoMathKit.CS_1dTo2d(cs1d_corrected[0]), GeoMathKit.CS_1dTo2d(
                 cs1d_corrected[1])
 
-            cqlm.append(clm_corrected)
-            sqlm.append(slm_corrected)
+            cqlm_new.append(clm_corrected)
+            sqlm_new.append(slm_corrected)
 
-        return SHC(cqlm, sqlm)
+        cqlm_new = np.array(cqlm_new)
+        sqlm_new = np.array(sqlm_new)
+
+        return cqlm_new, sqlm_new
