@@ -1,3 +1,7 @@
+"""
+This demo is a validation for downloading GRACE Level-2 products
+"""
+
 from pysrc.auxiliary.aux_tool.FileTool import FileTool
 from pysrc.data_collection.collect_GRACE_L2.CollectL2SH import CollectL2SH
 from pysrc.data_collection.collect_GRACE_L2.CollectL2LowDeg import CollectL2LowDeg

@@ -101,10 +101,10 @@ class SHC(CoreSHC):
 
         return self
 
-    def geometric(self, grid_space, assumption: str):
+    def geometric(self, assumption: str, log=False):
         gc = GeometricalCorrection()
         cqlm, sqlm = self.get_cs2d()
-        cqlm_new, sqlm_new = gc.apply_to(cqlm, sqlm, grid_space=grid_space, assumption=assumption)
+        cqlm_new, sqlm_new = gc.apply_to(cqlm, sqlm, assumption=assumption, log=log)
 
         self.value = MathTool.cs_combine_to_triangle_1d(cqlm_new, sqlm_new)
 
@@ -170,7 +170,7 @@ class GRID(CoreGRID):
 
     def leakage(self, method: str, basin: np.ndarray, filter_type: str, filter_params: tuple, lmax: int, times=None,
                 reference: dict = None, prefilter_type: str = None, prefilter_params: tuple = None,
-                shc_unfiltered: SHC = None, basin_conservation: np.ndarray = None, fm_iter_times: int = 30):
+                shc_unfiltered: SHC = None, basin_conservation: np.ndarray = None, fm_iter_times: int = 30, log=False):
         methods_of_model_driven = (
             "addictive", "multiplicative", "scaling", "scaling_grid"
         )
@@ -227,6 +227,7 @@ class GRID(CoreGRID):
                 lk = ForwardModeling()
                 lk.configuration.set_basin_conservation(basin_conservation)
                 lk.configuration.set_max_iteration(fm_iter_times)
+                lk.configuration.set_pring_log(log)
 
             elif method in ("iterative", "iter"):
                 assert (prefilter_params is not None) and (
@@ -257,6 +258,10 @@ class GRID(CoreGRID):
     def integral(self, basin=None, average=True):
         if average:
             assert basin is not None
+
+        if isinstance(basin, CoreGRID):
+            assert not basin.is_series()
+            basin = basin.value[0]
 
         if basin is None:
             grids = self.value
