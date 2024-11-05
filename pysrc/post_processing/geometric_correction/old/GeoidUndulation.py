@@ -10,11 +10,11 @@
 import numpy as np
 
 from pysrc.auxiliary.aux_tool.FileTool import FileTool
-from pysrc.post_processing.geometric_correction.original_files.Harmonic import Harmonic
-from pysrc.post_processing.geometric_correction.original_files.LoadSH import LoadSH, Gif48
-from pysrc.post_processing.geometric_correction.original_files.LoveNumber import LoveNumber
-from pysrc.post_processing.geometric_correction.original_files.RefEllipsoid import EllipsoidType, RefEllipsoid
-from pysrc.post_processing.geometric_correction.original_files.Setting import SynthesisType, LoveNumberType
+from pysrc.post_processing.geometric_correction.old.Harmonic import Harmonic
+from pysrc.post_processing.geometric_correction.old.LoadSH import LoadSH, Gif48
+from pysrc.post_processing.geometric_correction.old.LoveNumber import LoveNumber
+from pysrc.post_processing.geometric_correction.old.RefEllipsoid import EllipsoidType, RefEllipsoid
+from pysrc.post_processing.geometric_correction.old.Setting import SynthesisType, LoveNumberType
 
 
 class GeoidUndulation:

@@ -286,7 +286,3 @@ class GeoMathKit:
         # read uncompressed files and write down a copy without postfix
         open(f_name, "wb+").write(g_file.read())
         g_file.close()
-
-if __name__ == '__main__':
-    CS = np.array([23, 56, 78, 90, 32, 34])
-    GeoMathKit.CS_1dTo2d(CS)

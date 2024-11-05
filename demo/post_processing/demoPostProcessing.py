@@ -12,6 +12,7 @@ from pysrc.auxiliary.aux_tool.MathTool import MathTool
 from pysrc.auxiliary.aux_tool.TimeTool import TimeTool
 from pysrc.auxiliary.load_file.LoadL2LowDeg import load_low_degs
 from pysrc.auxiliary.load_file.LoadL2SH import load_SHC
+from pysrc.auxiliary.scripts.PlotGrids import plot_grids
 
 
 def demo():
@@ -102,12 +103,18 @@ def demo():
     shc_unf = copy.deepcopy(shc)
 
     filter_method = "gs"
-    filter_params = (300,)
+    filter_params = (500,)
     shc.filter(method=filter_method, param=filter_params)
     print("done!")
 
     print("harmonic synthesising to grid", end=" ")
     grid = shc.to_grid(grid_space)
+    print("done!")
+
+    print("plotting global distribution...", end=" ")
+    plot_grids(
+        grid.value[:3] * 100, lat=grid.lat, lon=grid.lon, vmin=-20, vmax=20,
+    )
     print("done!")
 
     print("leakagr reduction...", end=" ")
@@ -139,7 +146,7 @@ def demo():
     gmom = grid.integral(mask_ocean)
     print("done!")
 
-    print("plotting...", end=" ")
+    print("plotting time series...", end=" ")
     year_fraction = TimeTool.convert_date_format(dates_ave, TimeTool.DateFormat.ClassDate,
                                                  TimeTool.DateFormat.YearFraction)
 
@@ -156,6 +163,8 @@ def demo():
     ax.set_ylabel("EWH (mm)")
 
     plt.show()
+    plt.close()
+
     print("done!")
 
     print("OLS fitting...", end=" ")

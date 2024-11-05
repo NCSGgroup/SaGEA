@@ -10,7 +10,7 @@ import numpy as np
 import scipy.io as scio
 from scipy import interpolate
 
-from pysrc.post_processing.geometric_correction.original_files.Setting import LoveNumberType
+from pysrc.post_processing.geometric_correction.old.Setting import LoveNumberType
 
 
 class LoveNumber:

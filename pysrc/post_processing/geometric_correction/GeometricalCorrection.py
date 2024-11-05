@@ -1,8 +1,8 @@
 import numpy as np
 
-from pysrc.post_processing.geometric_correction.original_files.GC import GeometricalCorrection as GC
-from pysrc.post_processing.geometric_correction.original_files.GeoMathKit import GeoMathKit
-from pysrc.post_processing.geometric_correction.original_files.Setting import Assumption, FieldType
+from pysrc.post_processing.geometric_correction.old.GC import GeometricalCorrection as GC
+from pysrc.post_processing.geometric_correction.old.GeoMathKit import GeoMathKit
+from pysrc.post_processing.geometric_correction.old.Setting import Assumption, FieldType
 
 from pysrc.auxiliary.preference.EnumClasses import match_string
 

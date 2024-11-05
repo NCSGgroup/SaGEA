@@ -10,10 +10,11 @@ from multiprocessing import Pool
 
 import numpy as np
 
-from pysrc.post_processing.geometric_correction.original_files.GeoMathKit import GeoMathKit
-from pysrc.post_processing.geometric_correction.original_files.LoveNumber import LoveNumber
-from pysrc.post_processing.geometric_correction.original_files.RefEllipsoid import RefEllipsoid
-from pysrc.post_processing.geometric_correction.original_files.Setting import SynthesisType, EllipsoidType, LoveNumberType, Constants, HarAnalysisType
+from pysrc.post_processing.geometric_correction.old.GeoMathKit import GeoMathKit
+from pysrc.post_processing.geometric_correction.old.LoveNumber import LoveNumber
+from pysrc.post_processing.geometric_correction.old.RefEllipsoid import RefEllipsoid
+from pysrc.post_processing.geometric_correction.old.Setting import SynthesisType, EllipsoidType, \
+    LoveNumberType, Constants, HarAnalysisType
 
 
 class Harmonic:
@@ -572,39 +573,3 @@ class Harmonic:
             factor = 1. / ((R * rho_ave / 3) * (term / (1 + kl)) / Constants.rho_water)
 
         return factor
-
-
-def demo3():
-    """
-    compare with SHtools
-    :return:
-    """
-    import pyshtools as pysh
-    from pysrc.GeoMathKit import GeoMathKit
-    from pysrc.LoadSH import Gif48
-
-    lat = np.arange(-89.75, 90, 0.5)
-    lon = np.arange(0.25, 360, 0.5)
-    lmax = 80
-    SH = Gif48().load('../data/GIF48.gfc').getCS(lmax)
-    SH[0][0] = 0.
-
-    Har = Harmonic(LoveNumber('../data/'), Parallel=-1)
-    res1 = Har.synthesis(SH[0], SH[1], lmax, lat, lon, SynthesisType.synthesis)
-
-    lon, lat = np.meshgrid(lon, lat)
-    lat, lon = list(lat.flatten()), list(lon.flatten())
-    topo_sh = np.zeros((2, lmax + 1, lmax + 1))
-    topo_sh[0, :, :] = GeoMathKit.CS_1dTo2d(SH[0])
-    topo_sh[1, :, :] = GeoMathKit.CS_1dTo2d(SH[1])
-
-    topo_sh = pysh.SHCoeffs.from_array(topo_sh)
-    topo_grid = topo_sh.expand(lat=lat[0:10], lon=lon[0:10])
-
-    print("Difference is %s" % (res1[0, 0:10] - topo_grid[0:10]))
-
-    pass
-
-
-if __name__ == '__main__':
-    demo3()

@@ -7,14 +7,14 @@
 """
 
 from pysrc.auxiliary.aux_tool.FileTool import FileTool
-from pysrc.post_processing.geometric_correction.original_files.Setting import FieldType, Assumption, Constants, HarAnalysisType, \
+from pysrc.post_processing.geometric_correction.old.Setting import FieldType, Assumption, Constants, HarAnalysisType, \
     LoveNumberType, EllipsoidType, DataType, \
     SynthesisType
-from pysrc.post_processing.geometric_correction.original_files.GeoMathKit import GeoMathKit
-from pysrc.post_processing.geometric_correction.original_files.GeoidUndulation import GeoidUndulation
-from pysrc.post_processing.geometric_correction.original_files.Harmonic import Harmonic
-from pysrc.post_processing.geometric_correction.original_files.LoveNumber import LoveNumber
-from pysrc.post_processing.geometric_correction.original_files.RefEllipsoid import RefEllipsoid
+from pysrc.post_processing.geometric_correction.old.GeoMathKit import GeoMathKit
+from pysrc.post_processing.geometric_correction.old.GeoidUndulation import GeoidUndulation
+from pysrc.post_processing.geometric_correction.old.Harmonic import Harmonic
+from pysrc.post_processing.geometric_correction.old.LoveNumber import LoveNumber
+from pysrc.post_processing.geometric_correction.old.RefEllipsoid import RefEllipsoid
 from netCDF4 import Dataset
 
 import numpy as np

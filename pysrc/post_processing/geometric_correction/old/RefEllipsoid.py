@@ -8,8 +8,8 @@
 # usage of this file:
 import numpy as np
 
-from pysrc.post_processing.geometric_correction.original_files.GeoMathKit import GeoMathKit
-from pysrc.post_processing.geometric_correction.original_files.Setting import EllipsoidType
+from pysrc.post_processing.geometric_correction.old.GeoMathKit import GeoMathKit
+from pysrc.post_processing.geometric_correction.old.Setting import EllipsoidType
 
 
 class RefEllipsoid:

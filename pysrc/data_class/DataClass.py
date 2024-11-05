@@ -7,13 +7,15 @@ import numpy as np
 
 from pysrc.auxiliary.aux_tool.MathTool import MathTool
 from pysrc.auxiliary.aux_tool.TimeTool import TimeTool
+from pysrc.auxiliary.core_data_class.CoreGRID import CoreGRID
+from pysrc.auxiliary.core_data_class.CoreSHC import CoreSHC
 from pysrc.auxiliary.preference.EnumClasses import FieldPhysicalQuantity, match_string
+
 from pysrc.post_processing.Love_number.LoveNumber import LoveNumber
 from pysrc.post_processing.convert_field_physical_quantity.ConvertSHC import ConvertSHC
 from pysrc.post_processing.filter.get_filter import get_filter
 from pysrc.post_processing.geometric_correction.GeometricalCorrection import GeometricalCorrection
-
-from pysrc.post_processing.harmonic.Harmonic import Harmonic, CoreSHC, CoreGRID
+from pysrc.post_processing.harmonic.Harmonic import Harmonic
 from pysrc.post_processing.leakage.Addictive import Addictive
 from pysrc.post_processing.leakage.BufferZone import BufferZone
 from pysrc.post_processing.leakage.DataDriven import DataDriven
