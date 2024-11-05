@@ -32,7 +32,8 @@ class ForwardModelingConfig:
 
         self.__initial_grid = None
         self.__observed_gqij = None
-        # self.__reverse_basin_mode = False
+
+        self.__log = False
 
     def set_acceleration_factor(self, factor):
         self.__acceleration_factor = factor
@@ -118,12 +119,12 @@ class ForwardModelingConfig:
     def get_basin(self):
         return self.__basin
 
-    # def set_reverse_basin_mode(self, mode: bool):
-    #     self.__reverse_basin_mode = mode
-    #     return self
-    #
-    # def get_reverse_basin_mode(self):
-    #     return self.__reverse_basin_mode
+    def set_print_log(self, log=True):
+        self.__log = log
+        return self
+
+    def get_print_log(self):
+        return self.__log
 
 
 class ForwardModeling(Leakage):
@@ -148,9 +149,11 @@ class ForwardModeling(Leakage):
 
         true_model = keep_signals_in_basin(gqij, basin, basin_to_conservation)
         iter_times = 0
+        print_log = self.configuration.get_print_log()
         while True:
             iter_times += 1
-            print(f'\rforward modeling: iter {iter_times}...', end='')
+            if print_log:
+                print(f'\rforward modeling: iter {iter_times}...', end='')
 
             cqlm, sqlm = har.analysis_for_gqij(true_model)
             cqlm_filtered, sqlm_filtered = shc_filter.apply_to(cqlm, sqlm)

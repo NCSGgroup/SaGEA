@@ -57,10 +57,11 @@ class GeometricalCorrection:
     def __init__(self):
         self.configuration = GeometricalCorrectionConfig()
 
-    def apply_to(self, cqlm, sqlm, grid_space, assumption="Sphere"):
+    def apply_to(self, cqlm, sqlm, assumption="Sphere", log=False):
         assert assumption.lower() in ("sphere", "ellipsoid", "actualEarth")
         assumption = match_string(assumption, Assumption, ignore_case=True)
 
+        grid_space = 0.5
         lat = np.arange(-90, 90 + grid_space / 2, grid_space)
         lon = np.arange(-180 + grid_space / 2, 180 + grid_space / 2, grid_space)
         lmax = np.shape(cqlm)[1] - 1
@@ -71,7 +72,8 @@ class GeometricalCorrection:
 
         cqlm_new, sqlm_new = [], []
         for i in range(len(cqlm)):
-            print(f"geometric correction for {i + 1}th/{len(cqlm)}...")
+            if log:
+                print(f"\rgeometric correction for the {i + 1}th/{len(cqlm)} set...", end="")
 
             clm, slm = cqlm[i], sqlm[i]
 
