@@ -27,18 +27,18 @@ Use this code to download the dependencies:
 # Quick Start
 
 Several demo programs are under the direction `./demo/` for users to quickly use and verify.
-User can config the relevant parameters in the corresponding location or an independent JSON file.
+Users can config the relevant parameters in the corresponding location or an independent JSON file.
 Detailed module usage and related scientific explanations will be provided in later chapters.
 
 1. `./demo/data_collecting/demoCollectL2Data.py` provides an example of collecting GRACE Level 2 products,
    including auxiliary files such as GAX and low-degrees products.
-   User can config the collecting parameters from the jason file in `./setting/data_collection/CollectL2Data.json`.
+   Users can config the collecting parameters from the jason file in `./setting/data_collection/CollectL2Data.json`.
    Other necessary files for this program are provided at https://under.constraction.
 2. `./demo/post_processing/demoPostProcessing.py` provides an example for the post-processing of GRACE data.
 3. `./demo/uncertainty_estimation/demoErrorI.py` provides an example for the propagation of GRACE error (
    variance-covariance matrix) during the post-processing.
-4. `./demo/uncertainty_estimation/demoErrorII.py` provides an example for the TCH estimation of GRACE signals.
-5. `./demo/uncertainty_estimation/demoErrorIII.py` provides an example post-processing statistical uncertainty of GRACE
+4. `./demo/uncertainty_estimation/demoErrorII.py` provides an example for the TCH (Three Corner Hat) estimation of GRACE signals.
+5. `./demo/uncertainty_estimation/demoErrorIII.py` provides an example to gain the post-processing statistical uncertainty of GRACE
    signals.
 
 # Functional Module Description and Usage
