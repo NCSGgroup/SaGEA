@@ -3,6 +3,13 @@ GRACE-FO based mass change.
 This toolbox also comes with post-processing functions of GRACE(-FO)'s level-2 products,
 as well as the collection of the level-2 products, and the functions of the results visualization.
 
+# Features
+
+- Auto-collecting GRACE(-FO) level-2 products and related auxiliary files.
+- Commony used methodologies and technologies of GRACE(-FO)'s post-processing.
+- Types of Error assessment/quantification of GRACE(-FO) based mass change.
+- User interface (under construction).
+
 # Installation
 
 This program homepage is: https://github.com/NCSGgroup/SaGEA.
@@ -13,22 +20,34 @@ Use this code to download this project.
 
 This project is developed based on Python 3.9 and the dependencies are listed in `requirements.txt`.
 
-Use this code to download the dependencies.
+Use this code to download the dependencies:
 
 `pip install -r requirements.txt`
 
-# Features
+# Quick Start
 
-- Auto-collecting GRACE(-FO) level-2 products and related auxiliary files.
-- Commony used methodologies and technologies of GRACE(-FO)'s post-processing.
-- Types of Error assessment/quantification of GRACE(-FO) based mass change.
-- User interface (under construction).
+Several demo programs are under the direction `./demo/` for users to quickly use and verify.
+User can config the relevant parameters in the corresponding location or an independent JSON file.
+Detailed module usage and related scientific explanations will be provided in later chapters.
 
-# Functional Module Description
+1. `./demo/data_collecting/demoCollectL2Data.py` provides an example of collecting GRACE Level 2 products,
+   including auxiliary files such as GAX and low-degrees products.
+   User can config the collecting parameters from the jason file in `./setting/data_collection/CollectL2Data.json`.
+   Other necessary files for this program are provided at https://under.constraction.
+2. `./demo/post_processing/demoPostProcessing.py` provides an example for the post-processing of GRACE data.
+3. `./demo/uncertainty_estimation/demoErrorI.py` provides an example for the propagation of GRACE error (
+   variance-covariance matrix) during the post-processing.
+4. `./demo/uncertainty_estimation/demoErrorII.py` provides an example for the TCH estimation of GRACE signals.
+5. `./demo/uncertainty_estimation/demoErrorIII.py` provides an example post-processing statistical uncertainty of GRACE
+   signals.
+
+# Functional Module Description and Usage
 
 ## Class SHC
 
 ## Class GRID
+
+# Additional Scientific Descriptions
 
 ## Data Collection
 
@@ -53,18 +72,27 @@ which are given in fully normalized spherical harmonic coefficients (SHCs) of gr
 The most used GSM solutions are given by three processing centers, that is, Center for Space Research (CSR), University
 of Texas at Austin, Jet Propulsion Laboratory (JPL), NASA, and German Research for Geosciences (GFZ), German.
 
-Path `/pysrc/data_collection/` includes the source file to access remote servers and download GRACE level-2 products
-from the above FTP server,
-including the above GSM, GAX, and necessary low-degree files for replacing and other auxiliary files.
-It is recommended to control this program through an external configuration file.
+[//]: # (Path `/pysrc/data_collection/` includes the source file to access remote servers and download GRACE level-2 products)
 
-A demo program `/demo/data_collecting/demoCollectL2Data.py` gives an example to download GRACE level-2 files by a
-configuration file `/setting/data_collecting/CollectL2Data.json`.
-Users can simply modify the parameters in the configuration file and run the above program to achieve automatic
-collection of the corresponding files.
+[//]: # (from the above FTP server,)
 
-This demo program also gives an example to download the low-degree files. Users can simply run the above program to
-achieve automatic collections.
+[//]: # (including the above GSM, GAX, and necessary low-degree files for replacing and other auxiliary files.)
+
+[//]: # (It is recommended to control this program through an external configuration file.)
+
+[//]: # ()
+
+[//]: # (A demo program `/demo/data_collecting/demoCollectL2Data.py` gives an example to download GRACE level-2 files by a)
+
+[//]: # (configuration file `/setting/data_collecting/CollectL2Data.json`.)
+
+[//]: # (Users can simply modify the parameters in the configuration file and run the above program to achieve automatic)
+
+[//]: # (collection of the corresponding files.)
+
+[//]: # (This demo program also gives an example to download the low-degree files. Users can simply run the above program to)
+
+[//]: # (achieve automatic collections.)
 
 ## Loading local GRACE level-2 products and replacing low-degree coefficients
 
@@ -79,10 +107,13 @@ the degree-1 coefficients needs to be added back,
 and C20, C30 coefficients with large uncertainties also needs to be replaced with estimates from other techniques,
 such as satellite laser ranging (SLR).
 
-Path `/pysrc/auxiliary/load_file/LoadL2SH.py` provides functions to load GRACE level-2 products,
-and path `/pysrc/auxiliary/load_file/LoadL2LowDeg.py` provides those of the low-degree coefficient.
-Path `/pysrc/post_processing/replace_low_deg/ReplaceLowDegree.py` includes the source file to apply the replacing
-low-degree coefficients on given SHC.
+[//]: # (Path `/pysrc/auxiliary/load_file/LoadL2SH.py` provides functions to load GRACE level-2 products,)
+
+[//]: # (and path `/pysrc/auxiliary/load_file/LoadL2LowDeg.py` provides those of the low-degree coefficient.)
+
+[//]: # (Path `/pysrc/post_processing/replace_low_deg/ReplaceLowDegree.py` includes the source file to apply the replacing)
+
+[//]: # (low-degree coefficients on given SHC.)
 
 ## Post-processing: Conversion between SHC and GRID
 
@@ -99,14 +130,21 @@ corresponding grid data can be obtained,
 from which we can easily see the spatial distribution of signals.
 On the contrary, the corresponding SHC can also be obtained through spherical harmonic analysis of grid data.
 
-Path `/pysrc/post_processing/convert_field_physical_quantity/` includes the source files to convert the physical
-quantity like equivalent water height (EWH),
-and the required Love number can be obtained by the source files in `/pysrc/post_processing/Love_number/LoveNumber.py`.
+[//]: # (Path `/pysrc/post_processing/convert_field_physical_quantity/` includes the source files to convert the physical)
 
-Path `/pysrc/post_processing/convert_field_physical_quantity/` includes the source files to do the harmonic synthesis
-and analysis.
-and the required associated Legendre polynomial can be obtained by the auxiliary methods in source
-file `/pysrc/auxiliary/tools/MathTools.py`.
+[//]: # (quantity like equivalent water height &#40;EWH&#41;,)
+
+[//]: # (and the required Love number can be obtained by the source files in `/pysrc/post_processing/Love_number/LoveNumber.py`.)
+
+[//]: # ()
+
+[//]: # (Path `/pysrc/post_processing/convert_field_physical_quantity/` includes the source files to do the harmonic synthesis)
+
+[//]: # (and analysis.)
+
+[//]: # (and the required associated Legendre polynomial can be obtained by the auxiliary methods in source)
+
+[//]: # (file `/pysrc/auxiliary/tools/MathTools.py`.)
 
 ## Post-processing: Corrections
 
@@ -242,7 +280,7 @@ of global mean atmospheric mass (GMAM). Chen et al. (2019) found a constant annu
 GRACE and Altimeter-Argo estimates of GMOM changes. By removing GMAM from the GRACE solutions using atmospheric model
 (GAA, the monthly average of atmosphere), this annual phase lag is nearly compensated.
 
-In the SaGEA toolbox, the GAA model can be also easily collected, and the corresponding correction, which one can easily
+In SaGEA toolbox, the GAA model can be also easily collected, and the corresponding correction, which one can easily
 switch on or off, is integrated into SaGEA toolbox.
 
 ## Post-processing: Spatial and temporal analysis
@@ -322,8 +360,6 @@ Another general tool, the Fourier analysis, is also able to obtain the seasonali
   As the advanced post-processing module are provided in SaGEA, a comprehensive quantification of Error-III at a diverse
   and flexible option is possible.
   Therefore, based on the post-processing module, SaGEA also provides a quantization program for Error-III.
-
-# Usage
 
 # Contributing
 
