@@ -23,7 +23,6 @@ def demo():
 
     '''define filepaths input'''
 
-    '''CRA-LICOM'''
     gsm_path = FileTool.get_project_dir("data/L2_SH_products/GSM/CSR/RL06/BA01/")
     gsm_key = "GRCOF2"
 
@@ -91,9 +90,9 @@ def demo():
     shc.de_background()
     print("done!")
 
-    # print("geometric correcting... (this step may take times for minutes)", end=" ")
-    # shc.geometric(assumption="ellipsoid", log=True)
-    # print("done!")
+    print("geometric correcting... (this step may take minutes)", end=" ")
+    shc.geometric(assumption="ellipsoid", log=True)
+    print("done!")
 
     print("converting SHC type (physical quantity)...", end=" ")
     shc.convert_type(from_type="dimensionless", to_type="ewh")

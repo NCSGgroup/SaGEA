@@ -129,9 +129,20 @@ class TimeTool:
         return d_target_type
 
     @staticmethod
-    def get_the_final_day_of_this_month(date: datetime.date):
-        year = date.year
-        month = date.month
+    def get_the_final_day_of_this_month(date: datetime.date = None, year: int = None, month: int = None):
+        input_date = date is not  None
+
+        input_year = year is not None
+        input_month = month is not None
+
+        assert input_year == input_month
+        assert input_date ^ input_year
+
+        if input_date:
+            year = date.year
+            month = date.month
+        else:
+            pass
 
         if month == 12:
             return datetime.date(year, month, 31)
@@ -202,14 +213,3 @@ class TimeTool:
                 ave_dates.append(ave_date)
 
             return ave_dates
-
-
-if __name__ == '__main__':
-    d = [
-        datetime.date(2005, 1, 15),
-        datetime.date(2005, 2, 15),
-        datetime.date(2005, 3, 15),
-        datetime.date(2005, 4, 15),
-    ]
-    year_fraction = TimeTool.convert_date_format(d, TimeTool.DateFormat.ClassDate, TimeTool.DateFormat.YearFraction)
-    print(year_fraction)

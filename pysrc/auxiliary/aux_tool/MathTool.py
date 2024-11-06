@@ -183,11 +183,12 @@ class MathTool:
             raise Exception
 
     @staticmethod
-    def cs_decompose_triangle1d_to_cs2d(cs: np.ndarray):
+    def cs_decompose_triangle1d_to_cs2d(cs: np.ndarray, fill=0.):
         """
         :param cs: 1d-array sorted as
         [c[0,0]; s[1,1], c[1,0], c[1,1]; s[2,2], s[2,1], c[2,0], c[2,1], c[2,2]; s[3,3], s[3,2], s[3,1], c[3,0], ...].
 
+        :param fill:
         return: 2d-array clm, 2d-array slm
         """
         assert cs.ndim in (1, 2)
@@ -197,7 +198,8 @@ class MathTool:
             lmax = int(np.sqrt(length_cs1d) - 1)
             shape2d = (lmax + 1, lmax + 1)
 
-            clm, slm = np.zeros(shape2d), np.zeros(shape2d)
+            # clm, slm = np.zeros(shape2d), np.zeros(shape2d)
+            clm, slm = np.full(shape2d, fill, dtype=np.float32), np.full(shape2d, fill, dtype=np.float32)
 
             for l in range(lmax + 1):
                 for m in range(l + 1):
@@ -388,6 +390,7 @@ class MathTool:
         return lat, lon
 
     @staticmethod
+    @DeprecationWarning
     def sort_covariance_matrix_old(cov_cs, lmax, lmin=2):
         """
         Generally the diagonal index of covariance matrix of spherical harmonic coefficients is sorted by degree like:
@@ -435,7 +438,7 @@ class MathTool:
         return cov_cs_resorted
 
     @staticmethod
-    def sort_covariance_matrix(cov_cs, lmax, lmin=2):
+    def sort_covariance_matrix(cov_cs, lmax_input: int, lmin_input: int = 0):
         """
         Generally the diagonal index of covariance matrix of spherical harmonic coefficients is sorted by degree like:
         ( var(c00); var(c10), var(c11), var(s11); var(c20), var(c21), var(s21), var(c22), var(s22); ... ),
@@ -447,16 +450,16 @@ class MathTool:
         it needs be re-sorted before get further used.
 
         :param cov_cs: 2d-array given in the above form
-        :param lmax: max degree/order
-        :param lmin: the minimum degree/order given in the input
+        :param lmax_input: max degree/order
+        :param lmin_input: the minimum degree/order given in the input
 
         return: 2d-array that describe the re-sorted covariance matrix of spherical harmonic coefficients
         """
-        if lmin == 0:
+        if lmin_input == 0:
             cov_cs_full = cov_cs
         else:
-            cov_cs_full = np.zeros(((lmax + 1) ** 2, (lmax + 1) ** 2))
-            cov_cs_full[lmin ** 2:, lmin ** 2:] = cov_cs
+            cov_cs_full = np.zeros(((lmax_input + 1) ** 2, (lmax_input + 1) ** 2))
+            cov_cs_full[lmin_input ** 2:, lmin_input ** 2:] = cov_cs
 
         lrange = np.arange(1, 121 + 1, 2)
 
@@ -472,7 +475,7 @@ class MathTool:
         elementary_transformation_matrix = np.zeros_like(cov_cs_full)
 
         '''index 1d (after transform) -> l, m -> index 1d (before transform)'''
-        for index in range((lmax + 1) ** 2):
+        for index in range((lmax_input + 1) ** 2):
             l, m = get_index2d_from_index1dnew(index)
             index_old = get_index1dold(l, m)
             elementary_transformation_matrix[index] = identity_matrix[index_old]

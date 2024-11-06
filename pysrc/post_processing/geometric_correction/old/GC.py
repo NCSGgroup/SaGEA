@@ -19,6 +19,8 @@ from netCDF4 import Dataset
 
 import numpy as np
 
+np.seterr(divide="ignore", invalid="ignore")
+
 
 class ReadNC:
     """

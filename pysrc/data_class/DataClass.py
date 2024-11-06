@@ -229,7 +229,7 @@ class GRID(CoreGRID):
                 lk = ForwardModeling()
                 lk.configuration.set_basin_conservation(basin_conservation)
                 lk.configuration.set_max_iteration(fm_iter_times)
-                lk.configuration.set_pring_log(log)
+                lk.configuration.set_print_log(log)
 
             elif method in ("iterative", "iter"):
                 assert (prefilter_params is not None) and (

@@ -95,6 +95,8 @@ def load_SHC(*filepath, key: str, lmax: int, lmcs_in_queue=None, get_dates=False
         return True
 
     if len(filepath) == 1:
+        assert filepath[0].exists(), f"{filepath[0]} does not exist"
+
         if filepath[0].is_file():
 
             if lmcs_in_queue is None:

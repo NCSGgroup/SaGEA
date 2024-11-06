@@ -4,6 +4,8 @@ from enum import Enum
 import numpy as np
 from scipy.optimize import minimize
 
+from pysrc.auxiliary.preference.EnumClasses import match_string
+
 
 class TCHMode(Enum):
     KKT = 1
@@ -119,7 +121,7 @@ class TCH:
         var_array = np.abs(design_mat @ var_diff_array)[:, 0]
         return var_array
 
-    def get_var_epsilon(self):
+    def get_variance(self):
         mode = self.configuration.get_mode()
 
         if mode == TCHMode.KKT:
@@ -132,104 +134,34 @@ class TCH:
         return var_array
 
 
-def demo():
-    import datetime
-    from tqdm import trange
+def tch_estimate(*dataset, mode: TCHMode or str = TCHMode.OLS):
+    if isinstance(mode, str):
+        mode = match_string(mode, TCHMode, ignore_case=True)
+    assert mode in TCHMode
 
-    from pysrc.data_class.DataClass import SHC
+    dataset = np.array(dataset)
 
-    from pysrc.auxiliary.load_file.LoadL2SH import LoadL2SH, load_SHC
-    from pysrc.auxiliary.aux_tool.MathTool import MathTool
-    from pysrc.auxiliary.aux_tool.FileTool import FileTool
-    from pysrc.auxiliary.preference.EnumClasses import L2InstituteType
+    input_shape = dataset[0].shape
 
-    from pysrc.post_processing.convert_field_physical_quantity.ConvertSHC import ConvertSHC
-    from pysrc.post_processing.Love_number.LoveNumber import LoveNumber
-    from pysrc.post_processing.harmonic.Harmonic import Harmonic
-    from pysrc.post_processing.filter.Gaussian import Gaussian
-
-    from pysrc.auxiliary.scripts.PlotGrids import plot_grids
-
-    '''TCH config'''
-    tch_mode = TCHMode.OLS
-
-    '''load gsm'''
-    gif48_path = FileTool.get_project_dir() / 'data/auxiliary/GIF48.gfc'
-    clm_bg, slm_bg = load_SHC(gif48_path, key='gfc', lmax=60)
-    shc_bg = SHC(clm_bg, slm_bg)
-
-    load = LoadL2SH()
-    load.configuration.set_begin_date(datetime.date(2005, 1, 1))
-    load.configuration.set_end_date(datetime.date(2015, 12, 31))
-
-    load.configuration.set_institute(L2InstituteType.CSR)
-    shc_csr = load.get_shc()
-    shc_csr.de_background(shc_bg)
-
-    load.configuration.set_institute(L2InstituteType.GFZ)
-    shc_gfz = load.get_shc()
-    shc_gfz.de_background(shc_bg)
-
-    load.configuration.set_institute(L2InstituteType.JPL)
-    shc_jpl = load.get_shc()
-    shc_jpl.de_background(shc_bg)
-
-    shc_csr.value[:, :6] = 0
-    shc_gfz.value[:, :6] = 0
-    shc_jpl.value[:, :6] = 0
-
-    '''convert to ewh'''
-    ln = LoveNumber().get_Love_number()
-    convert = ConvertSHC()
-    convert.configuration.set_Love_number(ln)
-    shc_csr = convert.apply_to(shc_csr)
-    shc_gfz = convert.apply_to(shc_gfz)
-    shc_jpl = convert.apply_to(shc_jpl)
-
-    '''gs filter'''
-    gs = Gaussian()
-    gs.configuration.set_filtering_radius(300)
-    shc_csr = gs.apply_to(shc_csr)
-    shc_gfz = gs.apply_to(shc_gfz)
-    shc_jpl = gs.apply_to(shc_jpl)
-
-    '''harmonic synthesis to gridded signal'''
-    grid_space = 1
-    lmax = 60
-    lat, lon = MathTool.get_global_lat_lon_range(grid_space)
-    har = Harmonic(lat, lon, lmax, option=1)
-    grids_csr = har.synthesis(shc_csr)
-    grids_gfz = har.synthesis(shc_gfz)
-    grids_jpl = har.synthesis(shc_jpl)
-
-    '''tch for grid'''
-    grid_shape = np.shape(grids_csr.value)[-2:]
-    grid_length = grid_shape[0] * grid_shape[1]
-
-    grids_tch_1d = np.zeros((3, grid_length))
     tch = TCH()
-    tch.configuration.set_mode(mode=tch_mode)
+    tch.configuration.set_mode(mode=mode)
 
-    grids_flatten_csr = np.array([grids_csr.value[i].flatten() for i in range(len(grids_csr.value))])
-    grids_flatten_gfz = np.array([grids_gfz.value[i].flatten() for i in range(len(grids_gfz.value))])
-    grids_flatten_jpl = np.array([grids_jpl.value[i].flatten() for i in range(len(grids_jpl.value))])
+    if len(input_shape) == 1:
+        tch.set_datasets(*dataset)
+        return tch.get_variance()
 
-    for i in trange(grid_length):
-        tch.set_datasets(grids_flatten_jpl[:, i], grids_flatten_gfz[:, i], grids_flatten_csr[:, i])
-        grids_tch_1d[:, i] = tch.get_var_epsilon()
+    else:
+        nset = len(dataset)
+        data_shape = input_shape[1:]
+        data1d_length = np.prod(data_shape)
 
-    grids_tch = np.sqrt(grids_tch_1d).reshape((3, *grid_shape))
+        data1d = [np.array([dataset[i][j].flatten() for j in range(len(dataset[i]))]) for i in range(nset)]
 
-    plot_grids(
-        grids_tch * 100,  # cm
-        lat=lat,
-        lon=lon,
-        vmin=0.,
-        vmax=6.,
-        subtitle=['JPL', 'GFZ', 'CSR'],
-        title="TCH with OLS"
-    )
+        tch_results_1d = np.zeros((nset, data1d_length))
+        for i in range(data1d_length):
+            tch.set_datasets(*[data1d[j][:, i] for j in range(nset)])
+            tch_results_1d[:, i] = tch.get_variance()
 
+        tch_results = tch_results_1d.reshape((nset, *data_shape))
 
-if __name__ == '__main__':
-    demo()
+        return tch_results
