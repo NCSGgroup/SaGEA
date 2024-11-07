@@ -1,5 +1,3 @@
-[toc]
-
 SaGEA (Satellite Gravity error assessment) is a Python-based project for comprehensive error assessment of GRACE and
 GRACE-FO based mass change.
 This toolbox also comes with post-processing functions of GRACE(-FO)'s level-2 products,
@@ -86,8 +84,8 @@ achieve automatic collections.
 
 ### Creation
 
-SHC is used to store spherical harmonic coefficients (SHCs),
-contain can store one or more sets of data.
+Class `SHC` is used to store spherical harmonic coefficients (SHCs),
+and can store one or more sets of data.
 SHC is the object returned by `load_SHC()` at `./pysrc/auxiliary/load_file/LoadL2SH.py`,
 or users can also manually create it by entering the coefficients `SHC(clm, slm)`.
 
@@ -108,7 +106,7 @@ and boolean parameters `deg1`, `c20`, `c30` control whether to replace correspon
 
 ### Addition and subtraction
 
-SHC can implement addition and subtraction with another instance through the internal implementation of `__add__()`
+`SHC` can implement addition and subtraction with another instance through the internal implementation of `__add__()`
 and `__sub__()`.
 The other instance that are added or subtracted can be sequences of equal length or a single group.
 If it is a single sequence,
@@ -178,6 +176,73 @@ Here `SHC` divide it into two steps to implement:
    For more detail of class `GRID` please refer to the next section.
 
 ## Class GRID
+
+### Creation
+
+Class `GRID` is used to store spatial gridded data,
+`GRID()` can also store one or more sets of data.
+SHC is the object returned by `SHC().to_grid()`,
+or users can also manually create it by entering the coefficients `GRID(value, lat, lon)`.
+
+Its attribute `.value` in a 3-dimension `numpy.ndarray` in shape of `(num, nlat, nlon)`,
+with first dimension points to the first set of data, while the second and the third point to the number of latitude and
+longitude, respectively.
+Thus `GRID()` requires attributes `.lat` and `.lon` that represent geographic latitude and longitude sequences (in unit
+of degree).
+Use `.is_series()` to determine whether the stored data is multiple sets, i.e., whether `num == 1`.
+
+### Filtering
+
+(under construction)
+
+Most GRACE filters are designed for spectral domain signals, i.e., they filter SHCs.
+While there are still some practical filters implemented in the spatial domain, such as Yi et al. (2021) and Yang et
+al. (2024).
+Thus `GRID()` provides filtering method to do such kinds of spatial filters,
+and the usage is similar with that in `SHC()`:
+Use `.filter(method: str, param: tuple)` to perform relevant spatial filtering.
+
+### Seismic Correction
+
+Use `.seismic(date: iter, events: pathlib.Path)` to perform the seismic correction with several seismic events (in json
+file) given by users, see Tang et al. (2020).
+Parameters `dates` and `events` are required,
+with the former describes the times of `.value`,
+and the latter describes the direction of the json file that describes the seismic events.
+Path `data/earthquake/earthquakes.json` provided several preset events,
+and users can add other events later or specify another file path.
+
+### Leakage Correction
+
+Use `.leakage(method: str, basin: np.ndarray, filter_type: str, filter_params: tuple, lmax: int, **params)` to deduct
+the leakage effect caused by the spectral truncation and filtering.
+
+The currently supported spectral filters and their usages are:
+
+1. **"iterative"**, see Wahr et al. (1998);
+2. **"addictive"**, see Klees et al. (2007);
+3. **"multiplicative"**, see Longuevergne et al. (2010);
+4. **"scaling"**, see Landerer et al. (2012);
+5. **"scaling grid"**, see Landerer et al. (2012);
+6. **"forward modeling"**, see Chen et al. (2015);
+7. **"data_driven"**, see Vishwakarma et al. (2017);
+8. **"buffer_zone"**, see Chen et al. (2019).
+
+Unlike the spectral filters, there are significant differences in the parameters required for different methods.
+Please refer to the user's manual (under contraction) or code comments for more details.
+
+### Harmonic Analysis
+
+Use `.to_SHC(lmax: int)` to perform a harmonic analysis (HMA) on the gridded data into SHCs with maximum degree
+of `lmax`, and an instance of `SHC` will be returned.
+
+### Output files
+
+Use `.savefile(filepath: pathlib.Path, time_dim, **params)` to store gridded data in the given path,
+and three formats of `.npz`, `.nc`, and `.hdf5` are supported for now.
+Parameter `time_dim` is the time dimension and needs to be consistent with the length of the first dimension
+of `.value`, and users can input additional parameters `value_description: str` to add descriptions or comments to the
+data in saved file.
 
 ## Error Assessment
 
@@ -634,6 +699,13 @@ mass estimation. Journal of Geodesy , 96 . https://doi.org/10.1007/s00190-022-01
 Yang, F., Forootan, E., Wang, C., Kusche, J., Luo, Z., 2021. A New 1-Hourly ERA5-Based Atmosphere De-Aliasing Product
 for GRACE, GRACEFO, and Future Gravity Missions. Journal of Geophysical Research: Solid Earth 126, e2021JB021926.
 https://doi.org/10.1029/2021JB021926.
+
+Yang, F., Forootan, E., Liu, S., & Schumacher, M. (2024). A Monte Carlo Propagation of the Full Variance-Covariance of
+GRACE-Like Level-2 Data With Applications in Hydrological Data Assimilation and Sea-Level Budget Studies. Water
+Resources Research, 60 (9), e2023WR036764. https://doi.org/10.1029/2023WR036764449.
+
+Yi,S.,& Sneeuw,N. (2022). A novel spatial filter to reduce north south striping noise in GRACE spherical harmonic
+coefficients. Journal of Geodesy,96(4),23. https://doi.org/10.1007/s00190-022-01614-z.
 
 Zhang, Z.-Z., Chao, B. F., Lu, Y., & Hsu, H.-T., 2009, An effective filtering for GRACE time-variable gravity: Fan
 filter. Geophysical Research Letters, 36(17). https://doi.org/10.1029/2009gl039459
