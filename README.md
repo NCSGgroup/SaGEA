@@ -37,15 +37,114 @@ Detailed module usage and related scientific explanations will be provided in la
 2. `./demo/post_processing/demoPostProcessing.py` provides an example for the post-processing of GRACE data.
 3. `./demo/uncertainty_estimation/demoErrorI.py` provides an example for the propagation of GRACE error (
    variance-covariance matrix) during the post-processing.
-4. `./demo/uncertainty_estimation/demoErrorII.py` provides an example for the TCH (Three Corner Hat) estimation of GRACE signals.
-5. `./demo/uncertainty_estimation/demoErrorIII.py` provides an example to gain the post-processing statistical uncertainty of GRACE
+4. `./demo/uncertainty_estimation/demoErrorII.py` provides an example for the TCH (Three Corner Hat) estimation of GRACE
+   signals.
+5. `./demo/uncertainty_estimation/demoErrorIII.py` provides an example to gain the post-processing statistical
+   uncertainty of GRACE
    signals.
 
-# Functional Module Description and Usage
+# Functional Module Description and Usages
+
+![DataStructure.png](image/DataStructure.png)
+Fig. 1:
+Data structure of SaGEA Toolbox.
+Arrows represent dependency relationships
+
+SaGEA Toolbox is used for post-processing and error assessment of GRACE level-2 data,
+with the latter relying on the former, see Fig. 1.
+Thus post-processing is the core function of SaGEA toolbox.
+
+SaGEA provides comprehensive post-processing methods.
+For ease to use,
+we have packaged each method as a function of two data classes:
+
+1. `SHC`, representing spherical harmonic coefficients;
+2. `GRID`, representing gridded data.
+
+Supporting that users may not be very familiar with the methods and principles
+we recommend calling the post-processing function through SHC or GRID instead of using them directly,
+as indicated by the circle in Fig. 1
+
+## Data Collection
+
+Path `/pysrc/data_collection/` includes the source file to access remote servers and collect GRACE level-2 products
+from the above FTP server,
+including the above GSM, GAX, and necessary low-degree files for replacing and other auxiliary files.
+It is recommended to control this program through an external configuration file.
+A demo program `/demo/data_collecting/demoCollectL2Data.py` gives an example to collect GRACE level-2 files by a
+configuration file `/setting/data_collecting/CollectL2Data.json`.
+Users can simply modify the parameters in the configuration file and run the above program to achieve automatic
+collection of the corresponding files.
+This demo program also gives an example to download the low-degree files. Users can simply run the above program to
+achieve automatic collections.
 
 ## Class SHC
 
+### Creation
+
+SHC is used to store spherical harmonic data,
+contain can store one or more sets of data.
+SHC is the object returned by `load_file()` at `./pysrc/auxiliary/load_file/LoadL2SH.py`,
+or users can also manually create it by entering the coefficients `SHC(clm, slm)`.
+
+Its attribute `.value` is a two-dimensional `numpy.ndarray` in shape of `(n = num of sets, m = (lmax+1)^2)`.
+Use `.is_series()` to determine whether the stored data is multiple sets, i.e., whether `n == 1`.
+
+### Addition and subtraction
+
+SHC can implement addition and subtraction with another instance through the internal implementation of `__add__()`
+and `__sub__()`.
+The other instance that are added or subtracted can be sequences of equal length or a single group.
+If it is a single sequence,
+it will be calculated according to the broadcast principle of `numpy.ndarry`.
+However,
+in order to cope with different situations,
+such as users only needing to add or subtract data from a certain degree to another (like GAX recovery, GMAM correction,
+et al.),
+it is recommended using the function `.add(other: SHC, lbegin: int, lend :int)` or `.subreact(*)` to additionally
+customize the degree from start (`lbegin`) to finish (`lend`).
+
+### Time dimension expansion
+
+Some geophysical signals,
+such as the GIA model,
+are given as long-term trends.
+In order to calculate with the monthly signal,
+it is necessary to project it as the signal for each month.
+`.expand(time: iter)` can project its value as a linear trend into multiple sets of signal in each time epoch,
+and return a new SHC instance. 
+Note that `.expand(time: iter)` is only supported in single-group SHC instances (i.e., `.is_series()` is `True`)
+
+### Filtering
+
+Use `.filter(method: str, param: tuple)` to implement spectral domain filters.
+The currently supported spectral filters and their usages are:
+
+1. **Decorrelation of SlidingWindow (Swenson2006):**
+   `.filter(method="slidingwindow_swenosn2006", param=(n: int, m: int, min_length: int, A: int, K: int))`, see Swenson
+   and Wahr (2006);
+2. **Decorrelation of SlidingWindow (Stable):**
+   `.filter(method="slidingwindow_stable", param=(n: int, m: int, window_length: int))`, see Swenson and Wahr (2006).
+3. **Decorrelation of PnMm:**
+   `.filter(method="pnmm", param=(n:int, m:int))`, see Chen et al. (2007);
+4. **Gaussian Filter:**
+   `.filter(method="gs", param=(radius: int, ))` see Wahr et al. (1998);
+5. **Non-isotropic Gaussian Filter:**
+   `.filter(method="ngs", param=(radius_1: int, radius_2: int, m_0: int))`, see Han et al. (2005);
+6. **Fan Filter:**
+   `.filter(method="fan", param=(radius_1: int, radius_2: int))` see Zhang et al. (2009);
+7. **DDK Filter:**
+   `.filter(method="ddk", param=(ddk_id: int, ))`, see Kusche et al.(2007; 2009).
+
+### Geometrical Correction
+
+Use `.geometric(assumption: str)` to apply the geometrical correction on the SHCs, and the parameter `assumption`
+can be chosed as `"sphere"`, `"ellipsoid"` or `"actualEarth"` to support different types of corrections, see Yang et
+al. (2022).
+
 ## Class GRID
+
+## Error Assessment
 
 # Additional Scientific Descriptions
 
@@ -71,28 +170,6 @@ which are given in fully normalized spherical harmonic coefficients (SHCs) of gr
 
 The most used GSM solutions are given by three processing centers, that is, Center for Space Research (CSR), University
 of Texas at Austin, Jet Propulsion Laboratory (JPL), NASA, and German Research for Geosciences (GFZ), German.
-
-[//]: # (Path `/pysrc/data_collection/` includes the source file to access remote servers and download GRACE level-2 products)
-
-[//]: # (from the above FTP server,)
-
-[//]: # (including the above GSM, GAX, and necessary low-degree files for replacing and other auxiliary files.)
-
-[//]: # (It is recommended to control this program through an external configuration file.)
-
-[//]: # ()
-
-[//]: # (A demo program `/demo/data_collecting/demoCollectL2Data.py` gives an example to download GRACE level-2 files by a)
-
-[//]: # (configuration file `/setting/data_collecting/CollectL2Data.json`.)
-
-[//]: # (Users can simply modify the parameters in the configuration file and run the above program to achieve automatic)
-
-[//]: # (collection of the corresponding files.)
-
-[//]: # (This demo program also gives an example to download the low-degree files. Users can simply run the above program to)
-
-[//]: # (achieve automatic collections.)
 
 ## Loading local GRACE level-2 products and replacing low-degree coefficients
 
