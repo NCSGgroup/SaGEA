@@ -1,3 +1,5 @@
+[toc]
+
 SaGEA (Satellite Gravity error assessment) is a Python-based project for comprehensive error assessment of GRACE and
 GRACE-FO based mass change.
 This toolbox also comes with post-processing functions of GRACE(-FO)'s level-2 products,
@@ -37,18 +39,17 @@ Detailed module usage and related scientific explanations will be provided in la
 2. `./demo/post_processing/demoPostProcessing.py` provides an example for the post-processing of GRACE data.
 3. `./demo/uncertainty_estimation/demoErrorI.py` provides an example for the propagation of GRACE error (
    variance-covariance matrix) during the post-processing.
-4. `./demo/uncertainty_estimation/demoErrorII.py` provides an example for the TCH (Three Corner Hat) estimation of GRACE
-   signals.
+4. `./demo/uncertainty_estimation/demoErrorII.py` provides an example for the estimation of between-group errors through
+   TCH (Three Corner Hat) technology on GRACE signals.
 5. `./demo/uncertainty_estimation/demoErrorIII.py` provides an example to gain the post-processing statistical
-   uncertainty of GRACE
-   signals.
+   uncertainty of GRACE signals.
 
 # Overview of Functional Modules and Usages
 
 ![DataStructure.png](image/DataStructure.png)
 Fig. 1:
 Data structure of SaGEA Toolbox.
-Arrows represent dependency relationships
+Arrows represent dependency relationships.
 
 SaGEA Toolbox is used for post-processing and error assessment of GRACE level-2 data,
 with the latter relying on the former, see Fig. 1.
