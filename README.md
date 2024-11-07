@@ -1,16 +1,18 @@
+# 1. Introduction
+
 SaGEA (Satellite Gravity error assessment) is a Python-based project for comprehensive error assessment of GRACE and
 GRACE-FO based mass change.
 This toolbox also comes with post-processing functions of GRACE(-FO)'s level-2 products,
 as well as the collection of the level-2 products, and the functions of the results visualization.
 
-# Features
+# 2. Features
 
 - Auto-collecting GRACE(-FO) level-2 products and related auxiliary files.
 - Commony used methodologies and technologies of GRACE(-FO)'s post-processing.
 - Types of Error assessment/quantification of GRACE(-FO) based mass change.
 - User interface (under construction).
 
-# Installation
+# 3. Installation
 
 This program homepage is: https://github.com/NCSGgroup/SaGEA.
 
@@ -24,7 +26,7 @@ Use this code to download the dependencies:
 
 `pip install -r requirements.txt`
 
-# Quick Start
+# 4. Quick Start
 
 Several demo programs are under the direction `./demo/` for users to quickly use and verify.
 Users can config the relevant parameters in the corresponding location or an independent JSON file.
@@ -42,7 +44,7 @@ Detailed module usage and related scientific explanations will be provided in la
 5. `./demo/uncertainty_estimation/demoErrorIII.py` provides an example to gain the post-processing statistical
    uncertainty of GRACE signals.
 
-# Overview of Functional Modules and Usages
+# 5. Overview of Functional Modules and Usages
 
 ![DataStructure.png](image/DataStructure.png)
 Fig. 1:
@@ -67,7 +69,7 @@ as indicated by the circle in Fig. 1.
 Here we briefly provide an overview of the usages about data collection, post-processing, and error assessment.
 For detailed user manuals, please refer to http://under.construction.
 
-## Data Collection
+## 5.1 Data Collection
 
 Path `/pysrc/data_collection/` includes the source file to access remote servers and collect GRACE level-2 products
 from the above FTP server,
@@ -80,9 +82,9 @@ collection of the corresponding files.
 This demo program also gives an example to download the low-degree files. Users can simply run the above program to
 achieve automatic collections.
 
-## Class SHC
+## 5.2 Class SHC
 
-### Creation
+### 5.2.1 Creation
 
 Class `SHC` is used to store spherical harmonic coefficients (SHCs),
 and can store one or more sets of data.
@@ -92,7 +94,7 @@ or users can also manually create it by entering the coefficients `SHC(clm, slm)
 Its attribute `.value` is a two-dimensional `numpy.ndarray` in shape of `(n = num of sets, m = (max_degree + 1)^2)`.
 Use `.is_series()` to determine whether the stored data is multiple sets, i.e., whether `n == 1`.
 
-### Low-degrees replacement
+### 5.2.2 Low-degrees replacement
 
 The low-degree coefficients (degree-1, c20, etc.) of GRACE level-2 products usually need to be replaced by another
 independent measurement.
@@ -104,7 +106,7 @@ and parameter `low_deg` should be the replaced coefficients given as an instance
 it is highly recommended to get it through `load_low_degs()` at `pysrc/auxiliary/load_file/LoadL2LowDeg.py`,
 and boolean parameters `deg1`, `c20`, `c30` control whether to replace corresponding coefficients.
 
-### Addition and subtraction
+### 5.2.3 Addition and subtraction
 
 `SHC` can implement addition and subtraction with another instance through the internal implementation of `__add__()`
 and `__sub__()`.
@@ -119,7 +121,7 @@ it is recommended using the function `.add(other: SHC, lbegin: int, lend :int)`
 or `.subreact(other: SHC, lbegin: int, lend :int)` to additionally customize the degree from start (`lbegin`) to
 finish (`lend`).
 
-### Time dimension expansion
+### 5.2.4 Time dimension expansion
 
 Some geophysical signals,
 such as the GIA model,
@@ -130,7 +132,7 @@ it is necessary to project it as the signal for each month.
 and return a new SHC instance.
 Note that `.expand(time: iter)` is only supported in single-group SHC instances (i.e., `.is_series()` is `True`)
 
-### Filtering
+### 5.2.5 Filtering
 
 Use `.filter(method: str, param: tuple)` to implement spectral domain filters.
 The currently supported spectral filters and their usages are:
@@ -151,13 +153,13 @@ The currently supported spectral filters and their usages are:
 7. **DDK Filter:**
    `.filter(method="ddk", param=(ddk_id: int, ))`, see Kusche et al.(2007; 2009).
 
-### Geometrical Correction
+### 5.2.6 Geometrical Correction
 
 Use `.geometric(assumption: str)` to apply the geometrical correction on the SHCs, and the parameter `assumption`
 can be chosed as `"sphere"`, `"ellipsoid"` or `"actualEarth"` to support different types of corrections, see Yang et
 al. (2022).
 
-### Harmonic Synthesis
+### 5.2.7 Harmonic Synthesis
 
 Spherical harmonic synthesis (HMS) is the step of converting (dimensionless) SHCs into grid data of different physical
 types (such as equivalent water height, EWH, or pressure, etc.).
@@ -175,9 +177,9 @@ Here `SHC` divide it into two steps to implement:
    Use `.to_grid(grid_space: int)` to make an HMS on the SHCs, and a new instance of `GRID` will be returned.
    For more detail of class `GRID` please refer to the next section.
 
-## Class GRID
+## 5.3 Class GRID
 
-### Creation
+### 5.3.1 Creation
 
 Class `GRID` is used to store spatial gridded data,
 `GRID()` can also store one or more sets of data.
@@ -191,7 +193,7 @@ Thus `GRID()` requires attributes `.lat` and `.lon` that represent geographic la
 of degree).
 Use `.is_series()` to determine whether the stored data is multiple sets, i.e., whether `num == 1`.
 
-### Filtering
+### 5.3.2 Filtering
 
 (under construction)
 
@@ -202,7 +204,7 @@ Thus `GRID()` provides filtering method to do such kinds of spatial filters,
 and the usage is similar with that in `SHC()`:
 Use `.filter(method: str, param: tuple)` to perform relevant spatial filtering.
 
-### Seismic Correction
+### 5.3.3 Seismic Correction
 
 Use `.seismic(date: iter, events: pathlib.Path)` to perform the seismic correction with several seismic events (in json
 file) given by users, see Tang et al. (2020).
@@ -212,7 +214,7 @@ and the latter describes the direction of the json file that describes the seism
 Path `data/earthquake/earthquakes.json` provided several preset events,
 and users can add other events later or specify another file path.
 
-### Leakage Correction
+### 5.3.4 Leakage Correction
 
 Use `.leakage(method: str, basin: np.ndarray, filter_type: str, filter_params: tuple, lmax: int, **params)` to deduct
 the leakage effect caused by the spectral truncation and filtering.
@@ -231,12 +233,12 @@ The currently supported spectral filters and their usages are:
 Unlike the spectral filters, there are significant differences in the parameters required for different methods.
 Please refer to the user's manual (under contraction) or code comments for more details.
 
-### Harmonic Analysis
+### 5.3.5 Harmonic Analysis
 
 Use `.to_SHC(lmax: int)` to perform a harmonic analysis (HMA) on the gridded data into SHCs with maximum degree
 of `lmax`, and an instance of `SHC` will be returned.
 
-### Output files
+### 5.3.6 Output files
 
 Use `.savefile(filepath: pathlib.Path, time_dim, **params)` to store gridded data in the given path,
 and three formats of `.npz`, `.nc`, and `.hdf5` are supported for now.
@@ -244,11 +246,13 @@ Parameter `time_dim` is the time dimension and needs to be consistent with the l
 of `.value`, and users can input additional parameters `value_description: str` to add descriptions or comments to the
 data in saved file.
 
-## Error Assessment
+## 5.4. Error Assessment
 
-# Additional Scientific Descriptions
+(under construction)
 
-## Data Collection
+# 6. Additional Scientific Descriptions
+
+## 6.1 Data Collection
 
 GRACE and GRACE-FO level-2 products can be obtained at open source FTP server ftp://isdcftp.gfz-potsdam.de/.
 Level-2 products includes GSM, GAA, GAB, GAC, and GAD (The last four products are collectively referred to as GAX.),
@@ -271,7 +275,7 @@ which are given in fully normalized spherical harmonic coefficients (SHCs) of gr
 The most used GSM solutions are given by three processing centers, that is, Center for Space Research (CSR), University
 of Texas at Austin, Jet Propulsion Laboratory (JPL), NASA, and German Research for Geosciences (GFZ), German.
 
-## Loading local GRACE level-2 products and replacing low-degree coefficients
+## 6.2 Loading local GRACE level-2 products and replacing low-degree coefficients
 
 GRACE level-2 GSM solutions lack the three degree-1 coefficients,
 which are proportional to geocenter motion and can not been ignored for a complete representation of the mass
@@ -292,7 +296,7 @@ such as satellite laser ranging (SLR).
 
 [//]: # (low-degree coefficients on given SHC.)
 
-## Post-processing: Conversion between SHC and GRID
+## 6.3 Post-processing: Conversion between SHC and GRID
 
 GRACE level-2 products reflects the distribution of dimensionless geopotential,
 from which we can obtain the corresponding changes in gravity anomalies,
@@ -323,9 +327,9 @@ On the contrary, the corresponding SHC can also be obtained through spherical ha
 
 [//]: # (file `/pysrc/auxiliary/tools/MathTools.py`.)
 
-## Post-processing: Corrections
+## 6.4 Post-processing: Corrections
 
-### Low-degrees replacement
+### 6.4.1 Low-degrees replacement
 
 Due to the presumed Earth mass conservation and the on-orbit measuring mode,
 GRACE(-FO) has no ability to obtain the degree-0 and -1 terms of the gravity field (Wu et al., 2012).
@@ -342,7 +346,7 @@ SaGEA toolbox contains the following option to replace the low-degree terms of t
 - C20 terms given by Cheng & Ries (2017) and Loomis et al. (2020).
 - C30 terms given by Loomis et al. (2020).
 
-### Filtering spherical harmonic coefficients
+### 6.4.2 Filtering spherical harmonic coefficients
 
 Due to the existence of high-order noise and correlation error in the GRACE solutions,
 filtering is a necessary step before apply it on some scientific studies (Wahr et al., 2006).
@@ -359,7 +363,7 @@ SaGEA toolbox contains the following filtering methods:
 - Fan filter by Zhang et al. (2009).
 - DDK filter by Kusche et al. (2007, 2009).
 
-### Leakage Reduction
+### 6.4.3 Leakage Reduction
 
 Filters for GRACE can supress the noise at high degrees, but at the same time they could also weaken the signal as well.
 Spatially speaking, signal where it is strong would leak into some place where it is weaker, for example, the
@@ -389,7 +393,7 @@ SaGEA toolbox contains the following commonly used methods to correct the leakag
 - Data-driven (Vishwakarma et al., 2017).
 - Buffer zone (Chen et al., 2019)
 
-### GIA Removal
+### 6.4.4 GIA Removal
 
 In the Earth’s gravity anomalies observed by GRACE(-FO), apart from the effects caused by surface mass migration, there
 are also influences from GIA driven redistribution of solid Earth mass, which cannot be identified and separated
@@ -405,7 +409,7 @@ including the following commonly used GIA models:
 - Geruo2013 by A et al. (2013).
 - Caron2018 by Caron et al. (2018).
 
-### De-aliasing
+### 6.4.5 De-aliasing
 
 Due to imperfect tidal models (mainly ocean tides), monthly gravity field solutions from GRACE contain aliasing errors
 of frequencies much longer than 30 days, such as the S2 (approximately 161 days), P1 (approximately 171 days) and S1
@@ -416,7 +420,7 @@ as a major error source of the latest gravity product from GRACE(-FO), see Z. Li
 In SAGEA toolbox, either by the Fourier spectrum analysis or by the least square analysis, those aliasing frequency are
 identified and removed, and S1, S2, P1 are available options.
 
-### Geometrical Correction
+### 6.4.6 Geometrical Correction
 
 The geometrical deviation of the actual Earth from the presumed sphere would lead to a bias when converting the
 geopotential into TWS (J. Li et al., 2017; Ditmar, 2018; Yang et al., 2022). Such bias would become increasingly
@@ -426,7 +430,7 @@ correction, which indeed consists of an ellipsoid correction and a topography co
 In SAGEA toolbox, the geometrical correction is implemented following the method of Yang et al. (2022), where one can
 easily switch it on or off.
 
-### Seismic Correction
+### 6.4.7 Seismic Correction
 
 It is concluded by Chao & Liau (2019) that, the lowest earthquake magnitude threshold that can be detected by GRACE is
 the Mw 8.3. This also means, some of largest earthquakes could be directly modelled and removed from GRACE(-FO) monthly
@@ -439,7 +443,7 @@ Currently, the seismic events available in SaGEA contain Sumatra 2004, Nias 2005
 Tohoku-Oki 2011, Sumatra 2012 and Okhotsk 2013. On one hand, SaGEA will continue to update the available seismic events,
 and on the other hand, users can also edit their own list of seismic events for their need.
 
-### GAD Recovery
+### 6.4.8 GAD Recovery
 
 In addition to the corrections that are universal and common for all regions, there is some other correction that is
 specific only for certain study, e.g., to study the global mean ocean mass (GMOM) change. To obtain the complete ocean
@@ -450,7 +454,7 @@ GAD (the monthly average of ocean bottom pressure anomalies), which we know as G
 In the SaGEA toolbox, the GAD model can be easily collected, just like the GRACE level-2 products. And such correction,
 which one can easily switch on or off, is also integrated into it.
 
-### GMAM Correction
+### 6.4.9 GMAM Correction
 
 GMAM correction is proposed by Chen et al. (2019) to compensate the offset in Earth mass conservation due to the absence
 of global mean atmospheric mass (GMAM). Chen et al. (2019) found a constant annual phase lag(for about 10 deg) between
@@ -460,9 +464,9 @@ GRACE and Altimeter-Argo estimates of GMOM changes. By removing GMAM from the GR
 In SaGEA toolbox, the GAA model can be also easily collected, and the corresponding correction, which one can easily
 switch on or off, is integrated into SaGEA toolbox.
 
-## Post-processing: Spatial and temporal analysis
+## 6.5 Post-processing: Spatial and temporal analysis
 
-### Spatial analysis
+### 6.5.1 Spatial analysis
 
 Spatial analysis mainly indicates the extraction of basin-scale variability,
 like TWS (Total Water Storage) changes.
@@ -479,7 +483,7 @@ there are differences in practice due to the loss of spatial/spectral conversion
 SaGEA provides both of the two approaches,
 and users can choose them according to their needs.
 
-### Temporal analysis
+### 6.5.2 Temporal analysis
 
 The seasonality in time-series of GRACE(-FO) based mass change, i.e.,
 the secular trend, inter-annual periodic signal and seasonal periodic signals,
@@ -497,9 +501,9 @@ as heterogeneous and uniform.
 Further, WLS makes sense since SaGEA is able to provide the error information, otherwise WLS should be disabled.
 Another general tool, the Fourier analysis, is also able to obtain the seasonality other than a priori information.
 
-## Error assessment
+## 6.6 Error assessment
 
-- **Error-I**
+### 6.6.1 Error-I
 
   Due to the imperfect background models (Hauk and Pail, 2018; Yang et al., 2021) and on-board instrument error (
   Bandikova
@@ -513,7 +517,7 @@ Another general tool, the Fourier analysis, is also able to obtain the seasonali
   needs to be propagated to support uncertainty estimation of the level-3 product.
   Such kind of error is indicated as Error-I and integrated in SaGEA program.
 
-- Error-II
+### 6.6.2 Error-II
 
   Besides the official GRACE data producers,
   multiple producers are routinely producing level-2 solutions and contributing them to the International Centre for
@@ -526,7 +530,7 @@ Another general tool, the Fourier analysis, is also able to obtain the seasonali
   the TCH (Three-Cornered Hat, Ferreira et al., 2016; Chen et al., 2021) is integrated in SaGEA to consider the Error-II
   of desired variables.
 
-- Error-III
+### 6.6.3 Error-III
 
   This category of error might be caused by the non-uniqueness of the post-processing chain and the involvement of
   corrections with less known uncertaintiesm.
@@ -538,9 +542,10 @@ Another general tool, the Fourier analysis, is also able to obtain the seasonali
   and flexible option is possible.
   Therefore, based on the post-processing module, SaGEA also provides a quantization program for Error-III.
 
-# Contributing
+# 7. Contributing
+(under construction)
 
-# License
+# 8. License
 
 MIT License
 
