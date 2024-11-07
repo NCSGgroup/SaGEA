@@ -113,8 +113,9 @@ However,
 in order to cope with different situations,
 such as users only needing to add or subtract data from a certain degree to another (like GAX recovery, GMAM correction,
 et al.),
-it is recommended using the function `.add(other: SHC, lbegin: int, lend :int)` or `.subreact(*)` to additionally
-customize the degree from start (`lbegin`) to finish (`lend`).
+it is recommended using the function `.add(other: SHC, lbegin: int, lend :int)`
+or `.subreact(other: SHC, lbegin: int, lend :int)` to additionally customize the degree from start (`lbegin`) to
+finish (`lend`).
 
 ### Time dimension expansion
 
@@ -168,9 +169,9 @@ Here `SHC` divide it into two steps to implement:
    `"HorizontalDisplacementNorth"` and `"VerticalDisplacement"`.
 
 2. **Pure synthesis:**
-    
-    Use `.to_grid(grid_space: int)` to make an HMS on the SHCs, and a new instance of `GRID` will be returned.
-    For more detail of class `GRID` please refer to the next section. 
+
+   Use `.to_grid(grid_space: int)` to make an HMS on the SHCs, and a new instance of `GRID` will be returned.
+   For more detail of class `GRID` please refer to the next section.
 
 ## Class GRID
 
