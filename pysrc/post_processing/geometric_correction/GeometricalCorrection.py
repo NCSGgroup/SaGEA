@@ -58,7 +58,7 @@ class GeometricalCorrection:
         self.configuration = GeometricalCorrectionConfig()
 
     def apply_to(self, cqlm, sqlm, assumption="Sphere", log=False):
-        assert assumption.lower() in ("sphere", "ellipsoid", "actualEarth")
+        assert assumption.lower() in ("sphere", "ellipsoid", "actualearth")
         assumption = match_string(assumption, Assumption, ignore_case=True)
 
         grid_space = 0.5

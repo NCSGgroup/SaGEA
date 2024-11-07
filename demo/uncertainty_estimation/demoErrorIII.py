@@ -9,7 +9,6 @@ from pysrc.auxiliary.aux_tool.FileTool import FileTool
 from pysrc.auxiliary.aux_tool.TimeTool import TimeTool
 from pysrc.auxiliary.load_file.LoadL2LowDeg import load_low_degs
 from pysrc.auxiliary.load_file.LoadL2SH import load_SHC
-from pysrc.auxiliary.scripts.PlotGrids import plot_grids
 
 
 def demo_single_postprocessing(params, low_degs=None, shc_gsm=None, shc_gad=None, shc_gaa=None, shc_gia=None,
@@ -107,7 +106,7 @@ def demo():
         "decorrelation": (
             None,
             ("pnmm", (3, 5)),
-            # ("wahr2006", (3, 10, 10, 30, 5))
+            # ("swenson2006", (3, 10, 10, 30, 5))
         ),
 
         "filtering": (

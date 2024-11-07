@@ -115,7 +115,7 @@ class SHCDecorrelationType(Enum):
 
 class SHCDecorrelationSlidingWindowType(Enum):
     Stable = 1
-    Wahr2006 = 2
+    Swenson2006 = 2
 
 
 class LeakageMethod(Enum):

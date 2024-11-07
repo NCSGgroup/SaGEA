@@ -5,7 +5,7 @@ from pysrc.post_processing.filter.GetSHCFilter import get_shc_filter, get_shc_de
 
 def get_filter(method: str, param: tuple = None, lmax: int = None):
     methods = (
-        "pnmm", "slidingwindow_wahr2006", "wahr2006", "slidingwindow_stable",
+        "pnmm", "slidingwindow_swenson2006", "swenson2006", "slidingwindow_stable",
         "gaussian", "gs", "fan", "ngs", "han", "ani", "ddk",
     )
 
@@ -20,7 +20,7 @@ def get_filter(method: str, param: tuple = None, lmax: int = None):
             method=SHCDecorrelationType.PnMm, params=param, sliding_window_mode=None
         )
 
-    elif method == ("slidingwindow_wahr2006", "wahr2006"):
+    elif method == ("slidingwindow_swenson2006", "swenson2006"):
         if param is None:
             param = (3, 10, 10, 30, 5)
 
@@ -28,7 +28,7 @@ def get_filter(method: str, param: tuple = None, lmax: int = None):
 
         filtering = get_shc_decorrelation(
             method=SHCDecorrelationType.SlideWindow, params=param,
-            sliding_window_mode=SHCDecorrelationSlidingWindowType.Wahr2006
+            sliding_window_mode=SHCDecorrelationSlidingWindowType.Swenson2006
         )
 
     elif method == ("slidingwindow_stable",):

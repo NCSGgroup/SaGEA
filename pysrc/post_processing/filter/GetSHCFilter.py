@@ -28,7 +28,7 @@ def get_shc_decorrelation(method: SHCDecorrelationType, params: tuple,
     elif method == SHCDecorrelationType.SlideWindow:
         dec_filter = SlideWindow()
 
-        if sliding_window_mode == SHCDecorrelationSlidingWindowType.Wahr2006:
+        if sliding_window_mode == SHCDecorrelationSlidingWindowType.Swenson2006:
             n, m, length, a, k = params
             dec_filter.configuration.set_n(n)
             dec_filter.configuration.set_m(m)
