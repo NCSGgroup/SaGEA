@@ -63,7 +63,10 @@ we have packaged each method as a function of two data classes:
 
 Supporting that users may not be very familiar with the methods and principles
 we recommend calling the post-processing function through SHC or GRID instead of using them directly,
-as indicated by the circle in Fig. 1
+as indicated by the circle in Fig. 1.
+
+Here we briefly provide an overview of the usages about data collection, post-processing, and error assessment.
+For detailed user manuals, please refer to http://under.construction.
 
 ## Data Collection
 
