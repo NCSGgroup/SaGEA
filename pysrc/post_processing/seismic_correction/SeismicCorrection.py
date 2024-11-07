@@ -4,7 +4,6 @@ import numpy as np
 from scipy import optimize
 
 from pysrc.auxiliary.aux_tool.TimeTool import TimeTool
-from pysrc.data_class.DataClass import GRID
 
 
 class SeismicCorrectionConfig:
@@ -66,7 +65,7 @@ class SeismicCorrection:
 
         return year_frac
 
-    def apply_to(self, grid: GRID):
+    def apply_to(self, gqij, lat, lon):
         earthquakes = self.configuration.get_earthquakes()
         for key in earthquakes:
             '''get lat and lon index of grid.data'''
@@ -78,21 +77,21 @@ class SeismicCorrection:
             lat_min, lat_max = earthquakes[key]['lat_range']
             lon_min, lon_max = earthquakes[key]['lon_range']
 
-            lat_index = np.where((lat_min < grid.lat) & (grid.lat < lat_max))[0]
-            lon_index = np.where((lon_min < grid.lon) & (grid.lon < lon_max))[0]
+            lat_index = np.where((lat_min < lat) & (lat < lat_max))[0]
+            lon_index = np.where((lon_min < lon) & (lon < lon_max))[0]
 
             teq, tau = earthquakes[key]['teq'], earthquakes[key]['tau']
 
             if len(earthquakes[key]['teq']) == 1:
-                self.__analyse_for_once(grid, lon_index, lat_index, teq, tau)
+                self.__analyse_for_once(gqij, lon_index, lat_index, teq, tau)
 
             elif len(earthquakes[key]['teq']) == 2:
-                self.__analyse_for_twice(grid, lon_index, lat_index, teq, tau)
+                self.__analyse_for_twice(gqij, lon_index, lat_index, teq, tau)
 
             else:
                 assert False
 
-    def __analyse_for_once(self, grid, lon_index, lat_index, teq, tau):
+    def __analyse_for_once(self, gqij, lon_index, lat_index, teq, tau):
         teq, tau = teq[0], tau[0]
 
         def fit_function1(x, c):
@@ -108,7 +107,7 @@ class SeismicCorrection:
 
                 sigs = []
                 for t in range(len(year_fractions)):
-                    sigs.append(grid.value[t, j, i])
+                    sigs.append(gqij[t, j, i])
                 sigs = np.array(sigs)
 
                 times_before = []
@@ -139,11 +138,9 @@ class SeismicCorrection:
                     else:
                         seismic[t] = c2 + p * (1 - np.exp(-(year_fractions[t] - teq) / tau))
 
-                grid.value[:, j, i] -= seismic
+                gqij[:, j, i] -= seismic
 
-        pass
-
-    def __analyse_for_twice(self, grid, lon_index, lat_index, teq, tau):
+    def __analyse_for_twice(self, gqij, lon_index, lat_index, teq, tau):
 
         def fit_function2(x, c, p):
             return c + p * (1 - np.exp(-(x - teq1) / tau1))
@@ -160,7 +157,7 @@ class SeismicCorrection:
 
                 sigs = []
                 for t in range(len(time_points)):
-                    sigs.append(grid.value[t, j, i])
+                    sigs.append(gqij[t, j, i])
                 sigs = np.array(sigs)
 
                 times_before = []
@@ -205,53 +202,7 @@ class SeismicCorrection:
                     else:
                         seismic[t] = c3 + p2 * (1 - np.exp(-(time_points[t] - teq2) / tau2))
 
-                grid.value[:, j, i] -= seismic
+                gqij[:, j, i] -= seismic
                 pass
 
         pass
-
-
-if __name__ == '__main__':
-    from pysrc.auxiliary.load_file.LoadL2SH import LoadL2SH
-    from pysrc.auxiliary.preference.EnumClasses import L2InstituteType
-    from pysrc.auxiliary.aux_tool.FileTool import FileTool
-    import datetime
-
-    import matplotlib.pyplot as plt
-
-    '''load GRACE L2 SH products'''
-    begin_date = datetime.date(2002, 1, 1)
-    end_date = datetime.date(2015, 12, 31)
-    institute = L2InstituteType.CSR
-    lmax = 60
-
-    print('loading files...')
-    load = LoadL2SH()
-
-    load.configuration.set_begin_date(begin_date)
-    load.configuration.set_end_date(end_date)
-    load.configuration.set_institute(institute)
-    load.configuration.set_lmax(lmax)
-
-    shc, dates = load.get_shc(with_dates=True)
-
-    ave_dates_GRACE = TimeTool.get_average_dates(*dates)
-    shc.de_background()
-    '''end of loading files'''
-
-    grid_space = 1
-    grid = shc.to_grid(grid_space)
-
-    seis = SeismicCorrection()
-    seis.configuration.set_times(ave_dates_GRACE)
-    seis.configuration.set_earthquakes(FileTool.get_project_dir('data/earthquake/earthquakes.json'))
-
-    grid_data_before = grid.value.copy()
-    seis.apply_to(grid)
-    grid_data_after = grid.value.copy()
-
-    plt.plot(grid_data_before[:, 125, 315])
-    plt.plot(grid_data_after[:, 125, 315])
-    plt.show()
-
-    pass

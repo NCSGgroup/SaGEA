@@ -5,6 +5,7 @@ import h5py
 import netCDF4
 import numpy as np
 
+from pysrc.auxiliary.aux_tool.FileTool import FileTool
 from pysrc.auxiliary.aux_tool.MathTool import MathTool
 from pysrc.auxiliary.aux_tool.TimeTool import TimeTool
 from pysrc.auxiliary.core_data_class.CoreGRID import CoreGRID
@@ -25,6 +26,7 @@ from pysrc.post_processing.leakage.Multiplicative import Multiplicative
 from pysrc.post_processing.leakage.Scaling import Scaling
 from pysrc.post_processing.leakage.ScalingGrid import ScalingGrid
 from pysrc.post_processing.replace_low_deg.ReplaceLowDegree import ReplaceLowDegree
+from pysrc.post_processing.seismic_correction.SeismicCorrection import SeismicCorrection
 
 
 class SHC(CoreSHC):
@@ -254,6 +256,18 @@ class GRID(CoreGRID):
 
         gqij_corrected = lk.apply_to(self.value, get_grid=True)
         self.value = gqij_corrected
+
+        return self
+
+    def seismic(self, dates, events: pathlib.Path = None):
+        if events is None:
+            events = FileTool.get_project_dir('data/earthquake/earthquakes.json')
+
+        sei = SeismicCorrection()
+        sei.configuration.set_times(dates)
+        sei.configuration.set_earthquakes(events)
+
+        sei.apply_to(self.value, lat=self.lat, lon=self.lon)
 
         return self
 
