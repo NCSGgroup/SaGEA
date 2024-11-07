@@ -43,7 +43,7 @@ Detailed module usage and related scientific explanations will be provided in la
    uncertainty of GRACE
    signals.
 
-# Functional Module Description and Usages
+# Overview of Functional Modules and Usages
 
 ![DataStructure.png](image/DataStructure.png)
 Fig. 1:
@@ -82,13 +82,25 @@ achieve automatic collections.
 
 ### Creation
 
-SHC is used to store spherical harmonic data,
+SHC is used to store spherical harmonic coefficients (SHCs),
 contain can store one or more sets of data.
-SHC is the object returned by `load_file()` at `./pysrc/auxiliary/load_file/LoadL2SH.py`,
+SHC is the object returned by `load_SHC()` at `./pysrc/auxiliary/load_file/LoadL2SH.py`,
 or users can also manually create it by entering the coefficients `SHC(clm, slm)`.
 
-Its attribute `.value` is a two-dimensional `numpy.ndarray` in shape of `(n = num of sets, m = (lmax+1)^2)`.
+Its attribute `.value` is a two-dimensional `numpy.ndarray` in shape of `(n = num of sets, m = (max_degree + 1)^2)`.
 Use `.is_series()` to determine whether the stored data is multiple sets, i.e., whether `n == 1`.
+
+### Low-degrees replacement
+
+The low-degree coefficients (degree-1, c20, etc.) of GRACE level-2 products usually need to be replaced by another
+independent measurement.
+Use `.replace_low_degs(dates_begin: iter, dates_end: iter, low_deg: dict,
+deg1: bool, c20: bool, c30: bool)` to replace the low-degree coefficients.
+Parameters `dates_begin` and `dates_end` should describe the start and end times of `.value`, which is also given
+by `load_SHC()` at `./pysrc/auxiliary/load_file/LoadL2SH.py`,
+and parameter `low_deg` should be the replaced coefficients given as an instance of `dict`,
+it is highly recommended to get it through `load_low_degs()` at `pysrc/auxiliary/load_file/LoadL2LowDeg.py`,
+and boolean parameters `deg1`, `c20`, `c30` control whether to replace corresponding coefficients.
 
 ### Addition and subtraction
 
@@ -112,7 +124,7 @@ are given as long-term trends.
 In order to calculate with the monthly signal,
 it is necessary to project it as the signal for each month.
 `.expand(time: iter)` can project its value as a linear trend into multiple sets of signal in each time epoch,
-and return a new SHC instance. 
+and return a new SHC instance.
 Note that `.expand(time: iter)` is only supported in single-group SHC instances (i.e., `.is_series()` is `True`)
 
 ### Filtering
@@ -141,6 +153,24 @@ The currently supported spectral filters and their usages are:
 Use `.geometric(assumption: str)` to apply the geometrical correction on the SHCs, and the parameter `assumption`
 can be chosed as `"sphere"`, `"ellipsoid"` or `"actualEarth"` to support different types of corrections, see Yang et
 al. (2022).
+
+### Harmonic Synthesis
+
+Spherical harmonic synthesis (HMS) is the step of converting (dimensionless) SHCs into grid data of different physical
+types (such as equivalent water height, EWH, or pressure, etc.).
+Here `SHC` divide it into two steps to implement:
+
+1. **Convert physical type:**
+
+   Use `.convert_type(from_type: str, to_type: str)` to convert the dimensions of coefficients in SHC.
+   Currently supported types are:
+   `"dimensionless"`, `"EWH"`, `"Pressure"`, `"Density"`, `"Geoid"`, `"Gravity"`, `"HorizontalDisplacementEast"`,
+   `"HorizontalDisplacementNorth"` and `"VerticalDisplacement"`.
+
+2. **Pure synthesis:**
+    
+    Use `.to_grid(grid_space: int)` to make an HMS on the SHCs, and a new instance of `GRID` will be returned.
+    For more detail of class `GRID` please refer to the next section. 
 
 ## Class GRID
 
