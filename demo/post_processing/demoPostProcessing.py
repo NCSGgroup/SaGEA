@@ -17,7 +17,7 @@ def demo1():
     """this demo shows an example of post-processing on global ocean"""
     lmax = 60
     grid_space = 1
-    begin_date, end_date = date(2009, 1, 1), date(2010, 12, 31)
+    begin_date, end_date = date(2005, 1, 1), date(2015, 12, 31)
 
     '''define filepaths input'''
 
@@ -88,9 +88,9 @@ def demo1():
     shc.de_background()
     print("done!")
 
-    print("geometric correcting... (this step may take minutes)", end=" ")
-    shc.geometric(assumption="ellipsoid", log=True)
-    print("done!")
+    # print("geometric correcting... (this step may take minutes)", end=" ")
+    # shc.geometric(assumption="ellipsoid", log=True)
+    # print("done!")
 
     print("converting SHC type (physical quantity)...", end=" ")
     shc.convert_type(from_type="dimensionless", to_type="ewh")
@@ -108,35 +108,28 @@ def demo1():
     grid = shc.to_grid(grid_space)
     print("done!")
 
-    print("plotting global distribution...", end=" ")
-    plot_grids(
-        grid.value[:3] * 100, lat=grid.lat, lon=grid.lon, vmin=-20, vmax=20,
-    )
-    print("done!")
-
     print("leakage reduction...", end=" ")
     grid_basin = shc_basin.to_grid(grid_space=grid_space)
     grid_basin.limiter(threshold=0.5)
     mask_ocean = grid_basin.value[0]
 
     # leakage = "forward_modeling"
-    # leakage = "iterative"
-    leakage = "buffer"
+    leakage = "iterative"
+    # leakage = "buffer"
 
     if leakage == "forward_modeling":
         mask_land = 1 - mask_ocean
-        grid.leakage(method=leakage, basin=mask_land, basin_conservation=mask_ocean,
-                     filter_type=filter_method, filter_params=filter_params, lmax=lmax, )
+        grid.leakage(
+            method=leakage, basin=mask_land,
+            basin_conservation=mask_ocean, filter_type=filter_method, filter_params=filter_params, lmax=lmax,
+        )
     else:
-        grid.leakage(method=leakage, basin=mask_ocean, basin_conservation=mask_ocean,
-                     filter_type=filter_method, filter_params=filter_params, lmax=lmax,
-                     prefilter_type="gs", prefilter_params=(50,),
-                     shc_unfiltered=shc_unf)
+        grid.leakage(
+            method=leakage, basin=mask_ocean,
+            basin_conservation=mask_ocean, filter_type=filter_method, filter_params=filter_params, lmax=lmax,
+            prefilter_type="gs", prefilter_params=(50,), shc_unfiltered=shc_unf,
+        )
 
-    print("done!")
-
-    print("saving files...", end=" ")
-    grid.savefile(FileTool.get_project_dir("results/test_ocean.hdf5"), time_dim=dates_ave, rewrite=True)
     print("done!")
 
     print("extracting basin signal...", end=" ")
@@ -148,15 +141,10 @@ def demo1():
                                                  TimeTool.DateFormat.YearFraction)
 
     fig = plt.figure(figsize=(5, 3))
-    ax = fig.add_axes([0.15, 0.15, 0.83, 0.83])
+    ax = fig.add_axes([0.15, 0.2, 0.83, 0.78])
     ax.plot(year_fraction, gmom * 1000)  # mm
 
-    # ax.set_xlim(2009, 2011)
-    ax.set_xticks([2009, 2009.5, 2010, 2010.5, 2011], ['2009', '', '2010', '', '2011'])
     ax.set_xlabel("year")
-    #
-    # ax.set_ylim(-15, 20)
-    # ax.set_yticks([-10, 0, 10, 15])
     ax.set_ylabel("EWH (mm)")
 
     plt.show()
@@ -181,7 +169,7 @@ def demo2():
     """this demo shows an example of post-processing on a basin"""
     lmax = 60
     grid_space = 1
-    begin_date, end_date = date(2005, 1, 1), date(2006, 12, 31)
+    begin_date, end_date = date(2005, 1, 1), date(2015, 12, 31)
 
     '''define filepaths input'''
 
@@ -252,15 +240,16 @@ def demo2():
     grid_basin.limiter(threshold=0.5)
     mask = grid_basin.value[0]
 
-    # leakage = "forward_modeling"
-    # leakage = "addictive"
-    leakage = "multiplicative"
-    # leakage = "scale"
+    leakage = "addictive"
+    # leakage = "multiplicative"
+    # leakage = "scaling"
+    # leakage = "data_driven"
 
     grid.leakage(
         method=leakage, basin=mask, basin_conservation=mask, filter_type=filter_method, filter_params=filter_params,
         lmax=lmax, prefilter_type="gs", prefilter_params=(50,), shc_unfiltered=shc_unf,
-        reference=dict(time=dates_gldas, model=grid_gldas.value), times=dates_ave
+        reference=dict(time=dates_gldas, model=grid_gldas.value),
+        times=dates_ave, scale_type="trend", log=True, fm_iter_times=30
     )
 
     print("done!")
@@ -275,18 +264,14 @@ def demo2():
         input_type=TimeTool.DateFormat.ClassDate,
         output_type=TimeTool.DateFormat.YearFraction
     )
-
     fig = plt.figure(figsize=(5, 3))
     ax = fig.add_axes([0.2, 0.2, 0.78, 0.78])
-    ax.plot(year_fraction, ewh * 1000)  # mm
+    ax.plot(year_fraction, ewh * 100)  # cm
 
-    ax.set_xticks([2009, 2009.5, 2010, 2010.5, 2011], ['2009', '', '2010', '', '2011'])
     ax.set_xlabel("year")
-    ax.set_ylabel("EWH (mm)")
-
+    ax.set_ylabel("EWH (cm)")
     plt.show()
     plt.close()
-
     print("done!")
 
     print("OLS fitting...", end=" ")
@@ -296,8 +281,8 @@ def demo2():
 
     z = MathTool.curve_fit(f, year_fraction, ewh)
     print("done!")
-    print(f"trend: {z[0][0, 1] * 1000} mm/year")
-    print(f"annual amplitude: {np.sqrt(z[0][0, 2] ** 2 + z[0][0, 3] ** 2) * 1000} mm")
+    print(f"trend: {z[0][0, 1] * 100} cm/year")
+    print(f"annual amplitude: {np.sqrt(z[0][0, 2] ** 2 + z[0][0, 3] ** 2) * 100} cm")
 
     return year_fraction, ewh, grid
 
@@ -309,25 +294,20 @@ def demo3():
     begin_date, end_date = date(2005, 1, 1), date(2005, 12, 31)
 
     '''define filepaths input'''
-
-    gsm_path = FileTool.get_project_dir("data/L2_SH_products/GAA/GFZ/RL06/BC01/")
+    gsm_path = FileTool.get_project_dir("data/L2_SH_products/GSM/CSR/RL06/BA01/")
     gsm_key = "GRCOF2"
-
     low_deg_filepaths = (
         FileTool.get_project_dir("data/L2_low_degrees/TN-11_C20_SLR_RL06.txt"),
         FileTool.get_project_dir("data/L2_low_degrees/TN-13_GEOC_CSR_RL06.1.txt"),
         FileTool.get_project_dir("data/L2_low_degrees/TN-14_C30_C20_SLR_GSFC.txt")
     )
-
     '''gia path'''
     gia_filepath = FileTool.get_project_dir("data/GIA/GIA.Caron_et_al_2018.txt")
-
-    pass
 
     print("loading files...", end=" ")
     '''load GSM'''
     shc, dates_begin, dates_end = load_SHC(gsm_path, key=gsm_key, lmax=lmax, lmcs_in_queue=(2, 3, 4, 5),
-                                           get_dates=True, begin_date=begin_date, end_date=end_date)
+                                           begin_date=begin_date, end_date=end_date, get_dates=True)
     dates_ave = TimeTool.get_average_dates(dates_begin, dates_end)
 
     '''load low-degrees'''
@@ -336,7 +316,6 @@ def demo3():
     '''load GIA'''
     shc_gia_trend = load_SHC(gia_filepath, key='', lmax=lmax, lmcs_in_queue=(1, 2, 3, 4))
     shc_gia = shc_gia_trend.expand(dates_ave)
-
     print("done!")
 
     print("replacing low-degrees...", end=" ")
@@ -352,22 +331,21 @@ def demo3():
     shc.de_background()
     print("done!")
 
-    print("converting SHC type (physical quantity)...", end=" ")
-    shc.convert_type(from_type="dimensionless", to_type="pressure")
-    print("done!")
-
     print("filtering", end=" ")
-
     filter_method = "ddk"
     filter_params = (3,)
     shc.filter(method=filter_method, param=filter_params)
+    print("done!")
+
+    print("converting SHC type (physical quantity)...", end=" ")
+    shc.convert_type(from_type="dimensionless", to_type="pressure")
     print("done!")
 
     print("harmonic synthesising to grid", end=" ")
     grid = shc.to_grid(grid_space)
     print("done!")
 
-    print("plotting global distribution...", end=" ")
+    print("plotting global distribution...", end=" ")  # or save grid and plot/analysis on your own way
     plot_grids(
         grid.value[:3] / 100, lat=grid.lat, lon=grid.lon,
         vmin=-20, vmax=20
@@ -378,4 +356,4 @@ def demo3():
 
 
 if __name__ == '__main__':
-    demo3()
+    demo1()
