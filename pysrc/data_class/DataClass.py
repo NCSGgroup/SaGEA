@@ -261,7 +261,7 @@ class GRID(CoreGRID):
 
     def seismic(self, dates, events: pathlib.Path = None):
         if events is None:
-            events = FileTool.get_project_dir('data/earthquake/earthquakes.json')
+            events = FileTool.get_project_dir('setting/post_processing/earthquakes.json')
 
         sei = SeismicCorrection()
         sei.configuration.set_times(dates)
@@ -271,18 +271,18 @@ class GRID(CoreGRID):
 
         return self
 
-    def integral(self, basin=None, average=True):
+    def integral(self, mask=None, average=True):
         if average:
-            assert basin is not None
+            assert mask is not None
 
-        if isinstance(basin, CoreGRID):
-            assert not basin.is_series()
-            basin = basin.value[0]
+        if isinstance(mask, CoreGRID):
+            assert not mask.is_series()
+            mask = mask.value[0]
 
-        if basin is None:
+        if mask is None:
             grids = self.value
         else:
-            grids = self.value * basin
+            grids = self.value * mask
 
         lat, lon = self.lat, self.lon
 
@@ -309,7 +309,7 @@ class GRID(CoreGRID):
         integral_result = MathTool.global_integral(grids, lat, lon)
 
         if average:
-            integral_result /= MathTool.get_acreage(basin)
+            integral_result /= MathTool.get_acreage(mask)
 
         return integral_result
 

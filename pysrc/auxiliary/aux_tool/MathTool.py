@@ -593,12 +593,19 @@ class MathTool:
         :return: np.ndarray, grid
         """
         gs = max(np.abs(xyz[0][0] - xyz[1][0]), np.abs(xyz[0][1] - xyz[1][1]))
+        lat, lon = np.zeros(int(180 / gs, )), np.zeros((int(360 / gs),))
+
         grid = np.zeros((int(180 / gs), int(360 / gs)))
         for i in xyz:
-            lon, lat = i[0], i[1]
-            l, m = MathTool.getGridIndex(lon, lat, gs)
-            grid[l][m] = i[2]
-        return grid
+            this_lon, this_lat, this_value = i[0], i[1], i[2]
+
+            l, m = MathTool.getGridIndex(this_lat, this_lon, gs)
+
+            lat[l] = this_lat + gs / 2
+            lon[m] = this_lon + gs / 2
+
+            grid[l][m] = this_value
+        return grid, lat, lon
 
     @staticmethod
     def getGridIndex(lat, lon, gs):
@@ -620,28 +627,27 @@ class MathTool:
     def shrink(data, rows, cols):
         return data.reshape(rows, int(data.shape[0] / rows), cols, int(data.shape[1] / cols)).sum(axis=1).sum(axis=2)
 
-
-if __name__ == '__main__':
-    def a(nn, mm):
-        return np.sqrt((2 * nn + 1) * (2 * nn - 1) / ((nn - mm) * (nn + mm)))
-
-
-    lat, lon = MathTool.get_global_lat_lon_range(1)
-    lmax = 60
-    p = MathTool.get_Legendre(lat, lmax, option=1)
-    pd = MathTool.get_Legendre_derivative(lat, lmax, option=1)
-
-    i, l, m = 10, 16, 10
-
-    plm = p[i, l, m]
-    pdlm = pd[i, l, m]
-    theta = np.radians(90 - lat[i])
-
-    p1 = pdlm
-    if m < l:
-        p2 = l * plm / np.tan(theta) - (2 * l + 1) * p[i, l - 1, m] / (np.sin(theta) * a(l, m))  # m < n
-    else:
-        p2 = l * plm / np.tan(theta)  # m = n
-
-    print(p1, p2)
-    pass
+# if __name__ == '__main__':
+#     def a(nn, mm):
+#         return np.sqrt((2 * nn + 1) * (2 * nn - 1) / ((nn - mm) * (nn + mm)))
+#
+#
+#     lat, lon = MathTool.get_global_lat_lon_range(1)
+#     lmax = 60
+#     p = MathTool.get_Legendre(lat, lmax, option=1)
+#     pd = MathTool.get_Legendre_derivative(lat, lmax, option=1)
+#
+#     i, l, m = 10, 16, 10
+#
+#     plm = p[i, l, m]
+#     pdlm = pd[i, l, m]
+#     theta = np.radians(90 - lat[i])
+#
+#     p1 = pdlm
+#     if m < l:
+#         p2 = l * plm / np.tan(theta) - (2 * l + 1) * p[i, l - 1, m] / (np.sin(theta) * a(l, m))  # m < n
+#     else:
+#         p2 = l * plm / np.tan(theta)  # m = n
+#
+#     print(p1, p2)
+#     pass

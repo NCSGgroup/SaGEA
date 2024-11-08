@@ -64,33 +64,36 @@ class ModelDriven(Leakage):
         pass
 
     def _get_leakage(self):
+        basin = self.configuration.basin_map
         basin_outside = 1 - self.configuration.basin_map
         model_outside_basin = self.configuration.model * basin_outside
 
         model_outside_filtered = filter_grids(model_outside_basin, self.configuration.filter,
                                               self.configuration.harmonic)
 
-        leakage_c_m = MathTool.global_integral(model_outside_filtered.value * self.configuration.basin_map)
+        leakage_c_m = MathTool.global_integral(
+            model_outside_filtered * self.configuration.basin_map) / MathTool.get_acreage(basin)
 
         return leakage_c_m
 
     def _get_multiplicative_scale(self):
-        basin_mask_filtered = \
-            filter_grids(np.array([self.configuration.basin_map]), self.configuration.filter,
-                         self.configuration.harmonic).value[0]
+        basin = self.configuration.basin_map
 
-        integral_basin_mask = MathTool.global_integral(self.configuration.basin_map)
-        integral_basin_mask_filtered = MathTool.global_integral(basin_mask_filtered * self.configuration.basin_map)
+        basin_mask_filtered = \
+            filter_grids(np.array([basin]), self.configuration.filter, self.configuration.harmonic)[0]
+
+        integral_basin_mask = MathTool.global_integral(basin)
+        integral_basin_mask_filtered = MathTool.global_integral(basin_mask_filtered * basin)
 
         return integral_basin_mask / integral_basin_mask_filtered
 
     def _get_bias(self):
-        basin_mask_filtered = \
-            filter_grids(np.array([self.configuration.basin_map]), self.configuration.filter,
-                         self.configuration.harmonic).value[0]
+        basin = self.configuration.basin_map
 
-        bias_c_m = MathTool.global_integral(
-            self.configuration.model * (self.configuration.basin_map - basin_mask_filtered))
+        basin_filtered = filter_grids(np.array([basin]), self.configuration.filter, self.configuration.harmonic)[0]
+
+        bias_c_m = MathTool.global_integral(self.configuration.model * (basin - basin_filtered)) / MathTool.get_acreage(
+            basin)
 
         return bias_c_m
 

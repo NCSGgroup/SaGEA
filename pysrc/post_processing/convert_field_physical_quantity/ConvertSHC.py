@@ -113,6 +113,7 @@ class ConvertSHC:
         density_earth = GeoConstants.density_earth
         radius_e = GeoConstants.radius_earth
         GM = GeoConstants.GM
+        g_wmo = GeoConstants.g_wmo
 
         convert_mat = np.ones((lmax + 1,))
 
@@ -147,6 +148,15 @@ class ConvertSHC:
 
             convert_mat *= kl
 
+        elif field_type is FieldPhysicalQuantity.Pressure:
+            termI = np.arange(lmax + 1)
+            term = 2 * termI + 1.
+            ln = ln[:lmax + 1]
+
+            kl = (radius_e * density_earth / 3) * (term / (1 + ln)) * g_wmo
+
+            convert_mat *= kl
+
         elif field_type in (
                 FieldPhysicalQuantity.HorizontalDisplacementNorth, FieldPhysicalQuantity.HorizontalDisplacementEast):
             lnh, lnl = _get_love_number_h_and_l()
@@ -160,11 +170,3 @@ class ConvertSHC:
             raise Exception
 
         return convert_mat
-
-
-if __name__ == '__main__':
-    a = "dimensionless"
-
-    list(FieldPhysicalQuantity)[0].name
-
-    print(list(FieldPhysicalQuantity)[0].name)

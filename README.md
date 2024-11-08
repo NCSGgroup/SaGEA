@@ -208,7 +208,7 @@ file) given by users, see Tang et al. (2020).
 Parameters `dates` and `events` are required,
 with the former describes the times of `.value`,
 and the latter describes the direction of the json file that describes the seismic events.
-Path `data/earthquake/earthquakes.json` provided several preset events,
+Path `setting/post_processing/earthquakes.json` provided several preset events,
 and users can add other events later or specify another file path.
 
 ### 5.3.4 Leakage Correction

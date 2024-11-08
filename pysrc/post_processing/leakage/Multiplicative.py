@@ -16,7 +16,7 @@ class Multiplicative(ModelDriven):
 
         basin_map = self.configuration.basin_map
 
-        f_filtered = MathTool.global_integral(grids.value * basin_map) / MathTool.get_acreage(basin_map)
+        f_filtered = MathTool.global_integral(grids * basin_map) / MathTool.get_acreage(basin_map)
 
         f_predicted = copy.deepcopy(f_filtered)
         if leakage:
