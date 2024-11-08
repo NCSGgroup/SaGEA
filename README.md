@@ -1,6 +1,15 @@
 # 1. Introduction
 
-The level-2 time-variable gravity fields obtained from Gravity Recovery and Climate Experiment (GRACE) and its Follow-On (GRACE-FO) mission are widely used in multi-discipline geo-science studies. However, the post-processing of those gravity fields to obtain a desired signal is rather challenging for users that are not familiar with the level-2 products. In addition, the error assessment/quantification of those derived signals, which is of increasing demand in science application, is still a challenging issue even among the professional GRACE(-FO) users. In this effort, the common post-processing steps and the assessment of complicated error (uncertainty) of GRACE(-FO), are integrated into an open-source, cross-platform and Python-based toolbox called SAGEA (SAtellite Gravity Error Assessment). With diverse options, SAGEA provides flexibility to generate signal along with the full error from level-2 products, so that any non-expert user can easily obtain advanced experience of GRACE(-FO) processing. Please contact Shuhao Liu (liushuhao@hust.edu.cn) and Fan Yang (fany@plan.aau.dk) for more information. 
+The level-2 time-variable gravity fields obtained from Gravity Recovery and Climate Experiment (GRACE) and its
+Follow-On (GRACE-FO) mission are widely used in multi-discipline geo-science studies. However, the post-processing of
+those gravity fields to obtain a desired signal is rather challenging for users that are not familiar with the level-2
+products. In addition, the error assessment/quantification of those derived signals, which is of increasing demand in
+science application, is still a challenging issue even among the professional GRACE(-FO) users. In this effort, the
+common post-processing steps and the assessment of complicated error (uncertainty) of GRACE(-FO), are integrated into an
+open-source, cross-platform and Python-based toolbox called SAGEA (SAtellite Gravity Error Assessment). With diverse
+options, SAGEA provides flexibility to generate signal along with the full error from level-2 products, so that any
+non-expert user can easily obtain advanced experience of GRACE(-FO) processing. Please contact Shuhao Liu (
+liushuhao@hust.edu.cn) and Fan Yang (fany@plan.aau.dk) for more information.
 
 # 2. Features
 
@@ -22,6 +31,11 @@ This project is developed based on Python 3.9 and the dependencies are listed in
 Use this code to download the dependencies:
 
 `pip install -r requirements.txt`
+
+To ensure the successful running and validation of programs,
+please collect the corresponding auxiliary files and verification files at
+https://zenodo.org/records/14054704
+and place folders `data` and `validation` in the project folder before using this project.
 
 # 4. Quick Start
 
@@ -502,44 +516,45 @@ Another general tool, the Fourier analysis, is also able to obtain the seasonali
 
 ### 6.6.1 Error-I
 
-  Due to the imperfect background models (Hauk and Pail, 2018; Yang et al., 2021) and on-board instrument error (
-  Bandikova
-  and Flury, 2014; Flechtner et al., 2016),
-  GRACE(-FO) level-2 monthly gravity product is generated with an intrinsic uncertainty,
-  known as formal error that represents the variance of each SHC.
-  Besides, ITSG solutions provide the full variance covariance matrix of these SHCs (Kvas et al., 2019; Kvas and
-  Mayer-Gürr, 2019).
-  As one has to post-process the level-2 product to derive desired variables (known as level-3 products),
-  the formal error, or the variance-covariance matrix,
-  needs to be propagated to support uncertainty estimation of the level-3 product.
-  Such kind of error is indicated as Error-I and integrated in SaGEA program.
+Due to the imperfect background models (Hauk and Pail, 2018; Yang et al., 2021) and on-board instrument error (
+Bandikova
+and Flury, 2014; Flechtner et al., 2016),
+GRACE(-FO) level-2 monthly gravity product is generated with an intrinsic uncertainty,
+known as formal error that represents the variance of each SHC.
+Besides, ITSG solutions provide the full variance covariance matrix of these SHCs (Kvas et al., 2019; Kvas and
+Mayer-Gürr, 2019).
+As one has to post-process the level-2 product to derive desired variables (known as level-3 products),
+the formal error, or the variance-covariance matrix,
+needs to be propagated to support uncertainty estimation of the level-3 product.
+Such kind of error is indicated as Error-I and integrated in SaGEA program.
 
 ### 6.6.2 Error-II
 
-  Besides the official GRACE data producers,
-  multiple producers are routinely producing level-2 solutions and contributing them to the International Centre for
-  Global Earth Models (ICGEM).
-  These level-2 products are different from each other,
-  therefore, the discrepancy between these level-2 products shall result in various estimates of desired variables,
-  e.g., TWS estimation.
-  Such a discrepancy is considered as between-group error, which is indicated as Error-II in SaGEA program.
-  As the most popular technique,
-  the TCH (Three-Cornered Hat, Ferreira et al., 2016; Chen et al., 2021) is integrated in SaGEA to consider the Error-II
-  of desired variables.
+Besides the official GRACE data producers,
+multiple producers are routinely producing level-2 solutions and contributing them to the International Centre for
+Global Earth Models (ICGEM).
+These level-2 products are different from each other,
+therefore, the discrepancy between these level-2 products shall result in various estimates of desired variables,
+e.g., TWS estimation.
+Such a discrepancy is considered as between-group error, which is indicated as Error-II in SaGEA program.
+As the most popular technique,
+the TCH (Three-Cornered Hat, Ferreira et al., 2016; Chen et al., 2021) is integrated in SaGEA to consider the Error-II
+of desired variables.
 
 ### 6.6.3 Error-III
 
-  This category of error might be caused by the non-uniqueness of the post-processing chain and the involvement of
-  corrections with less known uncertaintiesm.
-  As there is no official convention of post-processing chain, each study has adopted its own strategy, resulting in
-  potential large discrepancy (indicated as Error-III in SaGEA) at obtained level-3 products.
-  Error-III is considered as the within-group error since it always relies upon only one set of level-2 product.
-  To quantify it, a large number of ensembles, which reflect various postprocessing chains, are required.
-  As the advanced post-processing module are provided in SaGEA, a comprehensive quantification of Error-III at a diverse
-  and flexible option is possible.
-  Therefore, based on the post-processing module, SaGEA also provides a quantization program for Error-III.
+This category of error might be caused by the non-uniqueness of the post-processing chain and the involvement of
+corrections with less known uncertaintiesm.
+As there is no official convention of post-processing chain, each study has adopted its own strategy, resulting in
+potential large discrepancy (indicated as Error-III in SaGEA) at obtained level-3 products.
+Error-III is considered as the within-group error since it always relies upon only one set of level-2 product.
+To quantify it, a large number of ensembles, which reflect various postprocessing chains, are required.
+As the advanced post-processing module are provided in SaGEA, a comprehensive quantification of Error-III at a diverse
+and flexible option is possible.
+Therefore, based on the post-processing module, SaGEA also provides a quantization program for Error-III.
 
 # 7. Contributing
+
 (under construction)
 
 # 8. License
