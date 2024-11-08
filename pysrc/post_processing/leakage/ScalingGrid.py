@@ -5,8 +5,8 @@ from pysrc.post_processing.leakage.BaseModelDriven import ModelDriven
 
 
 class ScalingGrid(ModelDriven):
-    def apply_to(self, grids: np.ndarray, get_grid=False):
-        grid_factor = self._get_scaling_scale_grid()
+    def apply_to(self, grids: np.ndarray, get_grid=True):
+        grid_factor = self._get_scaling_scale_grid(scale_type=self.configuration.scale_type)
 
         scaled_grids = grids * grid_factor
 

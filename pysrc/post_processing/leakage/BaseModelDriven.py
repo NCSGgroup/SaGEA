@@ -17,6 +17,7 @@ class ModelDrivenConfig:
         self.model = None
         self.GRACE_times = None
         self.model_times = None
+        self.scale_type = None
 
     def set_harmonic(self, har: Harmonic):
         self.harmonic = har
@@ -48,6 +49,11 @@ class ModelDrivenConfig:
 
     def set_model_times(self, times: list):
         self.model_times = times
+
+        return self
+
+    def set_scale_type(self, scale_type: str):
+        self.scale_type = scale_type
 
         return self
 
@@ -98,31 +104,40 @@ class ModelDriven(Leakage):
         return bias_c_m
 
     @staticmethod
-    def _scale_function(x, a, b):
-        return a * x + b
+    def _scale_function(x, a, b, c, d):
+        return a + b * x + c * np.sin(2 * np.pi * x) + d * np.cos(2 * np.pi * x)
 
     def _get_scaling_scale(self):
         model_filtered = filter_grids(self.configuration.model, self.configuration.filter, self.configuration.harmonic)
 
         time_series_model = MathTool.global_integral(self.configuration.model * self.configuration.basin_map)
-        time_series_model_filtered = MathTool.global_integral(model_filtered.value * self.configuration.basin_map)
+        time_series_model_filtered = MathTool.global_integral(model_filtered * self.configuration.basin_map)
 
         z = MathTool.curve_fit(self._scale_function, time_series_model_filtered, time_series_model)
 
         return z[0][0, 0]
 
-    def _get_scaling_scale_grid(self):
+    def _get_scaling_scale_grid(self, scale_type="trend"):
+        assert scale_type in ("trend", "annual_amplitude")
+
         model_filtered = filter_grids(self.configuration.model, self.configuration.filter, self.configuration.harmonic)
-        model_shape = np.shape(self.configuration.model[0])
+        model_shape = np.shape(self.configuration.model)[1:]
 
         model_1d = np.array([self.configuration.model[i].flatten() for i in range(len(self.configuration.model))])
-        model_filtered_1d = np.array([model_filtered.value[i].flatten() for i in range(len(model_filtered.value))])
+        model_filtered_1d = np.array([model_filtered[i].flatten() for i in range(len(model_filtered))])
 
         t = np.arange(len(model_1d))
         z1 = MathTool.curve_fit(self._scale_function, t, *model_1d)
         z2 = MathTool.curve_fit(self._scale_function, t, *model_filtered_1d)
 
-        factors_grids = (z1[0][:, 0] / z2[0][:, 0]).reshape(model_shape)
+        if scale_type == "trend":
+            factors_grids = (z1[0][:, 1] / z2[0][:, 1]).reshape(model_shape)
+        elif scale_type == "annual_amplitude":
+            a1 = np.sqrt(z1[0][:, 2] ** 2 + z1[0][:, 3] ** 2)
+            a2 = np.sqrt(z2[0][:, 2] ** 2 + z2[0][:, 3] ** 2)
+            factors_grids = (a1 / a2).reshape(model_shape)
+        else:
+            assert False
 
         return factors_grids
 

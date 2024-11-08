@@ -174,7 +174,8 @@ class GRID(CoreGRID):
 
     def leakage(self, method: str, basin: np.ndarray, filter_type: str, filter_params: tuple, lmax: int, times=None,
                 reference: dict = None, prefilter_type: str = None, prefilter_params: tuple = None,
-                shc_unfiltered: SHC = None, basin_conservation: np.ndarray = None, fm_iter_times: int = 30, log=False):
+                scale_type: str = "trend", shc_unfiltered: SHC = None, basin_conservation: np.ndarray = None,
+                fm_iter_times: int = 30, log=False):
         methods_of_model_driven = (
             "addictive", "multiplicative", "scaling", "scaling_grid"
         )
@@ -206,6 +207,7 @@ class GRID(CoreGRID):
 
             elif method == "scaling_grid":
                 lk = ScalingGrid()
+                lk.configuration.set_scale_type(scale_type)
 
             else:
                 assert False

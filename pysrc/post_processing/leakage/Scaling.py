@@ -4,8 +4,8 @@ from pysrc.post_processing.leakage.BaseModelDriven import ModelDriven
 
 class Scaling(ModelDriven):
     def apply_to(self, grids, get_grid=False):
-        basin_map = self.configuration.basin_map
-        f_filtered = MathTool.global_integral(grids.value * basin_map) / MathTool.get_acreage(basin_map)
+        basin = self.configuration.basin_map
+        f_filtered = MathTool.global_integral(grids * basin) / MathTool.get_acreage(basin)
 
         scale = self._get_scaling_scale()
 
