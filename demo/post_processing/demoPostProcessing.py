@@ -2,7 +2,6 @@ import copy
 from datetime import date
 
 import numpy as np
-from matplotlib import pyplot as plt
 
 from pysrc.auxiliary.aux_tool.FileTool import FileTool
 from pysrc.auxiliary.aux_tool.TimeTool import TimeTool
