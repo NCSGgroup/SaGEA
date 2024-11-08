@@ -323,7 +323,7 @@ class GRID(CoreGRID):
         self.value[index_below] = below
         return self
 
-    def savefile(self, filepath: pathlib.Path, filetype=None, rewrite=False, time_dim=None, value_description=None):
+    def savefile(self, filepath: pathlib.Path, filetype=None, rewrite=False, time_dim=None, description=None):
         if not filepath.parent.exists():
             filepath.parent.mkdir(parents=True)
         if filepath.exists() and not rewrite:
@@ -350,13 +350,13 @@ class GRID(CoreGRID):
         assert savetype in types, f"saving type must be one of {types}"
 
         if savetype == "nc":
-            self.__save_nc(filepath, time_dim=time_dim, value_description=value_description)
+            self.__save_nc(filepath, time_dim=time_dim, value_description=description)
 
         elif savetype == "npz":
-            self.__save_npz(filepath, time_dim=time_dim, value_description=value_description)
+            self.__save_npz(filepath, time_dim=time_dim, value_description=description)
 
         elif savetype == "hdf5":
-            self.__save_hdf5(filepath, time_dim=time_dim, value_description=value_description)
+            self.__save_hdf5(filepath, time_dim=time_dim, value_description=description)
 
     def __save_nc(self, filepath: pathlib.Path, time_dim=None, from_date=None, value_description=None):
         assert filepath.name.endswith(".nc")
