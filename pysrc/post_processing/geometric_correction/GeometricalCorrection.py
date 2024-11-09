@@ -4,7 +4,7 @@ from pysrc.post_processing.geometric_correction.old.GC import GeometricalCorrect
 from pysrc.post_processing.geometric_correction.old.GeoMathKit import GeoMathKit
 from pysrc.post_processing.geometric_correction.old.Setting import Assumption, FieldType
 
-from pysrc.auxiliary.preference.EnumClasses import match_string
+import pysrc.auxiliary.preference.EnumClasses as Enums
 
 
 class GeometricalCorrectionConfig:
@@ -57,9 +57,17 @@ class GeometricalCorrection:
     def __init__(self):
         self.configuration = GeometricalCorrectionConfig()
 
-    def apply_to(self, cqlm, sqlm, assumption="Sphere", log=False):
-        assert assumption.lower() in ("sphere", "ellipsoid", "actualearth")
-        assumption = match_string(assumption, Assumption, ignore_case=True)
+    def apply_to(self, cqlm, sqlm, assumption, log=False):
+        assert assumption in Enums.GeometricCorrectionAssumption
+
+        if assumption == Enums.GeometricCorrectionAssumption.Sphere:
+            assumption = Assumption.Sphere
+        elif assumption == Enums.GeometricCorrectionAssumption.Ellipsoid:
+            assumption = Assumption.Ellipsoid
+        elif assumption == Enums.GeometricCorrectionAssumption.ActualEarth:
+            assumption = Assumption.ActualEarth
+        else:
+            assert False
 
         grid_space = 0.5
         lat = np.arange(-90, 90 + grid_space / 2, grid_space)

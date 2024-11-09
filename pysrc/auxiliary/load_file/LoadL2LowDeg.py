@@ -1,29 +1,29 @@
 import datetime
+import pathlib
 import re
-from pathlib import Path
 
 import numpy as np
 
-from pysrc.auxiliary.preference.EnumClasses import L2LowDegreeFileID, L2InstituteType, L2Release
+import pysrc.auxiliary.preference.EnumClasses as Enum
 from pysrc.auxiliary.aux_tool.FileTool import FileTool
 from pysrc.auxiliary.aux_tool.TimeTool import TimeTool
 
 
 class LoadLowDegreeConfig:
     def __init__(self):
-        self.file_id = L2LowDegreeFileID.TN11
-        self.institute = L2InstituteType.CSR
-        self.release = L2Release.RL061
+        self.file_id = Enum.L2LowDegreeFileID.TN11
+        self.institute = Enum.L2InstituteType.CSR
+        self.release = Enum.L2Release.RL061
 
-    def set_file_id(self, file_id: L2LowDegreeFileID):
+    def set_file_id(self, file_id: Enum.L2LowDegreeFileID):
         self.file_id = file_id
         return self
 
-    def set_institute(self, institute: L2InstituteType):
+    def set_institute(self, institute: Enum.L2InstituteType):
         self.institute = institute
         return self
 
-    def set_release(self, release: L2Release):
+    def set_release(self, release: Enum.L2Release):
         self.release = release
         return self
 
@@ -431,25 +431,46 @@ def load_TN14(filepath):
     return result
 
 
-def load_low_degs(*filepath):
+def load_low_degs(
+        *filepath: pathlib.Path,
+        file_id: Enum.L2LowDegreeFileID = None,
+        release: Enum.L2Release = None,
+        institute: Enum.L2InstituteType = None,
+):
+    if len(filepath) == 0:
+        assert file_id in Enum.L2LowDegreeFileID
+        this_filepath = FileTool.get_l2_low_deg_path(
+            file_id=file_id, release=release, institute=institute
+        )
+        return load_low_degs(this_filepath)
+
     if len(filepath) == 1:
         this_filepath = filepath[0]
 
-        check_ids = ("TN-11", "TN-13", "TN-14")
-        check_pattern = "(" + ")|(".join(check_ids) + ")"
-        # check_pattern = r"(TN-11)|(TN-13)|(TN-14)"
-        checked = re.search(check_pattern, this_filepath.name) is not None
-        if not checked:
-            assert False, f"file name should include one of ids: {check_pattern}"
+        if this_filepath.is_file():
+            check_ids = ("TN-11", "TN-13", "TN-14")
+            check_pattern = "(" + ")|(".join(check_ids) + ")"  # r"(TN-11)|(TN-13)|(TN-14)"
+            checked = re.search(check_pattern, this_filepath.name) is not None
+            if not checked:
+                assert False, f"file name should include one of ids: {check_pattern}"
 
-        if "TN-11" in this_filepath.name:
-            return load_TN11(this_filepath)
-        elif "TN-13" in this_filepath.name:
-            return load_TN13(this_filepath)
-        elif "TN-14" in this_filepath.name:
-            return load_TN14(this_filepath)
-        else:
-            assert False
+            if "TN-11" in this_filepath.name:
+                return load_TN11(this_filepath)
+            elif "TN-13" in this_filepath.name:
+                return load_TN13(this_filepath)
+            elif "TN-14" in this_filepath.name:
+                return load_TN14(this_filepath)
+            else:
+                assert False
+
+        elif this_filepath.is_dir():
+            assert file_id in Enum.L2LowDegreeFileID
+
+            filepath_to_load = FileTool.get_l2_low_deg_path(
+                this_filepath, file_id=file_id, release=release, institute=institute
+            )
+
+            return load_low_degs(filepath_to_load)
 
     else:
         result = {}
@@ -463,14 +484,9 @@ def load_low_degs(*filepath):
 
 
 def demo():
-    filepaths = (
-        FileTool.get_project_dir("data/L2_low_degrees/TN-11_C20_SLR_RL06.txt"),
-        FileTool.get_project_dir("data/L2_low_degrees/TN-13_GEOC_CSR_RL06.1.txt"),
-        FileTool.get_project_dir("data/L2_low_degrees/TN-14_C30_C20_SLR_GSFC.txt")
-    )
-
-    load = load_low_degs(*filepaths)
-    pass
+    low_degs = load_low_degs(file_id=Enum.L2LowDegreeFileID.TN13, institute=Enum.L2InstituteType.CSR,
+                             release=Enum.L2Release.RL06)  # load degree-1
+    low_degs.update(load_low_degs(file_id=Enum.L2LowDegreeFileID.TN14))  # load c20 and c30
 
 
 if __name__ == '__main__':

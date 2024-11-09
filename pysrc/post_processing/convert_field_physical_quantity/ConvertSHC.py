@@ -1,6 +1,6 @@
 import numpy as np
 
-from pysrc.auxiliary.preference.EnumClasses import FieldPhysicalQuantity, LoveNumberType, match_string
+from pysrc.auxiliary.preference.EnumClasses import PhysicalDimensions, LoveNumberType, match_string
 from pysrc.auxiliary.preference.Constants import GeoConstants
 from pysrc.post_processing.Love_number.LoveNumber import LoveNumber
 
@@ -9,19 +9,19 @@ class ConvertSHCConfig:
     def __init__(self):
         self.ln = None
 
-        self.input_field_type = FieldPhysicalQuantity.Dimensionless
-        self.output_field_type = FieldPhysicalQuantity.EWH
+        self.input_field_type = PhysicalDimensions.Dimensionless
+        self.output_field_type = PhysicalDimensions.EWH
 
-    def set_input_type(self, field_type: FieldPhysicalQuantity):
+    def set_input_type(self, field_type: PhysicalDimensions):
         if type(field_type) is str:
-            field_type = match_string(field_type, FieldPhysicalQuantity)
+            field_type = match_string(field_type, PhysicalDimensions)
 
         self.input_field_type = field_type
         return self
 
-    def set_output_type(self, field_type: FieldPhysicalQuantity):
+    def set_output_type(self, field_type: PhysicalDimensions):
         if type(field_type) is str:
-            field_type = match_string(field_type, FieldPhysicalQuantity)
+            field_type = match_string(field_type, PhysicalDimensions)
 
         self.output_field_type = field_type
         return self
@@ -69,17 +69,17 @@ class ConvertSHC:
         density_earth = GeoConstants.density_earth
         radius_e = GeoConstants.radius_earth
 
-        if self.configuration.input_field_type is FieldPhysicalQuantity.Dimensionless:
+        if self.configuration.input_field_type is PhysicalDimensions.Dimensionless:
             pass
 
-        elif self.configuration.input_field_type is FieldPhysicalQuantity.EWH:
+        elif self.configuration.input_field_type is PhysicalDimensions.EWH:
             ln = ln[:lmax + 1]
             kl = np.array([(1 + ln[n]) / (2 * n + 1) for n in range(len(ln))]) * 3 * density_water / (
                     radius_e * density_earth)
 
             convert_mat *= kl
 
-        elif self.configuration.input_field_type is FieldPhysicalQuantity.Density:
+        elif self.configuration.input_field_type is PhysicalDimensions.Density:
             ln = ln[:lmax + 1]
             kl = np.array([(1 + ln[n]) / (2 * n + 1) for n in range(len(ln))]) * 3 / (radius_e * density_earth)
 
@@ -90,7 +90,7 @@ class ConvertSHC:
 
         return convert_mat
 
-    def _get_convert_array_from_dimensionless_to(self, field_type: FieldPhysicalQuantity, lmax):
+    def _get_convert_array_from_dimensionless_to(self, field_type: PhysicalDimensions, lmax):
         """
         return: [k1, k2, ..., kl, ...]
         """
@@ -117,30 +117,30 @@ class ConvertSHC:
 
         convert_mat = np.ones((lmax + 1,))
 
-        if field_type is FieldPhysicalQuantity.Dimensionless:
+        if field_type is PhysicalDimensions.Dimensionless:
             pass
 
-        elif field_type is FieldPhysicalQuantity.EWH:
+        elif field_type is PhysicalDimensions.EWH:
             ln = ln[:lmax + 1]
             kl = np.array([(2 * n + 1) / (1 + ln[n]) for n in range(len(ln))]) * radius_e * density_earth / (
                     3 * density_water)
 
             convert_mat *= kl
 
-        elif field_type is FieldPhysicalQuantity.Density:
+        elif field_type is PhysicalDimensions.Density:
             ln = ln[:lmax + 1]
             kl = np.array([(2 * n + 1) / (1 + ln[n]) for n in range(len(ln))]) * radius_e * density_earth / 3
 
             convert_mat *= kl
 
-        elif field_type is FieldPhysicalQuantity.Geoid:
+        elif field_type is PhysicalDimensions.Geoid:
             convert_mat *= radius_e
 
-        elif field_type is FieldPhysicalQuantity.Gravity:
+        elif field_type is PhysicalDimensions.Gravity:
             kl = np.array([n - 1 for n in range(lmax + 1)]) * (GM / radius_e ** 2)
             convert_mat *= kl
 
-        elif field_type is FieldPhysicalQuantity.VerticalDisplacement:
+        elif field_type is PhysicalDimensions.VerticalDisplacement:
             lnh, lnl = _get_love_number_h_and_l()
 
             ln = ln[:lmax + 1]
@@ -148,7 +148,7 @@ class ConvertSHC:
 
             convert_mat *= kl
 
-        elif field_type is FieldPhysicalQuantity.Pressure:
+        elif field_type is PhysicalDimensions.Pressure:
             termI = np.arange(lmax + 1)
             term = 2 * termI + 1.
             ln = ln[:lmax + 1]
@@ -158,7 +158,7 @@ class ConvertSHC:
             convert_mat *= kl
 
         elif field_type in (
-                FieldPhysicalQuantity.HorizontalDisplacementNorth, FieldPhysicalQuantity.HorizontalDisplacementEast):
+                PhysicalDimensions.HorizontalDisplacementNorth, PhysicalDimensions.HorizontalDisplacementEast):
             lnh, lnl = _get_love_number_h_and_l()
 
             ln = ln[:lmax + 1]

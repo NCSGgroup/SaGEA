@@ -14,7 +14,8 @@ class TimeTool:
         TimeDelta = 6
 
     @staticmethod
-    def convert_date_format(date, input_type: DateFormat, output_type: DateFormat = DateFormat.ClassDate,
+    def convert_date_format(date, input_type: DateFormat = DateFormat.ClassDate,
+                            output_type: DateFormat = DateFormat.YearFraction,
                             from_date: datetime.date = None):
         """
         get the date in format of datetime.date
@@ -130,7 +131,7 @@ class TimeTool:
 
     @staticmethod
     def get_the_final_day_of_this_month(date: datetime.date = None, year: int = None, month: int = None):
-        input_date = date is not  None
+        input_date = date is not None
 
         input_year = year is not None
         input_month = month is not None

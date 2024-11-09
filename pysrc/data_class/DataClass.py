@@ -10,11 +10,12 @@ from pysrc.auxiliary.aux_tool.MathTool import MathTool
 from pysrc.auxiliary.aux_tool.TimeTool import TimeTool
 from pysrc.auxiliary.core_data_class.CoreGRID import CoreGRID
 from pysrc.auxiliary.core_data_class.CoreSHC import CoreSHC
-from pysrc.auxiliary.preference.EnumClasses import FieldPhysicalQuantity, match_string
+import pysrc.auxiliary.preference.EnumClasses as Enums
+from pysrc.auxiliary.preference.EnumClasses import match_string
 
 from pysrc.post_processing.Love_number.LoveNumber import LoveNumber
 from pysrc.post_processing.convert_field_physical_quantity.ConvertSHC import ConvertSHC
-from pysrc.post_processing.filter.get_filter import get_filter
+from pysrc.post_processing.filter.GetSHCFilter import get_filter
 from pysrc.post_processing.geometric_correction.GeometricalCorrection import GeometricalCorrection
 from pysrc.post_processing.harmonic.Harmonic import Harmonic
 from pysrc.post_processing.leakage.Addictive import Addictive
@@ -44,14 +45,14 @@ class SHC(CoreSHC):
         return SHC(self.value - other.value)
 
     def convert_type(self, from_type=None, to_type=None):
-        types = list(FieldPhysicalQuantity)
+        types = list(Enums.PhysicalDimensions)
         types_string = [i.name.lower() for i in types]
         types += types_string
 
         if from_type is None:
-            from_type = FieldPhysicalQuantity.Dimensionless
+            from_type = Enums.PhysicalDimensions.Dimensionless
         if to_type is None:
-            to_type = FieldPhysicalQuantity.Dimensionless
+            to_type = Enums.PhysicalDimensions.Dimensionless
 
         assert (from_type.lower() if type(
             from_type) is str else from_type) in types, f"from_type must be one of {types}"
@@ -59,14 +60,14 @@ class SHC(CoreSHC):
             to_type) is str else to_type) in types, f"to_type must be one of {types}"
 
         if from_type is None:
-            from_type = FieldPhysicalQuantity.Dimensionless
+            from_type = Enums.PhysicalDimensions.Dimensionless
         if to_type is None:
-            to_type = FieldPhysicalQuantity.Dimensionless
+            to_type = Enums.PhysicalDimensions.Dimensionless
 
         if type(from_type) is str:
-            from_type = match_string(from_type, FieldPhysicalQuantity, ignore_case=True)
+            from_type = match_string(from_type, Enums.PhysicalDimensions, ignore_case=True)
         if type(to_type) is str:
-            to_type = match_string(to_type, FieldPhysicalQuantity, ignore_case=True)
+            to_type = match_string(to_type, Enums.PhysicalDimensions, ignore_case=True)
         lmax = self.get_lmax()
         LN = LoveNumber()
         LN.configuration.set_lmax(lmax)
@@ -94,22 +95,18 @@ class SHC(CoreSHC):
 
         return grid
 
-    def filter(self, method: str, param: tuple = None):
-
+    def filter(self, method: Enums.SHCFilterType or Enums.SHCDecorrelationType, param: tuple = None):
         cqlm, sqlm = self.get_cs2d()
-
         filtering = get_filter(method, param, lmax=self.get_lmax())
         cqlm_f, sqlm_f = filtering.apply_to(cqlm, sqlm)
-
         self.value = MathTool.cs_combine_to_triangle_1d(cqlm_f, sqlm_f)
 
         return self
 
-    def geometric(self, assumption: str, log=False):
+    def geometric(self, assumption: Enums.GeometricCorrectionAssumption, log=False):
         gc = GeometricalCorrection()
         cqlm, sqlm = self.get_cs2d()
         cqlm_new, sqlm_new = gc.apply_to(cqlm, sqlm, assumption=assumption, log=log)
-
         self.value = MathTool.cs_combine_to_triangle_1d(cqlm_new, sqlm_new)
 
         return self
@@ -121,19 +118,15 @@ class SHC(CoreSHC):
             c10, c11, s11 = True, True, True
         else:
             c10, c11, s11 = False, False, False
-
         replace_or_not = (c10, c11, s11, c20, c30)
         low_ids = ("c10", "c11", "s11", "c20", "c30")
         for i in range(len(low_ids)):
             if replace_or_not:
                 assert low_ids[i] in low_deg.keys(), f"input low_deg should include key {low_ids[i]}"
-
         replace_low_degs = ReplaceLowDegree()
         replace_low_degs.configuration.set_replace_deg1(deg1).set_replace_c20(c20).set_replace_c30(c30)
         replace_low_degs.set_low_degrees(low_deg)
-
         cqlm, sqlm = replace_low_degs.apply_to(*self.get_cs2d(), begin_dates=dates_begin, end_dates=dates_end)
-
         self.value = MathTool.cs_combine_to_triangle_1d(cqlm, sqlm)
 
         return self
@@ -172,20 +165,28 @@ class GRID(CoreGRID):
 
         return shc
 
-    def leakage(self, method: str, basin: np.ndarray, filter_type: str, filter_params: tuple, lmax: int, times=None,
-                reference: dict = None, prefilter_type: str = None, prefilter_params: tuple = None,
-                scale_type: str = "trend", shc_unfiltered: SHC = None, basin_conservation: np.ndarray = None,
-                fm_iter_times: int = 30, log=False):
-        methods_of_model_driven = (
-            "addictive", "multiplicative", "scaling", "scaling_grid"
-        )
-        methods_of_data_driven = (
-            "data_driven", "buffer_zone", "buffer", "bfz", "bf", "forward_modeling", "fm", "iterative", "iter"
-        )
-        methods = methods_of_data_driven + methods_of_model_driven
+    def leakage(self, method: str, basin: np.ndarray, filter_type: str, filter_params: tuple, lmax: int,
+                # necessary params
+                times=None, reference: dict = None,
+                # extra params for model-driven methods
+                prefilter_type: Enums.SHCFilterType = Enums.SHCFilterType.Gaussian, prefilter_params: tuple = (50,),
+                # extra params for iterative
+                scale_type: str = "trend", shc_unfiltered: SHC = None,
+                # extra params for scaling and scaling_grid
+                basin_conservation: np.ndarray = None, fm_iter_times: int = 30, log=False
+                # extra params for forward modeling
+                ):
 
-        method = method.lower()
-        assert method in methods, f"method must be one of {methods}"
+        assert method in Enums.LeakageMethod
+        methods_of_model_driven = (
+            Enums.LeakageMethod.Addictive, Enums.LeakageMethod.Multiplicative,
+            Enums.LeakageMethod.Scaling, Enums.LeakageMethod.ScalingGrid
+        )
+
+        methods_of_data_driven = (
+            Enums.LeakageMethod.ForwardModeling, Enums.LeakageMethod.DataDriven,
+            Enums.LeakageMethod.BufferZone, Enums.LeakageMethod.Iterative
+        )
 
         grid_space = self.get_grid_space()
         lat, lon = MathTool.get_global_lat_lon_range(grid_space)
@@ -196,16 +197,16 @@ class GRID(CoreGRID):
         if method in methods_of_model_driven:
             assert {"time", "model"}.issubset(set(reference.keys()))
 
-            if method == "addictive":
+            if method == Enums.LeakageMethod.Addictive:
                 lk = Addictive()
 
-            elif method == "multiplicative":
+            elif method == Enums.LeakageMethod.Multiplicative:
                 lk = Multiplicative()
 
-            elif method == "scaling":
+            elif method == Enums.LeakageMethod.Scaling:
                 lk = Scaling()
 
-            elif method == "scaling_grid":
+            elif method == Enums.LeakageMethod.ScalingGrid:
                 lk = ScalingGrid()
                 lk.configuration.set_scale_type(scale_type)
 
@@ -217,16 +218,16 @@ class GRID(CoreGRID):
             lk.configuration.set_model(reference["model"])
 
         elif method in methods_of_data_driven:
-            if method == "data_driven":
+            if method == Enums.LeakageMethod.DataDriven:
                 assert shc_unfiltered is not None, "Data-driven requires parameter shc_unfiltered."
 
                 lk = DataDriven()
                 lk.configuration.set_cs_unfiltered(*shc_unfiltered.get_cs2d())
 
-            elif method in ("buffer_zone", "buffer", "bfz", "bf"):
+            elif method == Enums.LeakageMethod.BufferZone:
                 lk = BufferZone()
 
-            elif method in ("forward_modeling", "fm"):
+            elif method == Enums.LeakageMethod.ForwardModeling:
                 assert basin_conservation is not None, "Forward Modeling requires parameter basin_conservation."
                 assert fm_iter_times is not None, "Forward Modeling requires parameter fm_iter_times."
 
@@ -235,7 +236,7 @@ class GRID(CoreGRID):
                 lk.configuration.set_max_iteration(fm_iter_times)
                 lk.configuration.set_print_log(log)
 
-            elif method in ("iterative", "iter"):
+            elif method == Enums.LeakageMethod.Iterative:
                 assert (prefilter_params is not None) and (
                         prefilter_type is not None), "Iterative requires parameter prefilter_type and prefilter_params."
                 assert shc_unfiltered is not None, "Iterative requires parameter shc_unfiltered."

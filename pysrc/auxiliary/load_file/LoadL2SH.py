@@ -98,9 +98,8 @@ def load_SHC(*filepath, key: str, lmax: int, lmcs_in_queue=None, get_dates=False
         assert filepath[0].exists(), f"{filepath[0]} does not exist"
 
         if filepath[0].is_file():
-
             if lmcs_in_queue is None:
-                lmcs_in_queue = [2, 3, 4, 5]
+                lmcs_in_queue = [1, 2, 3, 4] if key == "" else [2, 3, 4, 5]
 
             l_queue = lmcs_in_queue[0]
             m_queue = lmcs_in_queue[1]

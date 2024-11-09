@@ -1,4 +1,3 @@
-import pathlib
 from pathlib import Path
 import gzip
 import re
@@ -6,6 +5,7 @@ import re
 import h5py
 
 from pysrc.auxiliary.preference.EnumClasses import L2ProductType, L2InstituteType, L2Release, L2LowDegreeFileID
+import pysrc.auxiliary.preference.EnumClasses as Enum
 from pysrc.auxiliary.aux_tool.TimeTool import TimeTool
 
 
@@ -133,14 +133,16 @@ class FileTool:
         g_file.close()
 
     @staticmethod
-    def get_l2_low_deg_path(file_id: L2LowDegreeFileID,
+    def get_l2_low_deg_path(filedir: Path = None,
+                            file_id: L2LowDegreeFileID = None,
                             institute: L2InstituteType = None,
-                            release: L2Release = None):
+                            release: L2Release = None
+                            ):
 
-        filepath = FileTool.get_project_dir() / 'data/L2_low_degrees'
+        filedir = FileTool.get_project_dir() / 'data/L2_low_degrees' if filedir is None else filedir
 
         if file_id == L2LowDegreeFileID.TN11:
-            filepath /= 'TN-11_C20_SLR_RL06.txt'
+            filedir /= 'TN-11_C20_SLR_RL06.txt'
 
         elif file_id == L2LowDegreeFileID.TN13:
             assert institute in (L2InstituteType.CSR, L2InstituteType.GFZ, L2InstituteType.JPL)
@@ -148,15 +150,15 @@ class FileTool:
 
             institute_str = institute.name
             release_str = release.name.replace('RL061', 'RL06.1')
-            filepath /= f'TN-13_GEOC_{institute_str}_{release_str}.txt'
+            filedir /= f'TN-13_GEOC_{institute_str}_{release_str}.txt'
 
         elif file_id == L2LowDegreeFileID.TN14:
-            filepath /= 'TN-14_C30_C20_SLR_GSFC.txt'
+            filedir /= 'TN-14_C30_C20_SLR_GSFC.txt'
 
         else:
             raise Exception
 
-        return filepath
+        return filedir
 
     @staticmethod
     def get_hdf5_structure(filepath):
@@ -198,3 +200,20 @@ class FileTool:
                 break
 
         return '\n'.join(lines)
+
+    @staticmethod
+    def get_GIA_path(filedir: Path = None, gia_type=Enum.GIAModel):
+        assert gia_type in Enum.GIAModel
+
+        filedir = FileTool.get_project_dir("data/GIA/") if filedir is None else filedir
+
+        if gia_type == Enum.GIAModel.Caron2018:
+            return filedir / "GIA.Caron_et_al_2018.txt"
+        elif gia_type == Enum.GIAModel.Caron2019:
+            return filedir / "GIA.Caron_Ivins_2019.txt"
+        elif gia_type == Enum.GIAModel.ICE6GC:
+            return filedir / "GIA.ICE-6G_C.txt"
+        elif gia_type == Enum.GIAModel.ICE6GD:
+            return filedir / "GIA.ICE-6G_D.txt"
+        else:
+            assert False

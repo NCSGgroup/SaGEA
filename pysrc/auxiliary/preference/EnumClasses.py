@@ -36,10 +36,6 @@ class L2InstituteType(Enum):
 
 
 class L2Release(Enum):
-    RL01 = 1
-    RL02 = 2
-    RL03 = 3
-    RL04 = 4
     RL05 = 5
     RL06 = 6
     RL061 = 61
@@ -75,7 +71,7 @@ class Satellite(Enum):
     GRACE_FO = 2
 
 
-class FieldPhysicalQuantity(Enum):
+class PhysicalDimensions(Enum):
     Dimensionless = 0
     EWH = 1
     Pressure = 2
@@ -110,12 +106,8 @@ class SHCFilterType(Enum):
 
 class SHCDecorrelationType(Enum):
     PnMm = 1
-    SlideWindow = 2
-
-
-class SHCDecorrelationSlidingWindowType(Enum):
-    Stable = 1
-    Swenson2006 = 2
+    SlideWindowSwenson2006 = 2
+    SlideWindowStable = 2
 
 
 class LeakageMethod(Enum):
@@ -183,8 +175,7 @@ class EmpiricalDecorrelationType(Enum):
     window_Duan2009 = 4
 
 
-class AverageFilterType(Enum):
-    Gaussian = 1
-    fan = 2
-    non_isotropic_Gaussian = 3
-    DDK = 4
+class GeometricCorrectionAssumption(Enum):
+    Sphere = 1
+    Ellipsoid = 2
+    ActualEarth = 3

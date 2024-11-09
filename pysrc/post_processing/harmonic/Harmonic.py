@@ -3,7 +3,7 @@ import time
 import numpy as np
 from tqdm import trange
 
-from pysrc.auxiliary.preference.EnumClasses import FieldPhysicalQuantity
+from pysrc.auxiliary.preference.EnumClasses import PhysicalDimensions
 from pysrc.auxiliary.aux_tool.MathTool import MathTool
 
 from pysrc.auxiliary.core_data_class.CoreGRID import CoreGRID
@@ -81,10 +81,10 @@ class Harmonic:
 
         return CoreSHC(cqlm, sqlm)
 
-    def synthesis(self, shc: CoreSHC, special_type: FieldPhysicalQuantity = None):
+    def synthesis(self, shc: CoreSHC, special_type: PhysicalDimensions = None):
         assert shc.get_lmax() == self.lmax
         assert special_type in (
-            FieldPhysicalQuantity.HorizontalDisplacementEast, FieldPhysicalQuantity.HorizontalDisplacementNorth, None)
+            PhysicalDimensions.HorizontalDisplacementEast, PhysicalDimensions.HorizontalDisplacementNorth, None)
 
         cqlm, sqlm = shc.get_cs2d()
 
@@ -129,7 +129,7 @@ class Harmonic:
         else:
             return cqlm, sqlm
 
-    def synthesis_for_csqlm(self, cqlm: np.ndarray, sqlm: np.ndarray, special_type: FieldPhysicalQuantity = None):
+    def synthesis_for_csqlm(self, cqlm: np.ndarray, sqlm: np.ndarray, special_type: PhysicalDimensions = None):
         assert cqlm.shape == sqlm.shape
         assert len(cqlm.shape) in (2, 3)
         single = (len(cqlm.shape) == 2)
@@ -138,7 +138,7 @@ class Harmonic:
             sqlm = np.array([sqlm])
 
         assert special_type in (
-            FieldPhysicalQuantity.HorizontalDisplacementEast, FieldPhysicalQuantity.HorizontalDisplacementNorth, None)
+            PhysicalDimensions.HorizontalDisplacementEast, PhysicalDimensions.HorizontalDisplacementNorth, None)
 
         cqlm = np.array(cqlm)
         sqlm = np.array(sqlm)
@@ -147,13 +147,13 @@ class Harmonic:
             am = np.einsum('ijk,ljk->ilk', cqlm, self.pilm)
             bm = np.einsum('ijk,ljk->ilk', sqlm, self.pilm)
 
-        elif special_type is FieldPhysicalQuantity.HorizontalDisplacementNorth:
+        elif special_type is PhysicalDimensions.HorizontalDisplacementNorth:
             pilm_derivative = MathTool.get_Legendre_derivative(self.lat, self.lmax)
 
             am = np.einsum('ijk,ljk->ilk', sqlm, pilm_derivative)
             bm = np.einsum('ijk,ljk->ilk', -cqlm, pilm_derivative)
 
-        elif special_type is FieldPhysicalQuantity.HorizontalDisplacementEast:
+        elif special_type is PhysicalDimensions.HorizontalDisplacementEast:
             pilm_divide_sin_theta = self.pilm / np.sin(self.lat)[:, None, None]
 
             am = np.einsum('ijk,ljk->ilk', -sqlm, pilm_divide_sin_theta)
