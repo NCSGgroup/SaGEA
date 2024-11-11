@@ -5,128 +5,123 @@ import geopandas as gpd
 import shapely.vectorized
 
 from pysrc.data_class.DataClass import GRID
-from pysrc.auxiliary.scripts.PlotGrids import plot_grids
-from pysrc.auxiliary.aux_tool.FileTool import FileTool
 from pysrc.auxiliary.aux_tool.MathTool import MathTool
-from pysrc.post_processing.harmonic.Harmonic import Harmonic
 
 
-class ShpToMaskConfig:
+class LoadShpConfig:
     def __init__(self):
-        self.__grid_space = 1
-        self.__harmonic: Harmonic = None
+        self.__filepath = None
 
-        self.__shppath = None
-
-    def set_grid_space(self, grid_space):
-        self.__grid_space = grid_space
+    def set_path(self, path: pathlib.Path):
+        self.__filepath = path
 
         return self
 
-    def get_grid_space(self):
-        return self.__grid_space
+    def get_path(self):
+        return self.__filepath
 
-    def set_harmonic(self, harmonic: Harmonic):
-        self.__harmonic = harmonic
 
+class LoadShp:
+    def __init__(self, path: pathlib.Path = None):
+        self.configuration = LoadShpConfig()
+        if path is not None:
+            self.configuration.set_path(path)
+            self.__prepare()
+
+        self.__gpf = None
+
+    def __prepare(self):
+        shp_filepath = self.configuration.get_path()
+        self.__gpf = gpd.read_file(shp_filepath)
         return self
 
-    def get_harmonic(self):
-        return self.__harmonic
+    def __load_mask(self, grid_space=None, identity_name: str = None):
+        if identity_name is None:
+            identity_name = "Id"
 
-    def set_shppath(self, path: pathlib.WindowsPath):
-        self.__shppath = path
+        if self.__gpf is None:
+            self.__prepare()
 
-        return self
+        gdf = self.__gpf
 
-    def get_shppath(self):
-        return self.__shppath
-
-
-class ShpToMask:
-    def __init__(self):
-        self.configuration = ShpToMaskConfig()
-
-    def get_basin_gridmap(self, with_whole=True):
-        """
-
-        :return: 2-dimension np.ndarray, 1 inside the basin and 0 outside.
-        """
-        shp_filepath = self.configuration.get_shppath()
-        grid_space = self.configuration.get_grid_space()
-
-        gdf = gpd.read_file(shp_filepath)
         lat, lon = MathTool.get_global_lat_lon_range(grid_space)
-
         lon2d, lat2d = np.meshgrid(lon, lat)
 
-        mask_all = np.zeros(np.shape(lat2d))
-        masks_list = [mask_all]
+        masks_list = []
 
-        for idname in np.arange(gdf.ID.size) + 1:
-            bd1 = gdf[gdf.ID == idname]
+        attr = self.get_attr(identity_name)
+
+        for idname in np.arange(attr.size) + 1:
+            bd1 = gdf[attr == idname]
             mask1 = shapely.vectorized.touches(bd1.geometry.item(), lon2d, lat2d)
             mask2 = shapely.vectorized.contains(bd1.geometry.item(), lon2d, lat2d)
-
             mask_of_this_id = (mask1 + mask2).astype(int)
-            if with_whole:
-                masks_list[0] += mask_of_this_id
-
             masks_list.append(mask_of_this_id)
 
-        return np.array(masks_list)
+        return np.array(masks_list), lat, lon
 
-    def get_basin_SHC(self):
-        gridmap = self.get_basin_gridmap()
+    def __load_bound(self):
+        if self.__gpf is None:
+            self.__prepare()
 
-        har = self.configuration.get_harmonic()
-        lat, lon = har.lat, har.lon
-        shc = har.analysis(GRID(gridmap, lat, lon))
+        gdf = self.__gpf
+        bound = np.array([gdf.bounds.minx, gdf.bounds.maxx, gdf.bounds.miny, gdf.bounds.maxy]).T
 
+        return bound
+
+    def get_GRID(self, grid_space, identity_name: str = None):
+
+        mask, lat, lon = self.__load_mask(grid_space, identity_name)
+
+        return GRID(mask, lat, lon)
+
+    def get_SHC(self, lmax: int = None):
+
+        grid = self.get_GRID()
+        shc = grid.to_SHC(lmax)
         return shc
+
+    def get_bound(self):
+        return self.__load_bound()
+
+    def get_attr(self, identity_name: str):
+        if self.__gpf is None:
+            self.__prepare()
+
+        gdf = self.__gpf
+        assert identity_name in gdf.keys(), f"{identity_name} dose not exist in axes names: {gdf.keys()}"
+
+        return gdf[identity_name]
 
 
 def demo():
+    from pysrc.auxiliary.scripts.PlotGrids import plot_grids
+    from pysrc.auxiliary.aux_tool.FileTool import FileTool
+
     grid_space = 0.5
 
-    shp2mask = ShpToMask()
-    shp2mask.configuration.set_shppath(FileTool.get_project_dir() / 'data/shpfiles/Danube_9_shapefiles')
-    shp2mask.configuration.set_shppath(FileTool.get_project_dir() / 'data/shpfiles/Danube_9_shapefiles')
-    shp2mask.configuration.set_shppath(FileTool.get_project_dir() / 'data/shpfiles/Danube_9_shapefiles')
-    shp2mask.configuration.set_grid_space(grid_space)
+    load = LoadShp()
+    load.configuration.set_path(FileTool.get_project_dir() / 'data/basin_mask/Shp/bas200k_shp')
 
-    grid_list = shp2mask.get_basin_gridmap(with_whole=False)
-    grid_whole = shp2mask.get_basin_gridmap(with_whole=True)
+    pass
 
-    lat_max_grid_index = np.min(np.where(grid_whole == 1)[0])
-    lat_max = 180 - lat_max_grid_index * grid_space
-    lat_max = lat_max // 5 * 5
+    grid = load.get_GRID(grid_space=grid_space)
+    bound = load.get_bound()
+    names = load.get_attr("rivr_nm")
 
-    lat_min_grid_index = np.max(np.where(grid_whole == 1)[0])
-    lat_min = 180 - lat_min_grid_index * grid_space
-    lat_min = lat_min // 5 * 5
+    map_to_plot = np.zeros_like(grid.value[0])
+    for i in range(len(grid.value[1:])):
+        map_to_plot += grid.value[i] * i
 
-    lon_max_grid_index = np.max(np.where(grid_whole == 1)[1])
-    lon_max = lon_max_grid_index * grid_space - 180
-    lon_max = lon_max // 5 * 5
-
-    lon_min_grid_index = np.min(np.where(grid_whole == 1)[1])
-    lon_min = lon_min_grid_index * grid_space - 180
-    lon_min = lon_min // 5 * 5
-
-    lat, lon = MathTool.get_global_lat_lon_range(grid_space)
-
-    for i in range(len(grid_list)):
-        grid_to_plot = np.full(np.shape(grid_list[i]), np.nan)
-        grid_to_plot[np.where(grid_list[i] == 1)] = 1
-
+    for i in (20, 21, 22, 23, 24, 25):
         plot_grids(
-            grid_to_plot,
-            lat=lat,
-            lon=lon,
-            vmin=0,
-            vmax=2,
-            extent=[lon_min - 5, lon_max + 5, lat_min - 5, lat_max + 5]
+            grid.value[i:i + 1],
+            lat=grid.lat,
+            lon=grid.lon,
+            # vmin=0,
+            # vmax=2,
+            subtitle=list(names[i:i + 1]),
+            # extent=bound[i]
         )
     pass
 

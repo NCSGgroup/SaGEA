@@ -215,6 +215,9 @@ class GRID(CoreGRID):
 
             lk.configuration.set_GRACE_times(times)
             lk.configuration.set_model_times(reference["time"])
+
+            if isinstance(reference["model"], GRID):
+                reference["model"] = reference["model"].value
             lk.configuration.set_model(reference["model"])
 
         elif method in methods_of_data_driven:

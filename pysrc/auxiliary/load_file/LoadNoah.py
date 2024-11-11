@@ -65,7 +65,7 @@ def load_GLDAS_TWS(begin_date: datetime.date = None, end_date: datetime.date = N
     :param de_average: bool,
     :param log: bool,
     :param full_lat: bool,
-    :return:
+    :return: GRID, times
     """
     assert not from_exist_results
 
