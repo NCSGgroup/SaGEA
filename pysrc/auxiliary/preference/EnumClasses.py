@@ -107,7 +107,7 @@ class SHCFilterType(Enum):
 class SHCDecorrelationType(Enum):
     PnMm = 1
     SlideWindowSwenson2006 = 2
-    SlideWindowStable = 2
+    SlideWindowStable = 3
 
 
 class LeakageMethod(Enum):
