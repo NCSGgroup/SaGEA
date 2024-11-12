@@ -103,6 +103,9 @@ class GeometricalCorrection:
             cqlm_new.append(clm_corrected)
             sqlm_new.append(slm_corrected)
 
+        if log:
+            print(f"done!")
+
         cqlm_new = np.array(cqlm_new)
         sqlm_new = np.array(sqlm_new)
 
