@@ -10,7 +10,7 @@ def bar(current, total, width):
     wid = 30
     bar_style = '#' * (int(wid * progress) + 1) + '-' * (wid - int(wid * progress) - 1)
 
-    print(f'\r|{bar_style}| {round(current / total * 100, 2)}%', end='')
+    print(f'\r|{bar_style}| {"%.2f" % (current / total * 100)}%', end='')
 
 
 def demo():
@@ -32,7 +32,7 @@ def demo():
         wget.download(url, str(local_path), bar=bar)
         print()
 
-        print(f"unzipping: {local_path}")
+        print(f"unzipping: {local_path} ...")
         """unzip"""
         if filename in ("aux_data", "products"):
             local_path_unzip = FileTool.get_project_dir("data")
@@ -45,6 +45,7 @@ def demo():
 
         FileTool.un_zip(local_path, local_path_unzip)
         os.remove(local_path)
+        print("done!\n")
 
 
 if __name__ == '__main__':
