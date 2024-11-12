@@ -28,14 +28,18 @@ Use this code to download this project.
 
 This project is developed based on Python 3.9 and the dependencies are listed in `requirements.txt`.
 
-Use this code to download the dependencies:
+Use these coded to download the dependencies:
+
+`python -m pip install --upgrade pip==24.3.1`
 
 `pip install -r requirements.txt`
 
 To ensure the successful running and validation of programs,
 please collect the corresponding auxiliary files and verification files at
-https://zenodo.org/records/14054704
-and place folders `data` and `validation` in the project folder before using this project.
+https://zenodo.org/records/14087017
+and place folders `data` and `validation` in the project folder by running this code:
+
+`python ./demo/data_collecting/demoCollectAuxiliary.py`
 
 # 4. Quick Start
 
