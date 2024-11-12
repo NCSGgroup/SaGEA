@@ -1,8 +1,9 @@
 import numpy as np
 
 from pysrc.auxiliary.load_file.LoadL2SH import load_SHC
-from pysrc.auxiliary.aux_tool.FileTool import FileTool
 from pysrc.auxiliary.load_file.LoadCov import load_CovMatrix
+import pysrc.auxiliary.preference.EnumClasses as Enums
+from pysrc.auxiliary.aux_tool.FileTool import FileTool
 from pysrc.auxiliary.scripts.PlotGrids import plot_grids
 
 from pysrc.data_class.DataClass import SHC
@@ -30,8 +31,9 @@ def demo1():
     print("done!")
 
     print("post-processing", end=" ")
-    shc_noise.convert_type(from_type="dimensionless", to_type="ewh")
-    shc_noise.filter("ddk", (3,))
+    shc_noise.convert_type(from_type=Enums.PhysicalDimensions.Dimensionless, to_type=Enums.PhysicalDimensions.EWH)
+    # shc_noise.filter(Enums.SHCDecorrelationType.PnMm, (3, 5))
+    shc_noise.filter(Enums.SHCFilterType.DDK, (3,))
     grid_noise = shc_noise.to_grid(grid_space=grid_space)
     print("done!")
 
@@ -68,21 +70,21 @@ def demo2():
     print("done!")
 
     print("post-processing...", end=" ")
-    basin_path = FileTool.get_project_dir("data/basin_mask/Ocean_maskSH.dat")
+    basin_path = FileTool.get_project_dir("data/basin_mask/SH/Ocean_maskSH.dat")
     shc_basin = load_SHC(basin_path, key='', lmax=lmax, lmcs_in_queue=(1, 2, 3, 4))
     grid_basin = shc_basin.to_grid(grid_space=grid_space)
     grid_basin.limiter(threshold=0.5)
     mask_ocean = grid_basin.value[0]
 
-    shc_noise.convert_type(from_type="dimensionless", to_type="ewh")
+    shc_noise.convert_type(from_type=Enums.PhysicalDimensions.Dimensionless, to_type=Enums.PhysicalDimensions.EWH)
 
-    filter_method, filter_params = "ddk", (3,)
+    filter_method, filter_params = Enums.SHCFilterType.DDK, (3,)
     shc_noise.filter(filter_method, filter_params)
     grid_noise = shc_noise.to_grid(grid_space=grid_space)
 
-    leakage = "bf"
+    leakage = Enums.LeakageMethod.BufferZone
 
-    if leakage in ("forward_modeling", "fm"):
+    if leakage == Enums.LeakageMethod.ForwardModeling:
         mask_land = 1 - mask_ocean
         grid_noise.leakage(method=leakage, basin=mask_land, basin_conservation=mask_ocean,
                            filter_type=filter_method, filter_params=filter_params, lmax=lmax, log=True)

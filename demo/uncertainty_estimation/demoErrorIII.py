@@ -7,6 +7,7 @@ import numpy as np
 
 from pysrc.auxiliary.aux_tool.FileTool import FileTool
 from pysrc.auxiliary.aux_tool.TimeTool import TimeTool
+import pysrc.auxiliary.preference.EnumClasses as Enums
 from pysrc.auxiliary.load_file.LoadL2LowDeg import load_low_degs
 from pysrc.auxiliary.load_file.LoadL2SH import load_SHC
 
@@ -52,9 +53,9 @@ def demo_single_postprocessing(params, low_degs=None, shc_gsm=None, shc_gad=None
 
     if geometric:
         shc_gsm.de_background()
-        shc_gsm.geometric(assumption="ellipsoid")
+        shc_gsm.geometric(assumption=Enums.GeometricCorrectionAssumption.Ellipsoid)
 
-    shc_gsm.convert_type(from_type="dimensionless", to_type="ewh")
+    shc_gsm.convert_type(from_type=Enums.PhysicalDimensions.Dimensionless, to_type=Enums.PhysicalDimensions.EWH)
     shc_unf = copy.deepcopy(shc_gsm)
 
     if dec is not None:
@@ -63,27 +64,27 @@ def demo_single_postprocessing(params, low_degs=None, shc_gsm=None, shc_gad=None
     shc_gsm.filter(method=filtering, param=filtering_param)
 
     if gad == "direct":
-        shc_gad.convert_type(from_type="dimensionless", to_type="ewh")
+        shc_gad.convert_type(from_type=Enums.PhysicalDimensions.Dimensionless, to_type=Enums.PhysicalDimensions.EWH)
         shc_gsm.add(shc_gad, lbegin=1)
 
     if gmam == "direct":
-        shc_gaa.convert_type(from_type="dimensionless", to_type="ewh")
+        shc_gaa.convert_type(from_type=Enums.PhysicalDimensions.Dimensionless, to_type=Enums.PhysicalDimensions.EWH)
         shc_gsm.subtract(shc_gaa, lend=0)
 
     if gia == "direct":
-        shc_gia.convert_type(from_type="dimensionless", to_type="ewh")
+        shc_gia.convert_type(from_type=Enums.PhysicalDimensions.Dimensionless, to_type=Enums.PhysicalDimensions.EWH)
         shc_gsm.subtract(shc_gia)
 
     grid = shc_gsm.to_grid(grid_space)
 
-    if leakage == "forward_modeling":
+    if leakage == Enums.LeakageMethod.ForwardModeling:
         mask_reverse = 1 - mask
         grid.leakage(method=leakage, basin=mask_reverse, basin_conservation=mask,
                      filter_type=filtering, filter_params=filtering_param, lmax=lmax, )
     else:
         grid.leakage(method=leakage, basin=mask, basin_conservation=mask,
                      filter_type=filtering, filter_params=filtering_param, lmax=lmax,
-                     prefilter_type="gs", prefilter_params=(50,),
+                     prefilter_type=Enums.SHCFilterType.Gaussian, prefilter_params=(50,),
                      shc_unfiltered=shc_unf)
 
     gmom = grid.integral(mask)
@@ -105,14 +106,14 @@ def demo():
 
         "decorrelation": (
             None,
-            ("pnmm", (3, 5)),
-            # ("swenson2006", (3, 10, 10, 30, 5))
+            (Enums.SHCDecorrelationType.PnMm, (3, 5)),
+            # (Enums.SHCDecorrelationType.SlideWindowSwenson2006, (3, 10, 10, 30, 5))
         ),
 
         "filtering": (
-            ("gs", (300,)),
-            ("ddk", (3,)),
-            ("ngs", (300, 500, 30)),
+            (Enums.SHCFilterType.Gaussian, (300,)),
+            (Enums.SHCFilterType.DDK, (3,)),
+            (Enums.SHCFilterType.AnisotropicGaussianHan, (300, 500, 30)),
         ),
 
         "geometric": (
@@ -139,9 +140,9 @@ def demo():
         ),
 
         "leakage": (
-            # "forward_modeling",
-            "iterative",
-            "buffer",
+            # Enums.LeakageMethod.ForwardModeling,
+            Enums.LeakageMethod.Iterative,
+            Enums.LeakageMethod.BufferZone,
         )
     }
 

@@ -2,13 +2,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 import datetime
 
-from pysrc.uncertainty_estimating.three_coener_hat.TCH import TCHMode, tch_estimate
-
 from pysrc.auxiliary.aux_tool.MathTool import MathTool
-from pysrc.auxiliary.load_file.LoadL2SH import LoadL2SH, load_SHC
 from pysrc.auxiliary.aux_tool.FileTool import FileTool
-from pysrc.auxiliary.preference.EnumClasses import L2InstituteType
+from pysrc.auxiliary.load_file.LoadL2SH import LoadL2SH, load_SHC
+import pysrc.auxiliary.preference.EnumClasses as Enums
 from pysrc.auxiliary.scripts.PlotGrids import plot_grids
+
+from pysrc.uncertainty_estimating.three_coener_hat.TCH import TCHMode, tch_estimate
 
 
 def demo1():
@@ -25,15 +25,15 @@ def demo1():
     load.configuration.set_begin_date(datetime.date(2005, 1, 1))
     load.configuration.set_end_date(datetime.date(2015, 12, 31))
 
-    load.configuration.set_institute(L2InstituteType.CSR)
+    load.configuration.set_institute(Enums.L2InstituteType.CSR)
     shc_csr = load.get_shc()
     shc_csr.de_background(shc_bg)
 
-    load.configuration.set_institute(L2InstituteType.GFZ)
+    load.configuration.set_institute(Enums.L2InstituteType.GFZ)
     shc_gfz = load.get_shc()
     shc_gfz.de_background(shc_bg)
 
-    load.configuration.set_institute(L2InstituteType.JPL)
+    load.configuration.set_institute(Enums.L2InstituteType.JPL)
     shc_jpl = load.get_shc()
     shc_jpl.de_background(shc_bg)
 
@@ -44,14 +44,12 @@ def demo1():
     shcs = [shc_csr, shc_gfz, shc_jpl]
 
     '''filter'''
-    filter_method = "gs"
-    filter_params = (300,)
     for i in range(len(shcs)):
-        shcs[i].filter(method=filter_method, param=filter_params)
+        shcs[i].filter(method=Enums.SHCFilterType.Gaussian, param=(300,))
 
     '''convert to ewh'''
     for i in range(len(shcs)):
-        shcs[i].convert_type(from_type="dimensionless", to_type="ewh")
+        shcs[i].convert_type(from_type=Enums.PhysicalDimensions.Dimensionless, to_type=Enums.PhysicalDimensions.EWH)
 
     '''harmonic synthesis to gridded signal'''
     grid_space = 1
@@ -89,15 +87,15 @@ def demo2():
     load.configuration.set_begin_date(datetime.date(2005, 1, 1))
     load.configuration.set_end_date(datetime.date(2015, 12, 31))
 
-    load.configuration.set_institute(L2InstituteType.CSR)
+    load.configuration.set_institute(Enums.L2InstituteType.CSR)
     shc_csr = load.get_shc()
     shc_csr.de_background(shc_bg)
 
-    load.configuration.set_institute(L2InstituteType.GFZ)
+    load.configuration.set_institute(Enums.L2InstituteType.GFZ)
     shc_gfz = load.get_shc()
     shc_gfz.de_background(shc_bg)
 
-    load.configuration.set_institute(L2InstituteType.JPL)
+    load.configuration.set_institute(Enums.L2InstituteType.JPL)
     shc_jpl = load.get_shc()
     shc_jpl.de_background(shc_bg)
 
@@ -107,11 +105,8 @@ def demo2():
 
     shcs = [shc_csr, shc_gfz, shc_jpl]
 
-    '''filter'''
-    filter_method = "gs"
-    filter_params = (300,)
     for i in range(len(shcs)):
-        shcs[i].filter(method=filter_method, param=filter_params)
+        shcs[i].filter(method=Enums.SHCFilterType.Gaussian, param=(300,))
 
     '''tch for CS'''
     cs_value = [shcs[i].value for i in range(len(shcs))]
@@ -154,7 +149,6 @@ def demo2():
     cb = fig.colorbar(p,
                       orientation='horizontal',
                       fraction=1, ax=ax_cb,
-                      #  ticks=np.linspace(vmin[i], vmax[i], 3)
                       aspect=30,
                       extend='both',
                       )
@@ -164,4 +158,4 @@ def demo2():
 
 
 if __name__ == '__main__':
-    demo2()
+    demo1()
