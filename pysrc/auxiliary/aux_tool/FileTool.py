@@ -1,5 +1,7 @@
+import shutil
 from pathlib import Path
 import gzip
+import zipfile
 import re
 
 import h5py
@@ -21,11 +23,11 @@ class FileTool:
             if i > 100:
                 raise Exception
 
-            dir_of_project = dir_of_project.parent
-            # relative_dir_str += '../'
-            relative_dir_str /= '..'
             if Path.exists(dir_of_project / 'pysrc'):
                 break
+
+            dir_of_project = dir_of_project.parent
+            relative_dir_str /= '..'
 
         if relative:
             result = relative_dir_str
@@ -133,6 +135,14 @@ class FileTool:
         g_file.close()
 
     @staticmethod
+    def un_zip(zip_file_path: Path, target_path: Path = None):
+        if target_path is None:
+            target_path = zip_file_path.parent / zip_file_path.name.replace('.zip', '')
+
+        with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
+            zip_ref.extractall(target_path)
+
+    @staticmethod
     def get_l2_low_deg_path(filedir: Path = None,
                             file_id: L2LowDegreeFileID = None,
                             institute: L2InstituteType = None,
@@ -217,3 +227,11 @@ class FileTool:
             return filedir / "GIA.ICE-6G_D.txt"
         else:
             assert False
+
+    @staticmethod
+    def move_folder(src_folder, dst_folder):
+        try:
+            shutil.move(src_folder, dst_folder)
+        except Exception as e:
+            print(f"move files failed: {e}")
+
