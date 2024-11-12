@@ -30,7 +30,7 @@ This project is developed based on Python 3.9 and the dependencies are listed in
 
 Use these coded to download the dependencies:
 
-`pip install --upgrade pip==24.3.1`
+`python -m pip install --upgrade pip==24.3.1`
 
 `pip install -r requirements.txt`
 
