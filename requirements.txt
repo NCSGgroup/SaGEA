@@ -4,7 +4,8 @@ geopandas==0.14.4
 h5py==3.6.0
 matplotlib==3.5.1
 netCDF4==1.7.2
-numpy==1.21.5
-scipy==1.7.3
+numpy==1.22.4
+scipy==1.10.0-rc1
 shapely==2.0.0
 tqdm==4.66.3
+wget==3.2
