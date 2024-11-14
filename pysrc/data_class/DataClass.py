@@ -44,6 +44,10 @@ class SHC(CoreSHC):
 
         return SHC(self.value - other.value)
 
+    def get_degree_rms(self):
+        cqlm, sqlm = self.get_cs2d()
+        return MathTool.get_degree_rms(cqlm, sqlm)
+
     def convert_type(self, from_type=None, to_type=None):
         types = list(Enums.PhysicalDimensions)
         types_string = [i.name.lower() for i in types]

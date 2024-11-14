@@ -627,7 +627,23 @@ class MathTool:
     def shrink(data, rows, cols):
         return data.reshape(rows, int(data.shape[0] / rows), cols, int(data.shape[1] / cols)).sum(axis=1).sum(axis=2)
 
-# if __name__ == '__main__':
+    @staticmethod
+    def get_degree_rms(cqlm, sqlm):
+        assert np.shape(cqlm) == np.shape(sqlm)
+
+        shape = np.shape(cqlm)
+        lmax = np.shape(cqlm)[1] - 1
+
+        rms = np.zeros((shape[0], lmax + 1))
+
+        for i in range(lmax + 1):
+            rms_this_degree = np.sum(cqlm[:, i, :i + 1] ** 2 + sqlm[:, i, :i + 1] ** 2, axis=1)
+            rms_this_degree = np.sqrt(rms_this_degree / ((i + 1) ** 2))
+            rms[:, i] = rms_this_degree
+
+        return rms
+
+    # if __name__ == '__main__':
 #     def a(nn, mm):
 #         return np.sqrt((2 * nn + 1) * (2 * nn - 1) / ((nn - mm) * (nn + mm)))
 #
