@@ -80,17 +80,17 @@ class DataDriven(Leakage):
     def __get_leakage(self):
         har = self.configuration.harmonic
         cqlm_unf, sqlm_unf = self.configuration.cqlm_unfiltered, self.configuration.sqlm_unfiltered
-        gqij_unf = har.synthesis_for_csqlm(cqlm_unf, sqlm_unf)
+        gqij_unf = har.synthesis(cqlm_unf, sqlm_unf)
         cs_filter = self.configuration.filter
         basin = self.configuration.basin_map
 
         gqij_outside_unf = gqij_unf * (1 - basin)
 
-        cqlm_outside_unf, sqlm_outside_unf = har.analysis_for_gqij(gqij_outside_unf)
+        cqlm_outside_unf, sqlm_outside_unf = har.analysis(gqij_outside_unf)
 
         cqlm_outside_f, sqlm_outside_f = cs_filter.apply_to(cqlm_outside_unf, sqlm_outside_unf)
 
-        gqij_outside_f = har.synthesis_for_csqlm(cqlm_outside_f, sqlm_outside_f)
+        gqij_outside_f = har.synthesis(cqlm_outside_f, sqlm_outside_f)
 
         leakage_c = MathTool.global_integral(gqij_outside_f * basin)
 
@@ -99,7 +99,7 @@ class DataDriven(Leakage):
     def __get_deviation(self):
         har = self.configuration.harmonic
         cqlm_unf, sqlm_unf = self.configuration.cqlm_unfiltered, self.configuration.sqlm_unfiltered
-        gqij_unf = har.synthesis_for_csqlm(cqlm_unf, sqlm_unf)
+        gqij_unf = har.synthesis(cqlm_unf, sqlm_unf)
         basin = self.configuration.basin_map
         cs_filter = self.configuration.filter
 

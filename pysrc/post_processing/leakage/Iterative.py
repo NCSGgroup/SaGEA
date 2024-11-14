@@ -81,14 +81,14 @@ class Iterative(Leakage):
         cqlm_unf, sqlm_unf = self.configuration.cqlm_unfiltered, self.configuration.sqlm_unfiltered
         cqlm_f, sqlm_f = self.configuration.prefilter.apply_to(cqlm_unf, sqlm_unf)
 
-        gqij_prefiltered = self.configuration.harmonic.synthesis_for_csqlm(cqlm_f, sqlm_f)
+        gqij_prefiltered = self.configuration.harmonic.synthesis(cqlm_f, sqlm_f)
         gqij_prefiltered_outside = gqij_prefiltered * (1 - basin_map)
 
-        cqlm_pref, sqlm_pref = self.configuration.harmonic.analysis_for_gqij(gqij_prefiltered_outside)
+        cqlm_pref, sqlm_pref = self.configuration.harmonic.analysis(gqij_prefiltered_outside)
 
         cqlm_iter_filtered, sqlm_iter_filtered = self.configuration.filter.apply_to(cqlm_pref, sqlm_pref)
 
-        gqij_iter_filtered = self.configuration.harmonic.synthesis_for_csqlm(cqlm_iter_filtered, sqlm_iter_filtered)
+        gqij_iter_filtered = self.configuration.harmonic.synthesis(cqlm_iter_filtered, sqlm_iter_filtered)
 
         leakage_c = MathTool.global_integral(gqij_iter_filtered * basin_map)
 

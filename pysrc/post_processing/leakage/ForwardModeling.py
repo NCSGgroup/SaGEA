@@ -155,10 +155,10 @@ class ForwardModeling(Leakage):
             if print_log:
                 print(f'\rforward modeling: iter {iter_times}...', end='')
 
-            cqlm, sqlm = har.analysis_for_gqij(true_model)
+            cqlm, sqlm = har.analysis(true_model)
             cqlm_filtered, sqlm_filtered = shc_filter.apply_to(cqlm, sqlm)
 
-            grids_predicted = har.synthesis_for_csqlm(cqlm_filtered, sqlm_filtered)
+            grids_predicted = har.synthesis(cqlm_filtered, sqlm_filtered)
 
             grids_difference = (observed_model - grids_predicted) * basin
 
@@ -214,7 +214,7 @@ def demo1():
     lat, lon = MathTool.get_global_lat_lon_range(spatial_resolution)
     har = Harmonic(lat, lon, lmax=lmax, option=1)
 
-    gqij = har.synthesis_for_csqlm(cqlm, sqlm)
+    gqij = har.synthesis(cqlm, sqlm)
 
     fm = ForwardModeling()
     fm.configuration.set_harmonic(har)

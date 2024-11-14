@@ -18,9 +18,9 @@ class Leakage(ABC):
 
 
 def filter_grids(gqij, shc_filter: SHCFilter, harmonic: Harmonic):
-    cqlm, sqlm = harmonic.analysis_for_gqij(gqij)
+    cqlm, sqlm = harmonic.analysis(gqij)
 
     cqlm_f, sqlm_f = shc_filter.apply_to(cqlm, sqlm)
-    gqij_filtered = harmonic.synthesis_for_csqlm(cqlm_f, sqlm_f)
+    gqij_filtered = harmonic.synthesis(cqlm_f, sqlm_f)
 
     return gqij_filtered

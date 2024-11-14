@@ -73,10 +73,10 @@ class BufferZone(Leakage):
 
         lat, lon = self.configuration.harmonic.lat, self.configuration.harmonic.lon
         # shc_bar = self.configuration.harmonic.analysis(GRID(basin_bar, lat, lon))
-        cqlm_bar, sqlm_bar = self.configuration.harmonic.analysis_for_gqij(basin_bar)
+        cqlm_bar, sqlm_bar = self.configuration.harmonic.analysis(basin_bar)
 
         cqlm_bar_f, sqlm_bar_f = self.configuration.filter.apply_to(cqlm_bar, sqlm_bar)
-        basin_bar_filtered = self.configuration.harmonic.synthesis_for_csqlm(cqlm_bar_f, sqlm_bar_f)
+        basin_bar_filtered = self.configuration.harmonic.synthesis(cqlm_bar_f, sqlm_bar_f)
 
         threshold = 0.1
         basin_bar_filtered[np.where(basin_bar_filtered > threshold)] = 1
