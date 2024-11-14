@@ -2,7 +2,7 @@
 
 ## Post-processing
 
--[ ] add SHC method: synthesis for special types (horizontal displacement, etc.).
+-[x] add SHC method: synthesis for special types (horizontal displacement, etc.).
 -[ ] optimize SHC method: fasten geometrical correction.
 -[ ] add GRID method: spatial filter (VGC, SSAS by Yi et al. 2021, etc.).
 -[ ] add GRID method: de-aliasing.
