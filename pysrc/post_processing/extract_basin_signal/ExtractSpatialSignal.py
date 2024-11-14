@@ -51,7 +51,7 @@ class ExtractSpatial:
         lmax = 60
         clm_basin, slm_basin = load_SHC(path, key='', lmax=lmax, lmcs_in_queue=(1, 2, 3, 4))
         har = Harmonic(self.configuration.lat_range, self.configuration.lon_range, lmax)
-        grid_basin = har.synthesis_for_csqlm(np.array([clm_basin]), np.array([slm_basin]))[0]
+        grid_basin = har.synthesis(np.array([clm_basin]), np.array([slm_basin]))[0]
 
         return grid_basin
 

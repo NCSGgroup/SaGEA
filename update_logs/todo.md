@@ -14,6 +14,6 @@
 
 ## Others
 
--[ ] SHC method: get degree-RMS.
+-[x] SHC method: get degree-RMS.
 -[ ] Validations for error-I, -II and -III.
 -[ ] Separate plotting codes.

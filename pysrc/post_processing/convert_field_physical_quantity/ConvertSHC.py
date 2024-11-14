@@ -44,8 +44,12 @@ class ConvertSHC:
         length_of_cs1d = np.shape(cs1d)[-1]
         lmax = int(np.sqrt(length_of_cs1d) - 1)
 
-        convert_array = self._get_convert_array_to_dimensionless(lmax) * self._get_convert_array_from_dimensionless_to(
-            self.configuration.output_field_type, lmax)
+        convert_array = self._get_convert_array_to_dimensionless(
+            self.configuration.input_field_type,
+            lmax
+        ) * self._get_convert_array_from_dimensionless_to(
+            self.configuration.output_field_type, lmax
+        )
         # [k1, k2, ...,]
 
         convert_weight_cs1d = np.array([])
@@ -56,7 +60,7 @@ class ConvertSHC:
 
         return cs1d_converted
 
-    def _get_convert_array_to_dimensionless(self, lmax):
+    def _get_convert_array_to_dimensionless(self, field_type: PhysicalDimensions, lmax):
         """
         return: [k1, k2, ..., kl, ...]
         """
@@ -68,22 +72,48 @@ class ConvertSHC:
         density_water = GeoConstants.density_water
         density_earth = GeoConstants.density_earth
         radius_e = GeoConstants.radius_earth
+        GM = GeoConstants.GM
+        g_wmo = GeoConstants.g_wmo
 
-        if self.configuration.input_field_type is PhysicalDimensions.Dimensionless:
+        if field_type is PhysicalDimensions.Dimensionless:
             pass
 
-        elif self.configuration.input_field_type is PhysicalDimensions.EWH:
+        elif field_type is PhysicalDimensions.EWH:
             ln = ln[:lmax + 1]
             kl = np.array([(1 + ln[n]) / (2 * n + 1) for n in range(len(ln))]) * 3 * density_water / (
                     radius_e * density_earth)
 
             convert_mat *= kl
 
-        elif self.configuration.input_field_type is PhysicalDimensions.Density:
+        elif field_type is PhysicalDimensions.Density:
             ln = ln[:lmax + 1]
             kl = np.array([(1 + ln[n]) / (2 * n + 1) for n in range(len(ln))]) * 3 / (radius_e * density_earth)
 
             convert_mat *= kl
+
+        elif field_type is PhysicalDimensions.Geoid:
+            convert_mat /= radius_e
+
+        elif field_type is PhysicalDimensions.Gravity:
+            kl = np.array([n - 1 for n in range(lmax + 1)]) * (GM / radius_e ** 2)
+            convert_mat /= kl
+
+        elif field_type is PhysicalDimensions.VerticalDisplacement:
+            lnh, lnl = self.__get_love_number_h_and_l(lmax)
+
+            ln = ln[:lmax + 1]
+            kl = np.array([lnh[n] / (1 + ln[n]) for n in range(len(ln))]) * radius_e
+
+            convert_mat /= kl
+
+        elif field_type is PhysicalDimensions.Pressure:
+            termI = np.arange(lmax + 1)
+            term = 2 * termI + 1.
+            ln = ln[:lmax + 1]
+
+            kl = (radius_e * density_earth / 3) * (term / (1 + ln)) * g_wmo
+
+            convert_mat /= kl
 
         else:
             raise Exception
@@ -97,17 +127,6 @@ class ConvertSHC:
 
         assert self.configuration.ln is not None
         ln = self.configuration.ln
-
-        def _get_love_number_h_and_l():
-            LN = LoveNumber()
-
-            LN.configuration.set_lmax(lmax).set_type(LoveNumberType.VerticalDisplacement)  # h
-            ln_h = LN.get_Love_number()
-
-            LN.configuration.set_lmax(lmax).set_type(LoveNumberType.HorizontalDisplacement)  # l
-            ln_l = LN.get_Love_number()
-
-            return ln_h, ln_l
 
         density_water = GeoConstants.density_water
         density_earth = GeoConstants.density_earth
@@ -141,7 +160,7 @@ class ConvertSHC:
             convert_mat *= kl
 
         elif field_type is PhysicalDimensions.VerticalDisplacement:
-            lnh, lnl = _get_love_number_h_and_l()
+            lnh, lnl = self.__get_love_number_h_and_l(lmax)
 
             ln = ln[:lmax + 1]
             kl = np.array([lnh[n] / (1 + ln[n]) for n in range(len(ln))]) * radius_e
@@ -159,7 +178,7 @@ class ConvertSHC:
 
         elif field_type in (
                 PhysicalDimensions.HorizontalDisplacementNorth, PhysicalDimensions.HorizontalDisplacementEast):
-            lnh, lnl = _get_love_number_h_and_l()
+            lnh, lnl = self.__get_love_number_h_and_l(lmax)
 
             ln = ln[:lmax + 1]
             kl = np.array([lnl[n] / (1 + ln[n]) for n in range(len(ln))]) * radius_e
@@ -170,3 +189,15 @@ class ConvertSHC:
             raise Exception
 
         return convert_mat
+
+    @staticmethod
+    def __get_love_number_h_and_l(lmax):
+        LN = LoveNumber()
+
+        LN.configuration.set_lmax(lmax).set_type(LoveNumberType.VerticalDisplacement)  # h
+        ln_h = LN.get_Love_number()
+
+        LN.configuration.set_lmax(lmax).set_type(LoveNumberType.HorizontalDisplacement)  # l
+        ln_l = LN.get_Love_number()
+
+        return ln_h, ln_l
