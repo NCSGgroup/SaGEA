@@ -80,9 +80,14 @@ class SHC(CoreSHC):
         self.value = convert.apply_to(self.value)
         return self
 
-    def to_grid(self, grid_space=None):
+    def to_grid(self, grid_space=None, special_type: Enums.PhysicalDimensions = None):
         if grid_space is None:
             grid_space = int(180 / self.get_lmax())
+        assert special_type in (
+            None,
+            Enums.PhysicalDimensions.HorizontalDisplacementEast,
+            Enums.PhysicalDimensions.HorizontalDisplacementNorth,
+        )
 
         lat, lon = MathTool.get_global_lat_lon_range(grid_space)
 
@@ -90,7 +95,7 @@ class SHC(CoreSHC):
         har = Harmonic(lat, lon, lmax, option=1)
 
         cqlm, sqlm = self.get_cs2d()
-        grid_data = har.synthesis_for_csqlm(cqlm, sqlm)
+        grid_data = har.synthesis_for_csqlm(cqlm, sqlm, special_type=special_type)
         grid = GRID(grid_data, lat, lon, option=1)
 
         return grid
@@ -149,8 +154,14 @@ class GRID(CoreGRID):
     def __init__(self, grid, lat, lon, option=1):
         super().__init__(grid, lat, lon, option)
 
-    def to_SHC(self, lmax=None):
+    def to_SHC(self, lmax=None, special_type: Enums.PhysicalDimensions = None):
         grid_space = self.get_grid_space()
+
+        assert special_type in (
+            None,
+            Enums.PhysicalDimensions.HorizontalDisplacementEast,
+            Enums.PhysicalDimensions.HorizontalDisplacementNorth,
+        )
 
         if lmax is None:
             lmax = int(180 / grid_space)
@@ -160,7 +171,7 @@ class GRID(CoreGRID):
         har = Harmonic(lat, lon, lmax, option=1)
 
         grid_data = self.value
-        cqlm, sqlm = har.analysis_for_gqij(grid_data)
+        cqlm, sqlm = har.analysis_for_gqij(grid_data, special_type=special_type)
         shc = SHC(cqlm, sqlm)
 
         return shc
