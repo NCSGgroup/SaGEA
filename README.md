@@ -133,17 +133,17 @@ represents the number of sets, `nlat` and `nlon` represents the latitudes and th
 
 `.filter(*params)`: to apply a spatial filtering on the SHCs (under construction).
 
-`.leakage()`: to apply a leakage reduction.
+`.leakage(*params)`: to apply a leakage reduction.
 
-`.seismic()`: to apply a seismic correction.
+`.seismic(*params)`: to apply a seismic correction.
 
-`.de_aliasing()`: to fit and deduct long-term aliasing signals.
+`.de_aliasing(*params)`: to fit and deduct long-term aliasing signals.
 
-`.integral()`: to integral in globe or basin and get the results.
+`.integral(*params)`: to integral in globe or basin and get the results.
 
-`.limiter()`: to set all signals to 1 or 0 according to the threshold.
+`.limiter(*params)`: to set all signals to 1 or 0 according to the threshold.
 
-`.savefile()` to store as a file (`.nc`, `.hdf5`, etc.) locally.
+`.savefile(*params)` to store as a file (`.nc`, `.hdf5`, etc.) locally.
 
 Here we briefly provide an overview of the usages about data collection, post-processing, and error assessment.
 For detailed user manuals, please refer to http://under.construction.
