@@ -74,12 +74,36 @@ SaGEA provides comprehensive post-processing methods.
 For ease to use,
 we have packaged each method as a function of two data classes:
 
-1. `SHC`, representing spherical harmonic coefficients;
+1. `SHC`, representing spherical harmonic coefficients (SHCs);
 2. `GRID`, representing gridded data.
 
 Supporting that users may not be very familiar with the methods and principles
 we recommend calling the post-processing function through SHC or GRID instead of using them directly,
 as indicated by the circle in Fig. 1.
+
+Here are listed the attributes and some commonly used methods in `SHC()` and `GRID()`:
+
+attributes in `SHC()`
+: `.value`: 2-dimension `numpy.ndarray` that describes multiple sets of SHCs in shape of `(n, (lmax+1)^2)`, where `n`
+represents the number of sets, `lmax` represents the maximum degree of SHCs.
+The arrangement of SHCs in the second dimension
+is like `[C(0,0), S(1,1), C(1,0), C(1,1), S(2,2), S(2,1), C(2,0), C(2,1), C(2,2), S(3,3), ... ]`
+
+Methods in `SHC()`
+: `.is_series()`: to determine whether the stored SHCs are multiple sets.
+: `.get_lmax()`: to get the maximum degree/order of the SHCs.
+: `.get_degree_rms()`: to get degree-RMS.
+: `.replace_low_degs(*params)`: to replace low-degree SHCs with others.
+: `.filter(*params)`: to apply a spectral filtering on the SHCs.
+: `.convert_type(*params)`: to convert SHCs from one physical dimension to another.
+: `.geometric(*params)`: to apply a geometric correction on the SHCs.
+: `.de_background(*params)`: to deduct a background field.
+: `.add(*params)`: to add another `SHC()`
+: `.subtract(*params)`: to subtract another `SHC()`
+: `.expand(*params)`: to expand the stored SHCs as a linear trend to signals at time epochs (e.g., from GIA trend to
+signals).
+: `.synthesis(*params)`: to harmonic synthesis the stored SHCs into spatial distribution in optional physical dimensions.
+: `.to_grid(*params)`: pure harmonic synthesis.
 
 Here we briefly provide an overview of the usages about data collection, post-processing, and error assessment.
 For detailed user manuals, please refer to http://under.construction.
