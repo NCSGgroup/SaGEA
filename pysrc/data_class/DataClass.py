@@ -16,6 +16,7 @@ from pysrc.auxiliary.preference.EnumClasses import match_string
 
 from pysrc.post_processing.Love_number.LoveNumber import LoveNumber
 from pysrc.post_processing.convert_field_physical_quantity.ConvertSHC import ConvertSHC
+from pysrc.post_processing.de_aliasing.DeAliasing import DeAliasing
 from pysrc.post_processing.filter.GetSHCFilter import get_filter
 from pysrc.post_processing.geometric_correction.GeometricalCorrection import GeometricalCorrection
 from pysrc.post_processing.harmonic.Harmonic import Harmonic
@@ -323,6 +324,22 @@ class GRID(CoreGRID):
         sei.apply_to(self.value, lat=self.lat, lon=self.lon)
 
         return self
+
+    def de_aliasing(self, dates,
+                    s2: bool = False, p1: bool = False, s1: bool = False, k2: bool = False, k1: bool = False):
+        de_alias = DeAliasing()
+
+        de_alias.configuration.set_de_s2(s2),
+        de_alias.configuration.set_de_p1(p1),
+        de_alias.configuration.set_de_s1(s1),
+        de_alias.configuration.set_de_k2(k2),
+        de_alias.configuration.set_de_k1(k1),
+
+        year_frac = TimeTool.convert_date_format(
+            dates, input_type=TimeTool.DateFormat.ClassDate, output_type=TimeTool.DateFormat.YearFraction
+        )
+
+        self.value = de_alias.apply_to(self.value, year_frac)
 
     def integral(self, mask=None, average=True):
         if average:
