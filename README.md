@@ -90,7 +90,9 @@ The arrangement of SHCs in the second dimension
 is like `[C(0,0), S(1,1), C(1,0), C(1,1), S(2,2), S(2,1), C(2,0), C(2,1), C(2,2), S(3,3), ... ]`
 
 Methods in `SHC()`
+
 : `.is_series()`: to determine whether the stored SHCs are multiple sets.
+
 : `.get_lmax()`: to get the maximum degree/order of the SHCs.
 : `.get_degree_rms()`: to get degree-RMS.
 : `.replace_low_degs(*params)`: to replace low-degree SHCs with others.
