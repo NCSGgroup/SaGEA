@@ -98,12 +98,28 @@ Methods in `SHC()`
 : `.convert_type(*params)`: to convert SHCs from one physical dimension to another.
 : `.geometric(*params)`: to apply a geometric correction on the SHCs.
 : `.de_background(*params)`: to deduct a background field.
-: `.add(*params)`: to add another `SHC()`
-: `.subtract(*params)`: to subtract another `SHC()`
+: `.add(*params)`: to add another `SHC()`, e.g., that of GAD.
+: `.subtract(*params)`: to subtract another `SHC()`, e.g., that of GIA.
 : `.expand(*params)`: to expand the stored SHCs as a linear trend to signals at time epochs (e.g., from GIA trend to
 signals).
-: `.synthesis(*params)`: to harmonic synthesis the stored SHCs into spatial distribution in optional physical dimensions.
+: `.synthesis(*params)`: to harmonic synthesis the stored SHCs into spatial distribution in optional physical
+dimensions.
 : `.to_grid(*params)`: pure harmonic synthesis.
+
+attributes in `GRID()`
+: `.value`: 3-dimension `numpy.ndarray` that describes multiple sets of SHCs in shape of `(n, nlat, nlon)`, where `n`
+represents the number of sets, `nlat` and `nlon` represents the latitudes and the longitudes of grids.
+: `.lat`: 1-dimension `numpy.ndarray` that describes the geometry latitudes in unit degree.
+: `.lon`: 1-dimension `numpy.ndarray` that describes the geometry longitude in unit degree.
+
+Methods in `GRID()`
+: `.filter(*params)`: to apply a spatial filtering on the SHCs (under construction).
+: `.leakage()`: to apply a leakage reduction.
+: `.seismic()`: to apply a seismic correction.
+: `.de_aliasing()`: to fit and deduct long-term aliasing signals.
+: `.integral()`: to integral in globe or basin and get the results.
+: `.limiter()`: to set all signals to 1 or 0 according to the threshold.
+: `.savefile()` to store as a file (`.nc`, `.hdf5`, etc.) locally.
 
 Here we briefly provide an overview of the usages about data collection, post-processing, and error assessment.
 For detailed user manuals, please refer to http://under.construction.
