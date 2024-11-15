@@ -122,7 +122,7 @@ class VariableScale:
         if option == 0:
             assert self.harmonic is not None
 
-            gqij = self.harmonic.synthesis_for_csqlm(cqlm, sqlm)
+            gqij = self.harmonic.synthesis(cqlm, sqlm)
 
         else:
             gqij = cqlm
@@ -155,7 +155,7 @@ class VariableScale:
         print('done!')
 
         if option == 0:
-            return self.harmonic.analysis_for_gqij(gqij)
+            return self.harmonic.analysis(gqij)
 
         else:
             return gqij

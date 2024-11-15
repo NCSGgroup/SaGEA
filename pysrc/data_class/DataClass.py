@@ -1,3 +1,4 @@
+import copy
 import datetime
 import pathlib
 
@@ -15,6 +16,7 @@ from pysrc.auxiliary.preference.EnumClasses import match_string
 
 from pysrc.post_processing.Love_number.LoveNumber import LoveNumber
 from pysrc.post_processing.convert_field_physical_quantity.ConvertSHC import ConvertSHC
+from pysrc.post_processing.de_aliasing.DeAliasing import DeAliasing
 from pysrc.post_processing.filter.GetSHCFilter import get_filter
 from pysrc.post_processing.geometric_correction.GeometricalCorrection import GeometricalCorrection
 from pysrc.post_processing.harmonic.Harmonic import Harmonic
@@ -43,6 +45,10 @@ class SHC(CoreSHC):
         assert issubclass(type(other), CoreSHC)
 
         return SHC(self.value - other.value)
+
+    def get_degree_rms(self):
+        cqlm, sqlm = self.get_cs2d()
+        return MathTool.get_degree_rms(cqlm, sqlm)
 
     def convert_type(self, from_type=None, to_type=None):
         types = list(Enums.PhysicalDimensions)
@@ -80,9 +86,16 @@ class SHC(CoreSHC):
         self.value = convert.apply_to(self.value)
         return self
 
-    def to_grid(self, grid_space=None):
+    def to_grid(self, grid_space=None, special_type: Enums.PhysicalDimensions = None):
+        """pure synthesis"""
+
         if grid_space is None:
             grid_space = int(180 / self.get_lmax())
+        assert special_type in (
+            None,
+            Enums.PhysicalDimensions.HorizontalDisplacementEast,
+            Enums.PhysicalDimensions.HorizontalDisplacementNorth,
+        )
 
         lat, lon = MathTool.get_global_lat_lon_range(grid_space)
 
@@ -90,7 +103,7 @@ class SHC(CoreSHC):
         har = Harmonic(lat, lon, lmax, option=1)
 
         cqlm, sqlm = self.get_cs2d()
-        grid_data = har.synthesis_for_csqlm(cqlm, sqlm)
+        grid_data = har.synthesis(cqlm, sqlm, special_type=special_type)
         grid = GRID(grid_data, lat, lon, option=1)
 
         return grid
@@ -144,13 +157,38 @@ class SHC(CoreSHC):
         value = year_frac[:, None] @ trend[None, :]
         return SHC(value)
 
+    def synthesis(self, grid_space, from_type: Enums.PhysicalDimensions = None,
+                  to_type: Enums.PhysicalDimensions = None):
+
+        shc_copy = copy.deepcopy(self)
+
+        special_type = to_type if to_type in (
+            Enums.PhysicalDimensions.HorizontalDisplacementNorth,
+            Enums.PhysicalDimensions.HorizontalDisplacementEast) else None
+
+        shc_copy.convert_type(from_type=from_type, to_type=to_type)
+        grid = shc_copy.to_grid(grid_space=grid_space, special_type=special_type)
+
+        return grid
+
 
 class GRID(CoreGRID):
     def __init__(self, grid, lat, lon, option=1):
         super().__init__(grid, lat, lon, option)
 
-    def to_SHC(self, lmax=None):
+    def to_SHC(self, lmax=None, special_type: Enums.PhysicalDimensions = None):
         grid_space = self.get_grid_space()
+
+        assert special_type in (
+            None,
+            Enums.PhysicalDimensions.HorizontalDisplacementEast,
+            Enums.PhysicalDimensions.HorizontalDisplacementNorth,
+        )
+
+        if special_type in (
+                Enums.PhysicalDimensions.HorizontalDisplacementEast,
+                Enums.PhysicalDimensions.HorizontalDisplacementNorth):
+            assert False, "Horizontal Displacement is not supported yet."
 
         if lmax is None:
             lmax = int(180 / grid_space)
@@ -160,8 +198,18 @@ class GRID(CoreGRID):
         har = Harmonic(lat, lon, lmax, option=1)
 
         grid_data = self.value
-        cqlm, sqlm = har.analysis_for_gqij(grid_data)
+        cqlm, sqlm = har.analysis(grid_data, special_type=special_type)
         shc = SHC(cqlm, sqlm)
+
+        return shc
+
+    def analysis(self, lmax=None, from_type: Enums.PhysicalDimensions = None,
+                 to_type: Enums.PhysicalDimensions = None):
+
+        grid_copy = copy.deepcopy(self)
+
+        shc = grid_copy.to_SHC(lmax=lmax)
+        shc.convert_type(from_type=from_type, to_type=to_type)
 
         return shc
 
@@ -276,6 +324,22 @@ class GRID(CoreGRID):
         sei.apply_to(self.value, lat=self.lat, lon=self.lon)
 
         return self
+
+    def de_aliasing(self, dates,
+                    s2: bool = False, p1: bool = False, s1: bool = False, k2: bool = False, k1: bool = False):
+        de_alias = DeAliasing()
+
+        de_alias.configuration.set_de_s2(s2),
+        de_alias.configuration.set_de_p1(p1),
+        de_alias.configuration.set_de_s1(s1),
+        de_alias.configuration.set_de_k2(k2),
+        de_alias.configuration.set_de_k1(k1),
+
+        year_frac = TimeTool.convert_date_format(
+            dates, input_type=TimeTool.DateFormat.ClassDate, output_type=TimeTool.DateFormat.YearFraction
+        )
+
+        self.value = de_alias.apply_to(self.value, year_frac)
 
     def integral(self, mask=None, average=True):
         if average:
