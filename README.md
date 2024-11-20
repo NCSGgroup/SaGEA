@@ -466,9 +466,36 @@ For detailed user manuals, please refer to http://under.construction.
 [//]: # ()
 [//]: # (&#40;under construction&#41;)
 
-# 6. Additional Scientific Descriptions
+# 6. Contributing
 
-## 6.1 Data Collection
+(under construction)
+
+# 7. License
+
+MIT License
+
+Copyright (c) 2024 NCSG -- Numerical Computation and Satellite Geodesy research group
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+# 8. Additional Scientific Descriptions
+
+## 8.1 Data Collection
 
 GRACE and GRACE-FO level-2 products can be obtained at open source FTP server ftp://isdcftp.gfz-potsdam.de/.
 Level-2 products includes GSM, GAA, GAB, GAC, and GAD (The last four products are collectively referred to as GAX.),
@@ -491,7 +518,7 @@ which are given in fully normalized spherical harmonic coefficients (SHCs) of gr
 The most used GSM solutions are given by three processing centers, that is, Center for Space Research (CSR), University
 of Texas at Austin, Jet Propulsion Laboratory (JPL), NASA, and German Research for Geosciences (GFZ), German.
 
-## 6.2 Loading local GRACE level-2 products and replacing low-degree coefficients
+## 8.2 Loading local GRACE level-2 products and replacing low-degree coefficients
 
 GRACE level-2 GSM solutions lack the three degree-1 coefficients,
 which are proportional to geocenter motion and can not been ignored for a complete representation of the mass
@@ -512,7 +539,7 @@ such as satellite laser ranging (SLR).
 
 [//]: # (low-degree coefficients on given SHC.)
 
-## 6.3 Post-processing: Conversion between SHC and GRID
+## 8.3 Post-processing: Conversion between SHC and GRID
 
 GRACE level-2 products reflects the distribution of dimensionless geopotential,
 from which we can obtain the corresponding changes in gravity anomalies,
@@ -543,9 +570,9 @@ On the contrary, the corresponding SHC can also be obtained through spherical ha
 
 [//]: # (file `/pysrc/auxiliary/tools/MathTools.py`.)
 
-## 6.4 Post-processing: Corrections
+## 8.4 Post-processing: Corrections
 
-### 6.4.1 Low-degrees replacement
+### 8.4.1 Low-degrees replacement
 
 Due to the presumed Earth mass conservation and the on-orbit measuring mode,
 GRACE(-FO) has no ability to obtain the degree-0 and -1 terms of the gravity field (Wu et al., 2012).
@@ -562,7 +589,7 @@ SaGEA toolbox contains the following option to replace the low-degree terms of t
 - C20 terms given by Cheng & Ries (2017) and Loomis et al. (2020).
 - C30 terms given by Loomis et al. (2020).
 
-### 6.4.2 Filtering spherical harmonic coefficients
+### 8.4.2 Filtering spherical harmonic coefficients
 
 Due to the existence of high-order noise and correlation error in the GRACE solutions,
 filtering is a necessary step before apply it on some scientific studies (Wahr et al., 2006).
@@ -579,7 +606,7 @@ SaGEA toolbox contains the following filtering methods:
 - Fan filter by Zhang et al. (2009).
 - DDK filter by Kusche et al. (2007, 2009).
 
-### 6.4.3 Leakage Reduction
+### 8.4.3 Leakage Reduction
 
 Filters for GRACE can supress the noise at high degrees, but at the same time they could also weaken the signal as well.
 Spatially speaking, signal where it is strong would leak into some place where it is weaker, for example, the
@@ -609,7 +636,7 @@ SaGEA toolbox contains the following commonly used methods to correct the leakag
 - Data-driven (Vishwakarma et al., 2017).
 - Buffer zone (Chen et al., 2019)
 
-### 6.4.4 GIA Removal
+### 8.4.4 GIA Removal
 
 In the Earth’s gravity anomalies observed by GRACE(-FO), apart from the effects caused by surface mass migration, there
 are also influences from GIA driven redistribution of solid Earth mass, which cannot be identified and separated
@@ -625,7 +652,7 @@ including the following commonly used GIA models:
 - Geruo2013 by A et al. (2013).
 - Caron2018 by Caron et al. (2018).
 
-### 6.4.5 De-aliasing
+### 8.4.5 De-aliasing
 
 Due to imperfect tidal models (mainly ocean tides), monthly gravity field solutions from GRACE contain aliasing errors
 of frequencies much longer than 30 days, such as the S2 (approximately 161 days), P1 (approximately 171 days) and S1
@@ -636,7 +663,7 @@ as a major error source of the latest gravity product from GRACE(-FO), see Z. Li
 In SAGEA toolbox, either by the Fourier spectrum analysis or by the least square analysis, those aliasing frequency are
 identified and removed, and S1, S2, P1 are available options.
 
-### 6.4.6 Geometrical Correction
+### 8.4.6 Geometrical Correction
 
 The geometrical deviation of the actual Earth from the presumed sphere would lead to a bias when converting the
 geopotential into TWS (J. Li et al., 2017; Ditmar, 2018; Yang et al., 2022). Such bias would become increasingly
@@ -646,7 +673,7 @@ correction, which indeed consists of an ellipsoid correction and a topography co
 In SAGEA toolbox, the geometrical correction is implemented following the method of Yang et al. (2022), where one can
 easily switch it on or off.
 
-### 6.4.7 Seismic Correction
+### 8.4.7 Seismic Correction
 
 It is concluded by Chao & Liau (2019) that, the lowest earthquake magnitude threshold that can be detected by GRACE is
 the Mw 8.3. This also means, some of largest earthquakes could be directly modelled and removed from GRACE(-FO) monthly
@@ -659,7 +686,7 @@ Currently, the seismic events available in SaGEA contain Sumatra 2004, Nias 2005
 Tohoku-Oki 2011, Sumatra 2012 and Okhotsk 2013. On one hand, SaGEA will continue to update the available seismic events,
 and on the other hand, users can also edit their own list of seismic events for their need.
 
-### 6.4.8 GAD Recovery
+### 8.4.8 GAD Recovery
 
 In addition to the corrections that are universal and common for all regions, there is some other correction that is
 specific only for certain study, e.g., to study the global mean ocean mass (GMOM) change. To obtain the complete ocean
@@ -670,7 +697,7 @@ GAD (the monthly average of ocean bottom pressure anomalies), which we know as G
 In the SaGEA toolbox, the GAD model can be easily collected, just like the GRACE level-2 products. And such correction,
 which one can easily switch on or off, is also integrated into it.
 
-### 6.4.9 GMAM Correction
+### 8.4.9 GMAM Correction
 
 GMAM correction is proposed by Chen et al. (2019) to compensate the offset in Earth mass conservation due to the absence
 of global mean atmospheric mass (GMAM). Chen et al. (2019) found a constant annual phase lag(for about 10 deg) between
@@ -680,9 +707,9 @@ GRACE and Altimeter-Argo estimates of GMOM changes. By removing GMAM from the GR
 In SaGEA toolbox, the GAA model can be also easily collected, and the corresponding correction, which one can easily
 switch on or off, is integrated into SaGEA toolbox.
 
-## 6.5 Post-processing: Spatial and temporal analysis
+## 8.5 Post-processing: Spatial and temporal analysis
 
-### 6.5.1 Spatial analysis
+### 8.5.1 Spatial analysis
 
 Spatial analysis mainly indicates the extraction of basin-scale variability,
 like TWS (Total Water Storage) changes.
@@ -699,7 +726,7 @@ there are differences in practice due to the loss of spatial/spectral conversion
 SaGEA provides both of the two approaches,
 and users can choose them according to their needs.
 
-### 6.5.2 Temporal analysis
+### 8.5.2 Temporal analysis
 
 The seasonality in time-series of GRACE(-FO) based mass change, i.e.,
 the secular trend, inter-annual periodic signal and seasonal periodic signals,
@@ -717,9 +744,9 @@ as heterogeneous and uniform.
 Further, WLS makes sense since SaGEA is able to provide the error information, otherwise WLS should be disabled.
 Another general tool, the Fourier analysis, is also able to obtain the seasonality other than a priori information.
 
-## 6.6 Error assessment
+## 8.6 Error assessment
 
-### 6.6.1 Error-I
+### 8.6.1 Error-I
 
 Due to the imperfect background models (Hauk and Pail, 2018; Yang et al., 2021) and on-board instrument error (
 Bandikova
@@ -733,7 +760,7 @@ the formal error, or the variance-covariance matrix,
 needs to be propagated to support uncertainty estimation of the level-3 product.
 Such kind of error is indicated as Error-I and integrated in SaGEA program.
 
-### 6.6.2 Error-II
+### 8.6.2 Error-II
 
 Besides the official GRACE data producers,
 multiple producers are routinely producing level-2 solutions and contributing them to the International Centre for
@@ -746,7 +773,7 @@ As the most popular technique,
 the TCH (Three-Cornered Hat, Ferreira et al., 2016; Chen et al., 2021) is integrated in SaGEA to consider the Error-II
 of desired variables.
 
-### 6.6.3 Error-III
+### 8.6.3 Error-III
 
 This category of error might be caused by the non-uniqueness of the post-processing chain and the involvement of
 corrections with less known uncertaintiesm.
@@ -757,34 +784,6 @@ To quantify it, a large number of ensembles, which reflect various postprocessin
 As the advanced post-processing module are provided in SaGEA, a comprehensive quantification of Error-III at a diverse
 and flexible option is possible.
 Therefore, based on the post-processing module, SaGEA also provides a quantization program for Error-III.
-
-# 7. Contributing
-
-(under construction)
-
-# 8. License
-
-MIT License
-
-Copyright (c) 2024 NCSG -- Numerical Computation and Satellite Geodesy research group
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
 
 # Reference
 
