@@ -643,6 +643,22 @@ class MathTool:
 
         return rms
 
+    @staticmethod
+    def get_degree_rss(cqlm, sqlm):
+        assert np.shape(cqlm) == np.shape(sqlm)
+
+        shape = np.shape(cqlm)
+        lmax = np.shape(cqlm)[1] - 1
+
+        rss = np.zeros((shape[0], lmax + 1))
+
+        for i in range(lmax + 1):
+            rss_this_degree = np.sum(cqlm[:, i, :i + 1] ** 2 + sqlm[:, i, :i + 1] ** 2, axis=1)
+            rss_this_degree = np.sqrt(rss_this_degree)
+            rss[:, i] = rss_this_degree
+
+        return rss
+
 
 if __name__ == '__main__':
     def a(nn, mm):
