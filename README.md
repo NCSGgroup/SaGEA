@@ -108,186 +108,323 @@ signals).
 Here we briefly provide an overview of the usages about data collection, post-processing, and error assessment.
 For detailed user manuals, please refer to http://under.construction.
 
-## 5.1 Data Collection
+[//]: # (## 5.1 Data Collection)
 
-Path `/pysrc/data_collection/` includes the source file to access remote servers and collect GRACE level-2 products
-from the above FTP server,
-including the above GSM, GAX, and necessary low-degree files for replacing and other auxiliary files.
-It is recommended to control this program through an external configuration file.
-A demo program `/demo/data_collecting/demoCollectL2Data.py` gives an example to collect GRACE level-2 files by a
-configuration file `/setting/data_collecting/CollectL2Data.json`.
-Users can simply modify the parameters in the configuration file and run the above program to achieve automatic
-collection of the corresponding files.
-This demo program also gives an example to download the low-degree files. Users can simply run the above program to
-achieve automatic collections.
+[//]: # ()
+[//]: # (Path `/pysrc/data_collection/` includes the source file to access remote servers and collect GRACE level-2 products)
 
-## 5.2 Class SHC
+[//]: # (from the above FTP server,)
 
-### 5.2.1 Creation
+[//]: # (including the above GSM, GAX, and necessary low-degree files for replacing and other auxiliary files.)
 
-Class `SHC` is used to store spherical harmonic coefficients (SHCs),
-and can store one or more sets of data.
-SHC is the object returned by `load_SHC()` at `./pysrc/auxiliary/load_file/LoadL2SH.py`,
-or users can also manually create it by entering the coefficients `SHC(clm, slm)`.
+[//]: # (It is recommended to control this program through an external configuration file.)
 
-Its attribute `.value` is a two-dimensional `numpy.ndarray` in shape of `(n = num of sets, m = (max_degree + 1)^2)`.
-Use `.is_series()` to determine whether the stored data is multiple sets, i.e., whether `n == 1`.
+[//]: # (A demo program `/demo/data_collecting/demoCollectL2Data.py` gives an example to collect GRACE level-2 files by a)
 
-### 5.2.2 Low-degrees replacement
+[//]: # (configuration file `/setting/data_collecting/CollectL2Data.json`.)
 
-The low-degree coefficients (degree-1, c20, etc.) of GRACE level-2 products usually need to be replaced by another
-independent measurement.
-Use `.replace_low_degs(dates_begin: iter, dates_end: iter, low_deg: dict,
-deg1: bool, c20: bool, c30: bool)` to replace the low-degree coefficients.
-Parameters `dates_begin` and `dates_end` should describe the start and end times of `.value`, which is also given
-by `load_SHC()` at `./pysrc/auxiliary/load_file/LoadL2SH.py`,
-and parameter `low_deg` should be the replaced coefficients given as an instance of `dict`,
-it is highly recommended to get it through `load_low_degs()` at `pysrc/auxiliary/load_file/LoadL2LowDeg.py`,
-and boolean parameters `deg1`, `c20`, `c30` control whether to replace corresponding coefficients.
+[//]: # (Users can simply modify the parameters in the configuration file and run the above program to achieve automatic)
 
-### 5.2.3 Addition and subtraction
+[//]: # (collection of the corresponding files.)
 
-`SHC` can implement addition and subtraction with another instance through the internal implementation of `__add__()`
-and `__sub__()`.
-The other instance that are added or subtracted can be sequences of equal length or a single group.
-If it is a single sequence,
-it will be calculated according to the broadcast principle of `numpy.ndarry`.
-However,
-in order to cope with different situations,
-such as users only needing to add or subtract data from a certain degree to another (like GAX recovery, GMAM correction,
-et al.),
-it is recommended using the function `.add(other: SHC, lbegin: int, lend :int)`
-or `.subreact(other: SHC, lbegin: int, lend :int)` to additionally customize the degree from start (`lbegin`) to
-finish (`lend`).
+[//]: # (This demo program also gives an example to download the low-degree files. Users can simply run the above program to)
 
-### 5.2.4 Time dimension expansion
+[//]: # (achieve automatic collections.)
 
-Some geophysical signals,
-such as the GIA model,
-are given as long-term trends.
-In order to calculate with the monthly signal,
-it is necessary to project it as the signal for each month.
-`.expand(time: iter)` can project its value as a linear trend into multiple sets of signal in each time epoch,
-and return a new SHC instance.
-Note that `.expand(time: iter)` is only supported in single-group SHC instances (i.e., `.is_series()` is `True`)
+[//]: # ()
+[//]: # (## 5.2 Class SHC)
 
-### 5.2.5 Filtering
+[//]: # ()
+[//]: # (### 5.2.1 Creation)
 
-Use `.filter(method: str, param: tuple)` to implement spectral domain filters.
-The currently supported spectral filters and their usages are:
+[//]: # ()
+[//]: # (Class `SHC` is used to store spherical harmonic coefficients &#40;SHCs&#41;,)
 
-1. **Decorrelation of SlidingWindow (Swenson2006):**
-   `.filter(method="slidingwindow_swenosn2006", param=(n: int, m: int, min_length: int, A: int, K: int))`, see Swenson
-   and Wahr (2006);
-2. **Decorrelation of SlidingWindow (Stable):**
-   `.filter(method="slidingwindow_stable", param=(n: int, m: int, window_length: int))`, see Swenson and Wahr (2006).
-3. **Decorrelation of PnMm:**
-   `.filter(method="pnmm", param=(n:int, m:int))`, see Chen et al. (2007);
-4. **Gaussian Filter:**
-   `.filter(method="gs", param=(radius: int, ))` see Wahr et al. (1998);
-5. **Non-isotropic Gaussian Filter:**
-   `.filter(method="ngs", param=(radius_1: int, radius_2: int, m_0: int))`, see Han et al. (2005);
-6. **Fan Filter:**
-   `.filter(method="fan", param=(radius_1: int, radius_2: int))` see Zhang et al. (2009);
-7. **DDK Filter:**
-   `.filter(method="ddk", param=(ddk_id: int, ))`, see Kusche et al.(2007; 2009).
+[//]: # (and can store one or more sets of data.)
 
-### 5.2.6 Geometrical Correction
+[//]: # (SHC is the object returned by `load_SHC&#40;&#41;` at `./pysrc/auxiliary/load_file/LoadL2SH.py`,)
 
-Use `.geometric(assumption: str)` to apply the geometrical correction on the SHCs, and the parameter `assumption`
-can be chosed as `"sphere"`, `"ellipsoid"` or `"actualEarth"` to support different types of corrections, see Yang et
-al. (2022).
+[//]: # (or users can also manually create it by entering the coefficients `SHC&#40;clm, slm&#41;`.)
 
-### 5.2.7 Harmonic Synthesis
+[//]: # ()
+[//]: # (Its attribute `.value` is a two-dimensional `numpy.ndarray` in shape of `&#40;n = num of sets, m = &#40;max_degree + 1&#41;^2&#41;`.)
 
-Spherical harmonic synthesis (HMS) is the step of converting (dimensionless) SHCs into grid data of different physical
-types (such as equivalent water height, EWH, or pressure, etc.).
-Here `SHC` divide it into two steps to implement:
+[//]: # (Use `.is_series&#40;&#41;` to determine whether the stored data is multiple sets, i.e., whether `n == 1`.)
 
-1. **Convert physical type:**
+[//]: # ()
+[//]: # (### 5.2.2 Low-degrees replacement)
 
-   Use `.convert_type(from_type: str, to_type: str)` to convert the dimensions of coefficients in SHC.
-   Currently supported types are:
-   `"dimensionless"`, `"EWH"`, `"Pressure"`, `"Density"`, `"Geoid"`, `"Gravity"`, `"HorizontalDisplacementEast"`,
-   `"HorizontalDisplacementNorth"` and `"VerticalDisplacement"`.
+[//]: # ()
+[//]: # (The low-degree coefficients &#40;degree-1, c20, etc.&#41; of GRACE level-2 products usually need to be replaced by another)
 
-2. **Pure synthesis:**
+[//]: # (independent measurement.)
 
-   Use `.to_grid(grid_space: int)` to make an HMS on the SHCs, and a new instance of `GRID` will be returned.
-   For more detail of class `GRID` please refer to the next section.
+[//]: # (Use `.replace_low_degs&#40;dates_begin: iter, dates_end: iter, low_deg: dict,)
 
-## 5.3 Class GRID
+[//]: # (deg1: bool, c20: bool, c30: bool&#41;` to replace the low-degree coefficients.)
 
-### 5.3.1 Creation
+[//]: # (Parameters `dates_begin` and `dates_end` should describe the start and end times of `.value`, which is also given)
 
-Class `GRID` is used to store spatial gridded data,
-`GRID()` can also store one or more sets of data.
-SHC is the object returned by `SHC().to_grid()`,
-or users can also manually create it by entering the coefficients `GRID(value, lat, lon)`.
+[//]: # (by `load_SHC&#40;&#41;` at `./pysrc/auxiliary/load_file/LoadL2SH.py`,)
 
-Its attribute `.value` in a 3-dimension `numpy.ndarray` in shape of `(num, nlat, nlon)`,
-with first dimension points to the first set of data, while the second and the third point to the number of latitude and
-longitude, respectively.
-Thus `GRID()` requires attributes `.lat` and `.lon` that represent geographic latitude and longitude sequences (in unit
-of degree).
-Use `.is_series()` to determine whether the stored data is multiple sets, i.e., whether `num == 1`.
+[//]: # (and parameter `low_deg` should be the replaced coefficients given as an instance of `dict`,)
 
-### 5.3.2 Filtering
+[//]: # (it is highly recommended to get it through `load_low_degs&#40;&#41;` at `pysrc/auxiliary/load_file/LoadL2LowDeg.py`,)
 
-(under construction)
+[//]: # (and boolean parameters `deg1`, `c20`, `c30` control whether to replace corresponding coefficients.)
 
-Most GRACE filters are designed for spectral domain signals, i.e., they filter SHCs.
-While there are still some practical filters implemented in the spatial domain, such as Yi et al. (2021) and Yang et
-al. (2024).
-Thus `GRID()` provides filtering method to do such kinds of spatial filters,
-and the usage is similar with that in `SHC()`:
-Use `.filter(method: str, param: tuple)` to perform relevant spatial filtering.
+[//]: # ()
+[//]: # (### 5.2.3 Addition and subtraction)
 
-### 5.3.3 Seismic Correction
+[//]: # ()
+[//]: # (`SHC` can implement addition and subtraction with another instance through the internal implementation of `__add__&#40;&#41;`)
 
-Use `.seismic(date: iter, events: pathlib.Path)` to perform the seismic correction with several seismic events (in json
-file) given by users, see Tang et al. (2020).
-Parameters `dates` and `events` are required,
-with the former describes the times of `.value`,
-and the latter describes the direction of the json file that describes the seismic events.
-Path `setting/post_processing/earthquakes.json` provided several preset events,
-and users can add other events later or specify another file path.
+[//]: # (and `__sub__&#40;&#41;`.)
 
-### 5.3.4 Leakage Correction
+[//]: # (The other instance that are added or subtracted can be sequences of equal length or a single group.)
 
-Use `.leakage(method: str, basin: np.ndarray, filter_type: str, filter_params: tuple, lmax: int, **params)` to deduct
-the leakage effect caused by the spectral truncation and filtering.
+[//]: # (If it is a single sequence,)
 
-The currently supported spectral filters and their usages are:
+[//]: # (it will be calculated according to the broadcast principle of `numpy.ndarry`.)
 
-1. **"iterative"**, see Wahr et al. (1998);
-2. **"addictive"**, see Klees et al. (2007);
-3. **"multiplicative"**, see Longuevergne et al. (2010);
-4. **"scaling"**, see Landerer et al. (2012);
-5. **"scaling grid"**, see Landerer et al. (2012);
-6. **"forward modeling"**, see Chen et al. (2015);
-7. **"data_driven"**, see Vishwakarma et al. (2017);
-8. **"buffer_zone"**, see Chen et al. (2019).
+[//]: # (However,)
 
-Unlike the spectral filters, there are significant differences in the parameters required for different methods.
-Please refer to the user's manual (under contraction) or code comments for more details.
+[//]: # (in order to cope with different situations,)
 
-### 5.3.5 Harmonic Analysis
+[//]: # (such as users only needing to add or subtract data from a certain degree to another &#40;like GAX recovery, GMAM correction,)
 
-Use `.to_SHC(lmax: int)` to perform a harmonic analysis (HMA) on the gridded data into SHCs with maximum degree
-of `lmax`, and an instance of `SHC` will be returned.
+[//]: # (et al.&#41;,)
 
-### 5.3.6 Output files
+[//]: # (it is recommended using the function `.add&#40;other: SHC, lbegin: int, lend :int&#41;`)
 
-Use `.savefile(filepath: pathlib.Path, time_dim, **params)` to store gridded data in the given path,
-and three formats of `.npz`, `.nc`, and `.hdf5` are supported for now.
-Parameter `time_dim` is the time dimension and needs to be consistent with the length of the first dimension
-of `.value`, and users can input additional parameters `value_description: str` to add descriptions or comments to the
-data in saved file.
+[//]: # (or `.subreact&#40;other: SHC, lbegin: int, lend :int&#41;` to additionally customize the degree from start &#40;`lbegin`&#41; to)
 
-## 5.4. Error Assessment
+[//]: # (finish &#40;`lend`&#41;.)
 
-(under construction)
+[//]: # ()
+[//]: # (### 5.2.4 Time dimension expansion)
+
+[//]: # ()
+[//]: # (Some geophysical signals,)
+
+[//]: # (such as the GIA model,)
+
+[//]: # (are given as long-term trends.)
+
+[//]: # (In order to calculate with the monthly signal,)
+
+[//]: # (it is necessary to project it as the signal for each month.)
+
+[//]: # (`.expand&#40;time: iter&#41;` can project its value as a linear trend into multiple sets of signal in each time epoch,)
+
+[//]: # (and return a new SHC instance.)
+
+[//]: # (Note that `.expand&#40;time: iter&#41;` is only supported in single-group SHC instances &#40;i.e., `.is_series&#40;&#41;` is `True`&#41;)
+
+[//]: # ()
+[//]: # (### 5.2.5 Filtering)
+
+[//]: # ()
+[//]: # (Use `.filter&#40;method: str, param: tuple&#41;` to implement spectral domain filters.)
+
+[//]: # (The currently supported spectral filters and their usages are:)
+
+[//]: # ()
+[//]: # (1. **Decorrelation of SlidingWindow &#40;Swenson2006&#41;:**)
+
+[//]: # (   `.filter&#40;method="slidingwindow_swenosn2006", param=&#40;n: int, m: int, min_length: int, A: int, K: int&#41;&#41;`, see Swenson)
+
+[//]: # (   and Wahr &#40;2006&#41;;)
+
+[//]: # (2. **Decorrelation of SlidingWindow &#40;Stable&#41;:**)
+
+[//]: # (   `.filter&#40;method="slidingwindow_stable", param=&#40;n: int, m: int, window_length: int&#41;&#41;`, see Swenson and Wahr &#40;2006&#41;.)
+
+[//]: # (3. **Decorrelation of PnMm:**)
+
+[//]: # (   `.filter&#40;method="pnmm", param=&#40;n:int, m:int&#41;&#41;`, see Chen et al. &#40;2007&#41;;)
+
+[//]: # (4. **Gaussian Filter:**)
+
+[//]: # (   `.filter&#40;method="gs", param=&#40;radius: int, &#41;&#41;` see Wahr et al. &#40;1998&#41;;)
+
+[//]: # (5. **Non-isotropic Gaussian Filter:**)
+
+[//]: # (   `.filter&#40;method="ngs", param=&#40;radius_1: int, radius_2: int, m_0: int&#41;&#41;`, see Han et al. &#40;2005&#41;;)
+
+[//]: # (6. **Fan Filter:**)
+
+[//]: # (   `.filter&#40;method="fan", param=&#40;radius_1: int, radius_2: int&#41;&#41;` see Zhang et al. &#40;2009&#41;;)
+
+[//]: # (7. **DDK Filter:**)
+
+[//]: # (   `.filter&#40;method="ddk", param=&#40;ddk_id: int, &#41;&#41;`, see Kusche et al.&#40;2007; 2009&#41;.)
+
+[//]: # ()
+[//]: # (### 5.2.6 Geometrical Correction)
+
+[//]: # ()
+[//]: # (Use `.geometric&#40;assumption: str&#41;` to apply the geometrical correction on the SHCs, and the parameter `assumption`)
+
+[//]: # (can be chosed as `"sphere"`, `"ellipsoid"` or `"actualEarth"` to support different types of corrections, see Yang et)
+
+[//]: # (al. &#40;2022&#41;.)
+
+[//]: # ()
+[//]: # (### 5.2.7 Harmonic Synthesis)
+
+[//]: # ()
+[//]: # (Spherical harmonic synthesis &#40;HMS&#41; is the step of converting &#40;dimensionless&#41; SHCs into grid data of different physical)
+
+[//]: # (types &#40;such as equivalent water height, EWH, or pressure, etc.&#41;.)
+
+[//]: # (Here `SHC` divide it into two steps to implement:)
+
+[//]: # ()
+[//]: # (1. **Convert physical type:**)
+
+[//]: # ()
+[//]: # (   Use `.convert_type&#40;from_type: str, to_type: str&#41;` to convert the dimensions of coefficients in SHC.)
+
+[//]: # (   Currently supported types are:)
+
+[//]: # (   `"dimensionless"`, `"EWH"`, `"Pressure"`, `"Density"`, `"Geoid"`, `"Gravity"`, `"HorizontalDisplacementEast"`,)
+
+[//]: # (   `"HorizontalDisplacementNorth"` and `"VerticalDisplacement"`.)
+
+[//]: # ()
+[//]: # (2. **Pure synthesis:**)
+
+[//]: # ()
+[//]: # (   Use `.to_grid&#40;grid_space: int&#41;` to make an HMS on the SHCs, and a new instance of `GRID` will be returned.)
+
+[//]: # (   For more detail of class `GRID` please refer to the next section.)
+
+[//]: # ()
+[//]: # (## 5.3 Class GRID)
+
+[//]: # ()
+[//]: # (### 5.3.1 Creation)
+
+[//]: # ()
+[//]: # (Class `GRID` is used to store spatial gridded data,)
+
+[//]: # (`GRID&#40;&#41;` can also store one or more sets of data.)
+
+[//]: # (SHC is the object returned by `SHC&#40;&#41;.to_grid&#40;&#41;`,)
+
+[//]: # (or users can also manually create it by entering the coefficients `GRID&#40;value, lat, lon&#41;`.)
+
+[//]: # ()
+[//]: # (Its attribute `.value` in a 3-dimension `numpy.ndarray` in shape of `&#40;num, nlat, nlon&#41;`,)
+
+[//]: # (with first dimension points to the first set of data, while the second and the third point to the number of latitude and)
+
+[//]: # (longitude, respectively.)
+
+[//]: # (Thus `GRID&#40;&#41;` requires attributes `.lat` and `.lon` that represent geographic latitude and longitude sequences &#40;in unit)
+
+[//]: # (of degree&#41;.)
+
+[//]: # (Use `.is_series&#40;&#41;` to determine whether the stored data is multiple sets, i.e., whether `num == 1`.)
+
+[//]: # ()
+[//]: # (### 5.3.2 Filtering)
+
+[//]: # ()
+[//]: # (&#40;under construction&#41;)
+
+[//]: # ()
+[//]: # (Most GRACE filters are designed for spectral domain signals, i.e., they filter SHCs.)
+
+[//]: # (While there are still some practical filters implemented in the spatial domain, such as Yi et al. &#40;2021&#41; and Yang et)
+
+[//]: # (al. &#40;2024&#41;.)
+
+[//]: # (Thus `GRID&#40;&#41;` provides filtering method to do such kinds of spatial filters,)
+
+[//]: # (and the usage is similar with that in `SHC&#40;&#41;`:)
+
+[//]: # (Use `.filter&#40;method: str, param: tuple&#41;` to perform relevant spatial filtering.)
+
+[//]: # ()
+[//]: # (### 5.3.3 Seismic Correction)
+
+[//]: # ()
+[//]: # (Use `.seismic&#40;date: iter, events: pathlib.Path&#41;` to perform the seismic correction with several seismic events &#40;in json)
+
+[//]: # (file&#41; given by users, see Tang et al. &#40;2020&#41;.)
+
+[//]: # (Parameters `dates` and `events` are required,)
+
+[//]: # (with the former describes the times of `.value`,)
+
+[//]: # (and the latter describes the direction of the json file that describes the seismic events.)
+
+[//]: # (Path `setting/post_processing/earthquakes.json` provided several preset events,)
+
+[//]: # (and users can add other events later or specify another file path.)
+
+[//]: # ()
+[//]: # (### 5.3.4 Leakage Correction)
+
+[//]: # ()
+[//]: # (Use `.leakage&#40;method: str, basin: np.ndarray, filter_type: str, filter_params: tuple, lmax: int, **params&#41;` to deduct)
+
+[//]: # (the leakage effect caused by the spectral truncation and filtering.)
+
+[//]: # ()
+[//]: # (The currently supported spectral filters and their usages are:)
+
+[//]: # ()
+[//]: # (1. **"iterative"**, see Wahr et al. &#40;1998&#41;;)
+
+[//]: # (2. **"addictive"**, see Klees et al. &#40;2007&#41;;)
+
+[//]: # (3. **"multiplicative"**, see Longuevergne et al. &#40;2010&#41;;)
+
+[//]: # (4. **"scaling"**, see Landerer et al. &#40;2012&#41;;)
+
+[//]: # (5. **"scaling grid"**, see Landerer et al. &#40;2012&#41;;)
+
+[//]: # (6. **"forward modeling"**, see Chen et al. &#40;2015&#41;;)
+
+[//]: # (7. **"data_driven"**, see Vishwakarma et al. &#40;2017&#41;;)
+
+[//]: # (8. **"buffer_zone"**, see Chen et al. &#40;2019&#41;.)
+
+[//]: # ()
+[//]: # (Unlike the spectral filters, there are significant differences in the parameters required for different methods.)
+
+[//]: # (Please refer to the user's manual &#40;under contraction&#41; or code comments for more details.)
+
+[//]: # ()
+[//]: # (### 5.3.5 Harmonic Analysis)
+
+[//]: # ()
+[//]: # (Use `.to_SHC&#40;lmax: int&#41;` to perform a harmonic analysis &#40;HMA&#41; on the gridded data into SHCs with maximum degree)
+
+[//]: # (of `lmax`, and an instance of `SHC` will be returned.)
+
+[//]: # ()
+[//]: # (### 5.3.6 Output files)
+
+[//]: # ()
+[//]: # (Use `.savefile&#40;filepath: pathlib.Path, time_dim, **params&#41;` to store gridded data in the given path,)
+
+[//]: # (and three formats of `.npz`, `.nc`, and `.hdf5` are supported for now.)
+
+[//]: # (Parameter `time_dim` is the time dimension and needs to be consistent with the length of the first dimension)
+
+[//]: # (of `.value`, and users can input additional parameters `value_description: str` to add descriptions or comments to the)
+
+[//]: # (data in saved file.)
+
+[//]: # ()
+[//]: # (## 5.4. Error Assessment)
+
+[//]: # ()
+[//]: # (&#40;under construction&#41;)
 
 # 6. Additional Scientific Descriptions
 
