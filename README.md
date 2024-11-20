@@ -83,7 +83,7 @@ as indicated by the circle in Fig. 1.
 
 Here are listed the attributes and some commonly used methods in `SHC()` and `GRID()`:
 
-**attributes in `SHC()`**
+**Attributes in `SHC()`**
 
 `.value`: 2-dimension `numpy.ndarray` that describes multiple sets of SHCs in shape of `(n, (lmax+1)^2)`, where `n`
 represents the number of sets, `lmax` represents the maximum degree of SHCs.
@@ -120,7 +120,7 @@ dimensions.
 
 `.to_grid(*params)`: pure harmonic synthesis.
 
-**attributes in `GRID()`**
+**Attributes in `GRID()`**
 
 `.value`: 3-dimension `numpy.ndarray` that describes multiple sets of SHCs in shape of `(n, nlat, nlon)`, where `n`
 represents the number of sets, `nlat` and `nlon` represents the latitudes and the longitudes of grids.
