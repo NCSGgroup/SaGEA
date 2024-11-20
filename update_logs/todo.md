@@ -9,11 +9,11 @@
 
 ## Data collection
 
--[ ] Collection for GLDAS products.
+-[x] Collection for GLDAS products.
 -[ ] Collection for ITSG Covariance products.
 
 ## Others
 
--[x] SHC method: get degree-RMS.
+-[x] SHC method: get degree-RMS/RSS.
 -[ ] Validations for error-I, -II and -III.
 -[ ] Separate plotting codes.

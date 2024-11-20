@@ -32,7 +32,7 @@ Use these coded to download the dependencies:
 
 `python -m pip install --upgrade pip==24.3.1`
 
-`pip install -r requirements.txt`
+`python -m pip install -r requirements.txt`
 
 To ensure the successful running and validation of programs,
 please collect the corresponding auxiliary files and verification files at
