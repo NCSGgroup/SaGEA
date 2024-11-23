@@ -1,7 +1,7 @@
 Cartopy==0.22.0
 cmaps==1.0.5
 geopandas==0.14.4
-h5py==3.6.0
+h5py==3.12.1
 matplotlib==3.5.1
 netCDF4==1.7.2
 numpy==1.22.4
