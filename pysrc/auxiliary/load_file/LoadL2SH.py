@@ -139,6 +139,8 @@ def load_SHC(*filepath, key: str, lmax: int, lmcs_in_queue=None, get_dates=False
 
         elif filepath[0].is_dir():
             file_list = FileTool.get_files_in_dir(filepath[0], sub=True)
+            file_list.sort()
+
             files_to_load = []
             for i in range(len(file_list)):
                 this_begin_date, this_end_date = match_dates_from_filename(file_list[i].name)
