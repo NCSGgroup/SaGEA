@@ -1,4 +1,5 @@
 import os
+import ssl
 
 import wget
 
@@ -29,7 +30,19 @@ def demo():
         local_path = FileTool.get_project_dir(f"temp/{filename}.zip")
 
         print(f"downloading: {url}")
-        wget.download(url, str(local_path), bar=bar)
+
+        try:
+            wget.download(url, str(local_path), bar=bar)
+        except Exception as e:
+            if e.args[0].errno == 1:
+                ssl._create_default_https_context = ssl._create_unverified_context
+                wget.download(url, str(local_path), bar=bar)
+            else:
+                raise e
+        else:
+            pass
+
+
         print()
 
         print(f"unzipping: {local_path} ...")
