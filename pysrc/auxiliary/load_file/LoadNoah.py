@@ -71,6 +71,7 @@ def load_GLDAS_TWS(begin_date: datetime.date = None, end_date: datetime.date = N
 
     filedir = FileTool.get_project_dir(relative=True) / 'data/Noah2.1'
     filepaths_list = list(filedir.iterdir())
+    filepaths_list.sort()
 
     grids = []
     times = []
