@@ -10,3 +10,4 @@ shapely==2.0.0
 tqdm==4.66.3
 wget==3.2
 requests==2.32.3
+pandas==2.2.3

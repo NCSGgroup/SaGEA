@@ -1,24 +1,12 @@
-import datetime
-from enum import Enum
-
 import numpy as np
+from pandas.core.dtypes.inference import is_number
 from tqdm import trange
 
-from pysrc.auxiliary.load_file.LoadL2SH import LoadL2SH
-from pysrc.auxiliary.scripts.PlotGrids import plot_grids
-from pysrc.auxiliary.aux_tool.FileTool import FileTool
 from pysrc.auxiliary.aux_tool.MathTool import MathTool
-from pysrc.auxiliary.aux_tool.TimeTool import TimeTool
-from pysrc.post_processing.Love_number.LoveNumber import LoveNumber
-from pysrc.post_processing.convert_field_physical_quantity.ConvertSHC import ConvertSHC
+from pysrc.auxiliary.preference.EnumClasses import VaryRadiusWay
 from pysrc.post_processing.harmonic.Harmonic import Harmonic
 
 from pysrc.auxiliary.preference.Constants import GeoConstants
-
-
-class VaryRadiusWay(Enum):
-    sin = 1
-    sin2 = 2
 
 
 def getPsi(sp, colat, lon):
@@ -51,18 +39,29 @@ class VariableScale:
     This class is to smooth grids by applying a spatial convolution with a variable-scale anisotropy Gaussian kernel.
     """
 
-    def __init__(self, r_min, r_max=None, sigma=None, harmonic: Harmonic = None,
-                 vary_radius_mode: VaryRadiusWay = VaryRadiusWay.sin):
+    def __init__(self, r_min, r_max=None, sigma2=None, vary_radius_mode: VaryRadiusWay = None,
+                 harmonic: Harmonic = None):
 
         if r_max is None:
             r_max = r_min
 
-        if sigma is None:
-            sigma = np.array([[1, 0], [0, 1]])
+        if sigma2 is None:
+            sigma2 = np.array([[1, 0], [0, 1]])
+        else:
+            if is_number(sigma2):
+                sigma2 = np.array([[1, 0], [0, sigma2]])
+            elif type(sigma2) in (np.ndarray, np.matrix):
+                sigma2 = np.array(sigma2)
+            else:
+                raise ValueError("sigma2 must be as type number, np.ndarray or np.matrix")
+
+        if vary_radius_mode is None:
+            vary_radius_mode = VaryRadiusWay.sin
+
 
         self.r_min = r_min * 1000
         self.r_max = r_max * 1000
-        self.sigma = sigma
+        self.sigma = sigma2
 
         self.vary_way = vary_radius_mode
 
@@ -115,12 +114,14 @@ class VariableScale:
     def apply_to(self, cqlm, sqlm=None, option=0):
         """
 
-        :param shc: SHC if option=0, else GRID.
+        :param cqlm: cqlm option=0, else gqij.
+        :param sqlm: sqlm if option=0, else None.
         :param option:
         :return:
         """
         if option == 0:
             assert self.harmonic is not None
+            assert sqlm is not None
 
             gqij = self.harmonic.synthesis(cqlm, sqlm)
 
@@ -142,6 +143,7 @@ class VariableScale:
 
         for i in range(length_of_lat):
             this_theta = theta[i]
+
             Wpq = self.get_kernel_at_one_point(grid_space, this_theta, phi[0])
 
             Wipq[i] = Wpq
@@ -155,7 +157,7 @@ class VariableScale:
         print('done!')
 
         if option == 0:
-            return self.harmonic.analysis(gqij)
+            return self.harmonic.analysis(gqij_filtered)
 
         else:
-            return gqij
+            return gqij_filtered

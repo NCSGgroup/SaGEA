@@ -6,6 +6,7 @@
 -[ ] optimize SHC method: fasten geometrical correction.
 -[ ] add GRID method: spatial filter (VGC, SSAS by Yi et al. 2021, etc.).
 -[x] add GRID method: de-aliasing.
+-[ ] SHC method seismic: pre-check that dates range covers that of events
 
 ## Data collection
 

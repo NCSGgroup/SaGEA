@@ -283,31 +283,3 @@ def plot_grids(grid: np.ndarray, lat, lon, common_colorbar=False, projection=Non
 
     plt.show()
     plt.close()
-
-    # break
-
-
-def demo():
-    from pysrc.auxiliary.aux_tool.MathTool import MathTool
-    # grid1 = np.load('../../../results/spatial_std/2009-06_1.npy') * 1000
-    grid1 = np.load('../../../temp/ocean_300km-buffer(360,720))_Uebbing.npy')
-
-    # grid2 = np.load('../../../results/spatial_std/sigmaEWH_200906_ITSG_lmax60_diag_GS300.npy') * 1000
-
-    # grid3 = grid1 - grid2
-
-    lat, lon = MathTool.get_global_lat_lon_range(0.5)
-    plot_grids(
-        grid=np.array([grid1, grid1, grid1, grid1]), lat=lat, lon=lon,
-        vmin=(0,),
-        vmax=(1,),
-        subtitle=('(a) Yang', '(b) Liu', '(a)-(b)', '(a)-(b)'),
-        title='sigma EWH 200906 diag matrix GS300',
-        projection=ccrs.Robinson(),
-        common_colorbar=True
-        # save='../../../results/spatial_std/compare_sigmaEWH_200906_diag.pdf'
-    )
-
-
-if __name__ == '__main__':
-    demo()

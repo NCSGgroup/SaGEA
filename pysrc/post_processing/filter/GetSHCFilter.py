@@ -5,7 +5,7 @@ from pysrc.post_processing.filter.Fan import Fan
 from pysrc.post_processing.filter.Gaussian import Gaussian
 from pysrc.post_processing.filter.PnMm import PnMm
 from pysrc.post_processing.filter.SlideWindow import SlideWindow
-
+from pysrc.post_processing.filter.VariableScale import VariableScale
 
 def __get_shc_decorrelation(method: Enums.SHCDecorrelationType, params: tuple, ):
     """
@@ -13,8 +13,8 @@ def __get_shc_decorrelation(method: Enums.SHCDecorrelationType, params: tuple, )
     :param params: (n, m) for PnMm method;
                     (n, m, window length) for sliding window (stable) method;
                     (n, m, minimum window length, A, K) for sliding window (Wahr2006) method;
-    :param sliding_window_mode: required if method is SHCDecorrelationType.SlideWindow
     """
+    assert method in Enums.SHCDecorrelationType
 
     if method == Enums.SHCDecorrelationType.PnMm:
         dec_filter = PnMm()
@@ -56,6 +56,7 @@ def __get_shc_averaging_filter(method: Enums.SHCFilterType, params: tuple, lmax)
                     (DDKFilterType, ) for DDK
     :param lmax: lmax
     """
+    assert method in Enums.SHCFilterType
 
     if method == Enums.SHCFilterType.Gaussian:
         shc_filter = Gaussian()
@@ -90,8 +91,26 @@ def __get_shc_averaging_filter(method: Enums.SHCFilterType, params: tuple, lmax)
     return shc_filter
 
 
+def __get_grid_averaging_filter(method: Enums.SHCFilterType, params: tuple):
+    assert method in Enums.GridFilterType
+
+    if method == Enums.GridFilterType.VGC:
+        '''params = (r_min, r_max, sigma2=None, vary_radius_mode: VaryRadiusWay = None, harmonic: Harmonic = None)'''
+
+        assert 2 <= len(params) <= 5
+        params = list(params)
+        params += [None] * (5 - len(params))
+
+        grid_filter = VariableScale(*params)
+
+    else:
+        return -1
+
+    return grid_filter
+
+
 def get_filter(method: Enums.SHCFilterType or Enums.SHCDecorrelationType, params: tuple = None, lmax: int = None):
-    assert (method in Enums.SHCFilterType) or (method in Enums.SHCDecorrelationType)
+    assert (method in Enums.SHCFilterType) or (method in Enums.SHCDecorrelationType) or (method in Enums.GridFilterType)
 
     if method in Enums.SHCFilterType:
         assert lmax is not None
@@ -118,6 +137,12 @@ def get_filter(method: Enums.SHCFilterType or Enums.SHCDecorrelationType, params
                 params = (n, m, min_window, a, k)
 
         filtering = __get_shc_decorrelation(method=method, params=params)
+
+    elif method in Enums.GridFilterType:
+        if params is None:
+            params = (200, 500, 0.49,)
+
+        filtering = __get_grid_averaging_filter(method=method, params=params)
 
     else:
         assert False

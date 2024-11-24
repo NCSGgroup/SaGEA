@@ -1,6 +1,7 @@
 import copy
 import datetime
 import pathlib
+import warnings
 
 import h5py
 import netCDF4
@@ -18,6 +19,7 @@ from pysrc.post_processing.Love_number.LoveNumber import LoveNumber
 from pysrc.post_processing.convert_field_physical_quantity.ConvertSHC import ConvertSHC
 from pysrc.post_processing.de_aliasing.DeAliasing import DeAliasing
 from pysrc.post_processing.filter.GetSHCFilter import get_filter
+from pysrc.post_processing.filter.VariableScale import VariableScale
 from pysrc.post_processing.geometric_correction.GeometricalCorrection import GeometricalCorrection
 from pysrc.post_processing.harmonic.Harmonic import Harmonic
 from pysrc.post_processing.leakage.Addictive import Addictive
@@ -221,7 +223,13 @@ class GRID(CoreGRID):
 
         return shc
 
-    def leakage(self, method: str, basin: np.ndarray, filter_type: str, filter_params: tuple, lmax: int,
+    def filter(self, method: Enums.GridFilterType, params: tuple = None):
+        assert method in Enums.GridFilterType
+        filtering = get_filter(method, params)
+        self.value = filtering.apply_to(self.value, option=1)
+        return self
+
+    def leakage(self, method: Enums.LeakageMethod, basin: np.ndarray, filter_type, filter_params: tuple, lmax: int,
                 # necessary params
                 times=None, reference: dict = None,
                 # extra params for model-driven methods
@@ -247,6 +255,10 @@ class GRID(CoreGRID):
         grid_space = self.get_grid_space()
         lat, lon = MathTool.get_global_lat_lon_range(grid_space)
         har = Harmonic(lat, lon, lmax, option=1)
+
+        if filter_type == Enums.GridFilterType.VGC and len(filter_params) <= 4:
+            filter_params = list(filter_params) + [None] * (4 - len(filter_params)) + [har]
+            filter_params = tuple(filter_params)
 
         filtering = get_filter(filter_type, filter_params, lmax=lmax)
 
@@ -364,26 +376,6 @@ class GRID(CoreGRID):
 
         lat, lon = self.lat, self.lon
 
-        # grid_shape = np.shape(grids[0])
-        #
-        # if lat is None:
-        #     lat = np.linspace(-90, 90, grid_shape[0])
-        #
-        # if lon is None:
-        #     lon = np.linspace(-180, 180, grid_shape[1])
-        #
-        # colat_rad, lon_rad = MathTool.get_colat_lon_rad(lat, lon)
-        #
-        # dlat = np.abs(colat_rad[1] - colat_rad[0])
-        # dlon = np.abs(lon_rad[1] - lon_rad[0])
-        #
-        # domega = np.sin(colat_rad) * dlat * dlon * radius_e ** 2
-        #
-        # # if for_square:
-        # #     integral = np.einsum('pij,i->p', grids, domega ** 2)
-        # # else:
-        # #     integral = np.einsum('pij,i->p', grids, domega)
-        # integral_result = np.einsum('pij,i->p', grids, domega)
         integral_result = MathTool.global_integral(grids, lat, lon)
 
         if average:
@@ -400,6 +392,10 @@ class GRID(CoreGRID):
         return self
 
     def savefile(self, filepath: pathlib.Path, filetype=None, rewrite=False, time_dim=None, description=None):
+        warnings.warn("This method will be removed in future versions, use to_file() instead", DeprecationWarning)
+        self.to_file(filepath, filetype=filetype, rewrite=rewrite, time_dim=time_dim, description=description)
+
+    def to_file(self, filepath: pathlib.Path, filetype=None, rewrite=False, time_dim=None, description=None):
         if not filepath.parent.exists():
             filepath.parent.mkdir(parents=True)
         if filepath.exists() and not rewrite:

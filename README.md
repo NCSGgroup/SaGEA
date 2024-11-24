@@ -141,7 +141,7 @@ represents the number of sets, `nlat` and `nlon` represents the latitudes and th
 
 `.limiter(*params)`: to set all signals to 1 or 0 according to the threshold.
 
-`.savefile(*params)` to store as a file (`.nc`, `.hdf5`, etc.) locally.
+`.to_file(*params)` to store as a file (`.nc`, `.hdf5`, etc.) locally.
 
 Here we briefly provide an overview of the usages about data collection, post-processing, and error assessment.
 For detailed user manuals, please refer to http://under.construction.

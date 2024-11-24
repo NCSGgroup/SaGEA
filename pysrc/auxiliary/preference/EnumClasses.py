@@ -104,6 +104,16 @@ class SHCFilterType(Enum):
     DDK = 4
 
 
+class GridFilterType(Enum):
+    VGC = 1
+
+
+class VaryRadiusWay(Enum):
+    """for VGC filter"""
+    sin = 1
+    sin2 = 2
+
+
 class SHCDecorrelationType(Enum):
     PnMm = 1
     SlideWindowSwenson2006 = 2

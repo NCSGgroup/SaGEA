@@ -17,7 +17,8 @@ class SeismicCorrectionConfig:
         """
         set earthquake events from dict or .json file
         """
-        assert type(filepath) in (dict, pathlib.WindowsPath)
+        type_of_filepath = type(filepath)
+        assert issubclass(type(filepath), dict) or issubclass(type_of_filepath, pathlib.Path)
 
         if type(filepath) is pathlib.WindowsPath:
             assert filepath.name.endswith('.json')
