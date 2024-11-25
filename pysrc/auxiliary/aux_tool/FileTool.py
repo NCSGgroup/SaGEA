@@ -1,4 +1,7 @@
+import os
+import random
 import shutil
+import string
 from pathlib import Path
 import gzip
 import zipfile
@@ -235,3 +238,30 @@ class FileTool:
         except Exception as e:
             print(f"move files failed: {e}")
 
+    @staticmethod
+    def remove_file(filepath):
+        os.remove(filepath)
+
+    @staticmethod
+    def add_ramdom_suffix(filename, length=None):
+        if length is None:
+            length = 16
+
+        assert type(filename) is str or issubclass(type(filename), Path)
+
+        random_str = ''.join(random.sample(string.ascii_letters + string.digits, length - 1)) + "_"
+
+        if type(filename) is str:
+            filename_split = filename.split('/')
+            if len(filename_split) >= 2:
+                return "/".join(filename_split[:-1]) + "/" + random_str + filename_split[-1]
+            else:
+                return random_str + filename_split[-1]
+
+        elif issubclass(type(filename), Path):
+            parent = filename.parent
+            name = filename.name
+
+            name_random = random_str + name
+
+            return parent / name_random
