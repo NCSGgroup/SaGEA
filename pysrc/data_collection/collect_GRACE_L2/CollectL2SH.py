@@ -26,6 +26,8 @@ class CollectL2SHConfig:
         self.ending_date = datetime.date(2002, 12, 31)
         self.update_mode = False
 
+        self.__local_root = None
+
         self.__max_relink_time = 3
 
     def set_server(self, server: L2DataServer):
@@ -132,6 +134,16 @@ class CollectL2SHConfig:
     def get_max_relink_times(self):
         return self.__max_relink_time
 
+    def set_local_root(self, local_root: Path):
+        assert type(local_root) is str or issubclass(type(local_root), Path)
+        if type(local_root) is str:
+            local_root = Path(local_root)
+
+        self.__local_root = local_root
+
+    def get_local_root(self):
+        return self.__local_root
+
     def __str__(self):
         """
 
@@ -179,8 +191,8 @@ class CollectL2SH:
         """
 
         # load the presets
-        assert type(preset) in (WindowsPath, CollectL2SHConfig)
-        if type(preset) is WindowsPath:
+        assert type(preset) in (CollectL2SHConfig,) or issubclass(type(preset), Path)
+        if issubclass(type(preset), Path):
             configuration = CollectL2SHConfig().set_from_json(preset)
         elif type(preset) is CollectL2SHConfig:
             configuration = preset
@@ -239,7 +251,12 @@ class CollectL2SH:
         get local path 'projectname/data/x' based on a (remote) filename
         :return: pathlib.Path, local filepath to save the file
         """
-        local_l2dir = FileTool.get_project_dir() / 'data/L2_SH_products'
+
+        if self.configuration.get_local_root() is None:
+            local_l2dir = FileTool.get_project_dir() / 'data/L2_SH_products'
+        else:
+            local_l2dir = self.configuration.get_local_root() / 'data/L2_SH_products'
+
         formatted_filename = self._format_filename(filename=filename)
 
         local_l2dir /= formatted_filename['product_type']
@@ -281,7 +298,7 @@ class CollectL2SH:
             )
 
         elif self.configuration.server == L2DataServer.ITSG:
-            regular_pattern = r'ITSG-(.*)_(n\d{2})_(\d{4})-(\d{2}).gfc'
+            regular_pattern = r'ITSG-(.*)_(n\d{2,3})_(\d{4})-(\d{2}).gfc'
             matches = re.match(regular_pattern, filename).groups()
             # parameter matches is a tuple, the elements in order are:
             # index 0, product release, 'Grace_operational'
@@ -452,17 +469,30 @@ class CollectL2SH:
             print('done!')
 
 
-def demo():
+def demo1():
     collect = CollectL2SH()
     collect.configuration.set_server(L2DataServer.ITSG)
     collect.configuration.set_institute(L2InstituteType.ITSG)
     collect.configuration.set_release(L2Release.ITSGGrace2018)
     collect.configuration.set_degree(L2ProductMaxDegree.Degree96)
-    collect.configuration.set_beginning_date(datetime.date(2010, 7, 1))
-    collect.configuration.set_ending_date(datetime.date(2010, 7, 31))
+    collect.configuration.set_beginning_date(datetime.date(2002, 1, 1))
+    collect.configuration.set_ending_date(datetime.date(2017, 12, 31))
+
+    collect.run()
+
+
+def demo2():
+    collect = CollectL2SH()
+    collect.configuration.set_server(L2DataServer.ITSG)
+    collect.configuration.set_institute(L2InstituteType.ITSG)
+    collect.configuration.set_release(L2Release.ITSGGrace_operational)
+    collect.configuration.set_degree(L2ProductMaxDegree.Degree96)
+    collect.configuration.set_beginning_date(datetime.date(2018, 1, 1))
+    collect.configuration.set_ending_date(datetime.date(2024, 12, 31))
 
     collect.run()
 
 
 if __name__ == '__main__':
-    demo()
+    demo1()
+    demo2()

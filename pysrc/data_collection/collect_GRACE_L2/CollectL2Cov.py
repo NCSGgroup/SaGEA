@@ -340,8 +340,6 @@ def demo1():
     collect.configuration.set_ending_date(datetime.date(2017, 12, 31))
     collect.configuration.set_update_mode(True)
 
-    collect.configuration.set_local_root(Path("/Volumes/ShuhaoWork/SaGEA_Data/"))
-
     collect.run()
 
 
@@ -354,8 +352,6 @@ def demo2():
     collect.configuration.set_beginning_date(datetime.date(2018, 1, 1))
     collect.configuration.set_ending_date(datetime.date(2024, 12, 31))
     collect.configuration.set_update_mode(True)
-
-    collect.configuration.set_local_root(Path("/Volumes/ShuhaoWork/SaGEA_Data/"))
 
     collect.run()
 
