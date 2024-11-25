@@ -58,7 +58,6 @@ class VariableScale:
         if vary_radius_mode is None:
             vary_radius_mode = VaryRadiusWay.sin
 
-
         self.r_min = r_min * 1000
         self.r_max = r_max * 1000
         self.sigma = sigma2
