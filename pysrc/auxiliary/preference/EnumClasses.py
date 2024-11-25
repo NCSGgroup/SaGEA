@@ -102,6 +102,7 @@ class SHCFilterType(Enum):
     Fan = 2
     AnisotropicGaussianHan = 3
     DDK = 4
+    VGC = 5
 
 
 class GridFilterType(Enum):
