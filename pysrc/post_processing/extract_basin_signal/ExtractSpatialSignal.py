@@ -36,9 +36,9 @@ class ExtractSpatial:
                         or class Basin
         """
 
-        assert type(basin) in (np.ndarray, pathlib.WindowsPath)
+        assert type(basin) in (np.ndarray,) or issubclass(type(basin), Path)
 
-        if type(basin) is pathlib.WindowsPath:
+        if issubclass(type(basin), Path):
             basin = self.__load_SHC_to_basin(basin)
 
         basin_shape = np.shape(basin)

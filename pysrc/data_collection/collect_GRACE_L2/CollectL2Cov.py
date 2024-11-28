@@ -1,15 +1,19 @@
 import ftplib
 import os
 import re
+import threading
 import time
 import datetime
 from pathlib import Path
+from tempfile import SpooledTemporaryFile
 
 from pysrc.auxiliary.aux_tool.FileTool import FileTool
 from pysrc.auxiliary.aux_tool.TimeTool import TimeTool
 
 from pysrc.auxiliary.preference.EnumClasses import Satellite, L2DataServer, L2InstituteType, L2Release, \
     L2ProductMaxDegree
+
+MEGABYTE = 1024 * 1024
 
 
 class CollectL2CovConfig:
@@ -26,7 +30,7 @@ class CollectL2CovConfig:
 
         self.__local_root = None
 
-        self.__max_relink_time = 3
+        self.__max_relink_time = 500
 
     def set_server(self, server: L2DataServer):
         self.server = server
@@ -288,11 +292,12 @@ class CollectL2Cov:
         files_list = self._ftp.nlst()
         files_list.sort()
 
+        self._ftp.voidcmd("TYPE I")
         for i in range(len(files_list)):
             this_file = files_list[i]
 
             formatted_filename = self._format_filename(filename=this_file)
-            pass
+
             if formatted_filename['beginning_date'] < self.configuration.beginning_date:
                 continue
             if formatted_filename['ending_date'] > self.configuration.ending_date:
@@ -308,26 +313,64 @@ class CollectL2Cov:
             if not Path.exists(local_l2path.parent):
                 Path.mkdir(local_l2path.parent, parents=True)
 
-            temp_gz_filepath = FileTool.get_project_dir() / 'temp'
+            if self.configuration.get_local_root() is not None:
+                temp_gz_filepath = self.configuration.get_local_root() / "temp"
+            else:
+                temp_gz_filepath = FileTool.get_project_dir() / 'temp'
+
             temp_gz_filepath /= FileTool.add_ramdom_suffix(this_file)
 
+            if not Path.exists(temp_gz_filepath.parent):
+                Path.mkdir(temp_gz_filepath.parent, parents=True)
+
+            # with open(temp_gz_filepath, "wb") as f:
+            #     self._ftp.voidcmd("TYPE I")
+            #     this_remote_size = self._ftp.size(this_file)
+            #
+            #     def handle_download(block):
+            #         f.write(block)
+            #         this_local_size = f.seek(0, os.SEEK_END)
+            #         print(f'\rCollecting {this_file}...', end=' ')
+            #         print("%.2f" % (this_local_size / this_remote_size * 100) + "%", end="")
+            #         print("\n?")
+            #
+            #     self._ftp.retrbinary('RETR %s' % this_file, handle_download, blocksize=1024)
+            #
+            #
+            #     print(f"\nUnzipping {this_file}...", end="")
+            #     FileTool.un_gz(temp_gz_filepath, local_l2path)
+            #
+            #     FileTool.remove_file(temp_gz_filepath)
+
+            # print(f"Downloading {this_file}... SIZE: {filesize:.1f} MB")
+            # with SpooledTemporaryFile(max_size=MEGABYTE, mode="w+b") as f:
             with open(temp_gz_filepath, "wb") as f:
-                self._ftp.voidcmd("TYPE I")
+
                 this_remote_size = self._ftp.size(this_file)
 
-                def handle_download(block):
-                    f.write(block)
-                    this_local_size = f.seek(0, os.SEEK_END)
+                sock = self._ftp.transfercmd('RETR %s' % this_file)
+
+                while True:
+                    buff = sock.recv(MEGABYTE)
+                    if not buff:
+                        break
+
+                    f.write(buff)
+
+                    this_local_size = f.tell()
                     print(f'\rCollecting {this_file}...', end=' ')
-                    print("%.2f" % (this_local_size / this_remote_size * 100) + "%", end="")
+                    print(f"{(this_local_size / MEGABYTE):.1f}/{(this_remote_size / MEGABYTE):.1f} MB, " + "%.2f" % (
+                            this_local_size / this_remote_size * 100) + "%", end="")
 
-                self._ftp.retrbinary('RETR %s' % this_file, handle_download)
-                print(f"\nUnzipping {this_file}...", end="")
-                FileTool.un_gz(temp_gz_filepath, local_l2path)
+                sock.close()
 
-                FileTool.remove_file(temp_gz_filepath)
+            print(f"\nUnzipping {this_file}...", end="")
+            FileTool.un_gz(temp_gz_filepath, local_l2path)
+            FileTool.remove_file(temp_gz_filepath)
 
             print('done!')
+
+        self._ftp.quit()
 
 
 def demo1():

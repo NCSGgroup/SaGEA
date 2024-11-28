@@ -71,21 +71,6 @@ class ForwardModelingConfig:
         return self.__harmonic
 
     def set_basin_conservation(self, basin: np.ndarray):
-        # assert self.__harmonic is not None, "set harmonic before setting basin."
-        #
-        # har = self.__harmonic
-        #
-        # if type(basin) is pathlib.WindowsPath:
-        #     lmax = self.__harmonic.lmax
-        #     basin_clm, basin_slm = load_SHC(basin, key='', lmax=lmax, lmcs_in_queue=(1, 2, 3, 4))
-        #     basin = har.synthesis(SHC(basin_clm, basin_slm)).value[0]
-        #     basin[np.where(basin >= 0.5)] = 1
-        #     basin[np.where(basin < 0.5)] = 0
-        #     self.__basin_to_maintain_global_conservation = basin
-        #
-        # else:
-        #     self.__basin_to_maintain_global_conservation = har.synthesis(basin).value[0]
-
         self.__basin_to_maintain_global_conservation = basin
 
         return self
@@ -94,24 +79,6 @@ class ForwardModelingConfig:
         return self.__basin_to_maintain_global_conservation
 
     def set_basin(self, basin: np.ndarray):
-        # if type(basin) is pathlib.WindowsPath:
-        #     lmax = self.__harmonic.lmax
-        #     basin_clm, basin_slm = load_SHC(basin, key='', lmax=lmax, lmcs_in_queue=(1, 2, 3, 4))
-        #     basin = har.synthesis(SHC(basin_clm, basin_slm)).value[0]
-        #     basin[np.where(basin >= 0.5)] = 1
-        #     basin[np.where(basin < 0.5)] = 0
-        #     self.__basin = basin
-        #
-        # elif type(basin) is SHC:
-        #     self.__basin = har.synthesis(basin).value[0]
-        #
-        # elif type(basin) is np.ndarray:
-        #     self.__basin = basin
-        #
-        # else:
-        #     print('Unsupported format of basin map.')
-        #     return -1
-
         self.__basin = basin
 
         return self

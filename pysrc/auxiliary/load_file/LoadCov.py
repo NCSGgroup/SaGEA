@@ -1,3 +1,4 @@
+import pathlib
 import re
 from datetime import date
 
@@ -316,7 +317,9 @@ def load_CovMatrix(filepath, lmax: int, lmin: int = 0, get_dates=False):
 def demo():
     from pysrc.auxiliary.aux_tool.FileTool import FileTool
 
-    filepath = FileTool.get_project_dir("data/L2_SH_products/VarGSM/ITSG/Grace2018/2009/ITSG-Grace2018_n96_2009-06.snx")
+    # filepath = FileTool.get_project_dir("data/L2_SH_products/VarGSM/ITSG/Grace2018/2009/ITSG-Grace2018_n96_2009-06.snx")
+    filepath = pathlib.Path(
+        "/Volumes/ShuhaoWork/SaGEA_Data/data/L2_SH_products/VarGSM/ITSG/Grace2018/n96/2002/ITSG-Grace2018_n96_2002-04.snx")
     covmat, date_begin, date_end = load_CovMatrix(filepath, lmax=60, get_dates=True)
     print(np.shape(covmat), date_begin, date_end)
     pass

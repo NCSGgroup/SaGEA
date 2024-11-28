@@ -6,7 +6,7 @@ import numpy as np
 from pysrc.auxiliary.aux_tool.FileTool import FileTool
 
 
-def make_hdf5(filepath: pathlib.WindowsPath or str, v: dict, make_dir=True, rewrite=False):
+def make_hdf5(filepath: pathlib.Path or str, v: dict, make_dir=True, rewrite=False):
     """
     make a hdf5 file from a given dict.
     :param filepath:
@@ -15,7 +15,7 @@ def make_hdf5(filepath: pathlib.WindowsPath or str, v: dict, make_dir=True, rewr
     :param rewrite: if True, it will allow the newly generated file to overwrite the possibly existing file.
     """
 
-    assert type(filepath) in (pathlib.WindowsPath, str)
+    assert type(filepath) in (str,) or issubclass(type(filepath), pathlib.Path)
 
     if type(filepath) in (str,):
         path = pathlib.Path(filepath)

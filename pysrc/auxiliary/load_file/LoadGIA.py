@@ -16,7 +16,7 @@ class LoadGIAConfig:
         self.__filepath = FileTool.get_project_dir() / 'data/GIA/GIA.ICE-6G_D.txt'
         self.__dates = None
 
-    def set_filepath(self, filepath: pathlib.WindowsPath):
+    def set_filepath(self, filepath: pathlib.Path):
         warnings.warn('This function is deprecated, use .set_GIA_model instead', DeprecationWarning)
 
         self.__filepath = filepath

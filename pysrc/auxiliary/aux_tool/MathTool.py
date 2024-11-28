@@ -630,6 +630,9 @@ class MathTool:
     @staticmethod
     def get_degree_rms(cqlm, sqlm):
         assert np.shape(cqlm) == np.shape(sqlm)
+        if len(np.shape(cqlm)) == 2:
+            cqlm = np.array([cqlm])
+            sqlm = np.array([sqlm])
 
         shape = np.shape(cqlm)
         lmax = np.shape(cqlm)[1] - 1
@@ -646,6 +649,9 @@ class MathTool:
     @staticmethod
     def get_degree_rss(cqlm, sqlm):
         assert np.shape(cqlm) == np.shape(sqlm)
+        if len(np.shape(cqlm)) == 2:
+            cqlm = np.array([cqlm])
+            sqlm = np.array([sqlm])
 
         shape = np.shape(cqlm)
         lmax = np.shape(cqlm)[1] - 1

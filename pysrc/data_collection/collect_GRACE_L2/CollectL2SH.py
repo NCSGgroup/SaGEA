@@ -3,7 +3,7 @@ import re
 import time
 import datetime
 import json
-from pathlib import Path, WindowsPath
+from pathlib import Path
 
 from pysrc.auxiliary.aux_tool.FileTool import FileTool
 from pysrc.auxiliary.aux_tool.TimeTool import TimeTool
@@ -100,7 +100,7 @@ class CollectL2SHConfig:
         """
 
         # ensure that the path describes a JSON file
-        assert type(path) is WindowsPath and path.name.endswith('.json')
+        assert issubclass(type(path), Path) and path.name.endswith('.json')
 
         # load json file to a dict
         with open(path) as jsonfile:

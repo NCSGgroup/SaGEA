@@ -26,20 +26,6 @@ class DataDrivenConfig:
         types = (np.ndarray,)
         assert type(basin) in types, "basin should be a numpy array."
 
-        # har = self.harmonic
-
-        # if type(basin) is pathlib.WindowsPath:
-        #     lmax = self.harmonic.lmax
-        #     basin_clm, basin_slm = load_SHC(basin, key='', lmax=lmax, lmcs_in_queue=(1, 2, 3, 4))
-        #     # basin_map = har.synthesis(SHC(basin_clm, basin_slm)).value[0]
-        #     basin_map = har.synthesis_for_csqlm(basin_clm, basin_slm)
-        #
-        #     self.basin_map = basin_map
-        #
-        # else:
-        #     # self.basin_map = har.synthesis(basin).data[0]
-        #     self.basin_map = basin
-
         self.basin_map = basin
 
         self.basin_acreage = MathTool.get_acreage(self.basin_map)

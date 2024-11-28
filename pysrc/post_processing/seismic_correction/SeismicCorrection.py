@@ -20,7 +20,7 @@ class SeismicCorrectionConfig:
         type_of_filepath = type(filepath)
         assert issubclass(type(filepath), dict) or issubclass(type_of_filepath, pathlib.Path)
 
-        if type(filepath) is pathlib.WindowsPath:
+        if issubclass(type(filepath), pathlib.Path):
             assert filepath.name.endswith('.json')
             self.__set_earthquakes_from_json(filepath)
 

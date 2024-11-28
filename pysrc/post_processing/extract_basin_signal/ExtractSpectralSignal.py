@@ -34,9 +34,9 @@ class ExtractSpectral:
                         or class SHC
         """
         if len(basin) == 1:
-            assert type(basin[0]) in (pathlib.WindowsPath, SHC)
+            assert type(basin[0]) in (SHC,) or issubclass(type(basin[0]), Path)
 
-            if type(basin[0]) is pathlib.WindowsPath:
+            if issubclass(type(basin[0]), Path):
                 path = basin[0]
                 lmax = self._configuration.lmax
                 self.basin_clm, self.basin_slm = load_SHC(path, key='', lmax=lmax, lmcs_in_queue=(1, 2, 3, 4))
