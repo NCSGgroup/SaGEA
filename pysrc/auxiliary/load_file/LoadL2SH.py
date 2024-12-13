@@ -478,6 +478,7 @@ class LoadL2SH:
             dir_up_to_year = FileTool.get_l2_SH_dir_upto_year(year, product_type, institute, release, lmax)
 
             filelist_this_year = list(Path.iterdir(dir_up_to_year))
+            filelist_this_year.sort()
 
             if begin_date.year < year < end_date.year:
                 filepath_list += filelist_this_year
