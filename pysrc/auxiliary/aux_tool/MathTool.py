@@ -224,7 +224,7 @@ class MathTool:
     @staticmethod
     def get_Legendre(lat, lmax: int, option=0):
         """
-        get legendre function up to degree/order lmax in Lat.
+        get associated legendre function up to degree/order lmax in Lat. Be careful that this applies the 4-pi normalizaton.
         :param lat: ndarray, co-latitude if option=0, unit[rad]; geophysical latitude if option = others, unit[degree]
         :param lmax: int, max degree
         :param option:
