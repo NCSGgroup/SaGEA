@@ -18,13 +18,13 @@ def match_dates_from_filename(filename):
 
     '''date format: yyyymmdd-yyyymmdd or yyyy-mm-dd-yyyy-mm-dd'''
     if not match_flag:
-        date_begin_end_pattern = r"(\d{4})-?(\d{2})-?(\d{2})-(\d{4})-?(\d{2})-?(\d{2})"
+        date_begin_end_pattern = r"(\d{4})-?(\d{2})-?(\d{2})(-|_)(\d{4})-?(\d{2})-?(\d{2})"
         date_begin_end_searched = re.search(date_begin_end_pattern, filename)
 
         if date_begin_end_searched is not None:
             date_begin_end = date_begin_end_searched.groups()
             this_date_begin = datetime.date(*list(map(int, date_begin_end[:3])))
-            this_date_end = datetime.date(*list(map(int, date_begin_end[3:])))
+            this_date_end = datetime.date(*list(map(int, date_begin_end[4:])))
 
             match_flag = True
 
