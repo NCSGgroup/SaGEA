@@ -8,8 +8,11 @@ science application, is still a challenging issue even among the professional GR
 common post-processing steps and the assessment of complicated error (uncertainty) of GRACE(-FO), are integrated into an
 open-source, cross-platform and Python-based toolbox called SAGEA (SAtellite Gravity Error Assessment). With diverse
 options, SAGEA provides flexibility to generate signal along with the full error from level-2 products, so that any
-non-expert user can easily obtain advanced experience of GRACE(-FO) processing. Please contact Shuhao Liu 
+non-expert user can easily obtain advanced experience of GRACE(-FO) processing. Please contact Shuhao Liu
 (liushuhao@hust.edu.cn) and Fan Yang (fany@plan.aau.dk) for more information.
+
+When referencing this work, please cite:
+> Liu, S., Yang, F., & Forootan, E. (2025). SAGEA: A toolbox for comprehensive error assessment of GRACE and GRACE-FO based mass changes. Computers & Geosciences, 196, 105825. https://doi.org/10.1016/j.cageo.2024.105825
 
 # 2. Features
 
@@ -48,7 +51,6 @@ Detailed module usage and related scientific explanations will be provided in la
 1. `./demo/data_collecting/demoCollectL2Data.py` provides an example of collecting GRACE Level 2 products,
    including auxiliary files such as GAX and low-degrees products.
    Users can config the collecting parameters from the jason file in `./setting/data_collection/CollectL2Data.json`.
-   Other necessary files for this program are provided at https://under.constraction.
 2. `./demo/post_processing/demoPostProcessing.py` provides an example for the post-processing of GRACE data.
 3. `./demo/uncertainty_estimation/demoErrorI.py` provides an example for the propagation of GRACE error (
    variance-covariance matrix) during the post-processing.
@@ -143,330 +145,11 @@ represents the number of sets, `nlat` and `nlon` represents the latitudes and th
 
 `.to_file(*params)` to store as a file (`.nc`, `.hdf5`, etc.) locally.
 
-Here we briefly provide an overview of the usages about data collection, post-processing, and error assessment.
-For detailed user manuals, please refer to http://under.construction.
-
-[//]: # (## 5.1 Data Collection)
-
-[//]: # ()
-[//]: # (Path `/pysrc/data_collection/` includes the source file to access remote servers and collect GRACE level-2 products)
-
-[//]: # (from the above FTP server,)
-
-[//]: # (including the above GSM, GAX, and necessary low-degree files for replacing and other auxiliary files.)
-
-[//]: # (It is recommended to control this program through an external configuration file.)
-
-[//]: # (A demo program `/demo/data_collecting/demoCollectL2Data.py` gives an example to collect GRACE level-2 files by a)
-
-[//]: # (configuration file `/setting/data_collecting/CollectL2Data.json`.)
-
-[//]: # (Users can simply modify the parameters in the configuration file and run the above program to achieve automatic)
-
-[//]: # (collection of the corresponding files.)
-
-[//]: # (This demo program also gives an example to download the low-degree files. Users can simply run the above program to)
-
-[//]: # (achieve automatic collections.)
-
-[//]: # ()
-[//]: # (## 5.2 Class SHC)
-
-[//]: # ()
-[//]: # (### 5.2.1 Creation)
-
-[//]: # ()
-[//]: # (Class `SHC` is used to store spherical harmonic coefficients &#40;SHCs&#41;,)
-
-[//]: # (and can store one or more sets of data.)
-
-[//]: # (SHC is the object returned by `load_SHC&#40;&#41;` at `./pysrc/auxiliary/load_file/LoadL2SH.py`,)
-
-[//]: # (or users can also manually create it by entering the coefficients `SHC&#40;clm, slm&#41;`.)
-
-[//]: # ()
-[//]: # (Its attribute `.value` is a two-dimensional `numpy.ndarray` in shape of `&#40;n = num of sets, m = &#40;max_degree + 1&#41;^2&#41;`.)
-
-[//]: # (Use `.is_series&#40;&#41;` to determine whether the stored data is multiple sets, i.e., whether `n == 1`.)
-
-[//]: # ()
-[//]: # (### 5.2.2 Low-degrees replacement)
-
-[//]: # ()
-[//]: # (The low-degree coefficients &#40;degree-1, c20, etc.&#41; of GRACE level-2 products usually need to be replaced by another)
-
-[//]: # (independent measurement.)
-
-[//]: # (Use `.replace_low_degs&#40;dates_begin: iter, dates_end: iter, low_deg: dict,)
-
-[//]: # (deg1: bool, c20: bool, c30: bool&#41;` to replace the low-degree coefficients.)
-
-[//]: # (Parameters `dates_begin` and `dates_end` should describe the start and end times of `.value`, which is also given)
-
-[//]: # (by `load_SHC&#40;&#41;` at `./pysrc/auxiliary/load_file/LoadL2SH.py`,)
-
-[//]: # (and parameter `low_deg` should be the replaced coefficients given as an instance of `dict`,)
-
-[//]: # (it is highly recommended to get it through `load_low_degs&#40;&#41;` at `pysrc/auxiliary/load_file/LoadL2LowDeg.py`,)
-
-[//]: # (and boolean parameters `deg1`, `c20`, `c30` control whether to replace corresponding coefficients.)
-
-[//]: # ()
-[//]: # (### 5.2.3 Addition and subtraction)
-
-[//]: # ()
-[//]: # (`SHC` can implement addition and subtraction with another instance through the internal implementation of `__add__&#40;&#41;`)
-
-[//]: # (and `__sub__&#40;&#41;`.)
-
-[//]: # (The other instance that are added or subtracted can be sequences of equal length or a single group.)
-
-[//]: # (If it is a single sequence,)
-
-[//]: # (it will be calculated according to the broadcast principle of `numpy.ndarry`.)
-
-[//]: # (However,)
-
-[//]: # (in order to cope with different situations,)
-
-[//]: # (such as users only needing to add or subtract data from a certain degree to another &#40;like GAX recovery, GMAM correction,)
-
-[//]: # (et al.&#41;,)
-
-[//]: # (it is recommended using the function `.add&#40;other: SHC, lbegin: int, lend :int&#41;`)
-
-[//]: # (or `.subreact&#40;other: SHC, lbegin: int, lend :int&#41;` to additionally customize the degree from start &#40;`lbegin`&#41; to)
-
-[//]: # (finish &#40;`lend`&#41;.)
-
-[//]: # ()
-[//]: # (### 5.2.4 Time dimension expansion)
-
-[//]: # ()
-[//]: # (Some geophysical signals,)
-
-[//]: # (such as the GIA model,)
-
-[//]: # (are given as long-term trends.)
-
-[//]: # (In order to calculate with the monthly signal,)
-
-[//]: # (it is necessary to project it as the signal for each month.)
-
-[//]: # (`.expand&#40;time: iter&#41;` can project its value as a linear trend into multiple sets of signal in each time epoch,)
-
-[//]: # (and return a new SHC instance.)
-
-[//]: # (Note that `.expand&#40;time: iter&#41;` is only supported in single-group SHC instances &#40;i.e., `.is_series&#40;&#41;` is `True`&#41;)
-
-[//]: # ()
-[//]: # (### 5.2.5 Filtering)
-
-[//]: # ()
-[//]: # (Use `.filter&#40;method: str, param: tuple&#41;` to implement spectral domain filters.)
-
-[//]: # (The currently supported spectral filters and their usages are:)
-
-[//]: # ()
-[//]: # (1. **Decorrelation of SlidingWindow &#40;Swenson2006&#41;:**)
-
-[//]: # (   `.filter&#40;method="slidingwindow_swenosn2006", param=&#40;n: int, m: int, min_length: int, A: int, K: int&#41;&#41;`, see Swenson)
-
-[//]: # (   and Wahr &#40;2006&#41;;)
-
-[//]: # (2. **Decorrelation of SlidingWindow &#40;Stable&#41;:**)
-
-[//]: # (   `.filter&#40;method="slidingwindow_stable", param=&#40;n: int, m: int, window_length: int&#41;&#41;`, see Swenson and Wahr &#40;2006&#41;.)
-
-[//]: # (3. **Decorrelation of PnMm:**)
-
-[//]: # (   `.filter&#40;method="pnmm", param=&#40;n:int, m:int&#41;&#41;`, see Chen et al. &#40;2007&#41;;)
-
-[//]: # (4. **Gaussian Filter:**)
-
-[//]: # (   `.filter&#40;method="gs", param=&#40;radius: int, &#41;&#41;` see Wahr et al. &#40;1998&#41;;)
-
-[//]: # (5. **Non-isotropic Gaussian Filter:**)
-
-[//]: # (   `.filter&#40;method="ngs", param=&#40;radius_1: int, radius_2: int, m_0: int&#41;&#41;`, see Han et al. &#40;2005&#41;;)
-
-[//]: # (6. **Fan Filter:**)
-
-[//]: # (   `.filter&#40;method="fan", param=&#40;radius_1: int, radius_2: int&#41;&#41;` see Zhang et al. &#40;2009&#41;;)
-
-[//]: # (7. **DDK Filter:**)
-
-[//]: # (   `.filter&#40;method="ddk", param=&#40;ddk_id: int, &#41;&#41;`, see Kusche et al.&#40;2007; 2009&#41;.)
-
-[//]: # ()
-[//]: # (### 5.2.6 Geometrical Correction)
-
-[//]: # ()
-[//]: # (Use `.geometric&#40;assumption: str&#41;` to apply the geometrical correction on the SHCs, and the parameter `assumption`)
-
-[//]: # (can be chosed as `"sphere"`, `"ellipsoid"` or `"actualEarth"` to support different types of corrections, see Yang et)
-
-[//]: # (al. &#40;2022&#41;.)
-
-[//]: # ()
-[//]: # (### 5.2.7 Harmonic Synthesis)
-
-[//]: # ()
-[//]: # (Spherical harmonic synthesis &#40;HMS&#41; is the step of converting &#40;dimensionless&#41; SHCs into grid data of different physical)
-
-[//]: # (types &#40;such as equivalent water height, EWH, or pressure, etc.&#41;.)
-
-[//]: # (Here `SHC` divide it into two steps to implement:)
-
-[//]: # ()
-[//]: # (1. **Convert physical type:**)
-
-[//]: # ()
-[//]: # (   Use `.convert_type&#40;from_type: str, to_type: str&#41;` to convert the dimensions of coefficients in SHC.)
-
-[//]: # (   Currently supported types are:)
-
-[//]: # (   `"dimensionless"`, `"EWH"`, `"Pressure"`, `"Density"`, `"Geoid"`, `"Gravity"`, `"HorizontalDisplacementEast"`,)
-
-[//]: # (   `"HorizontalDisplacementNorth"` and `"VerticalDisplacement"`.)
-
-[//]: # ()
-[//]: # (2. **Pure synthesis:**)
-
-[//]: # ()
-[//]: # (   Use `.to_grid&#40;grid_space: int&#41;` to make an HMS on the SHCs, and a new instance of `GRID` will be returned.)
-
-[//]: # (   For more detail of class `GRID` please refer to the next section.)
-
-[//]: # ()
-[//]: # (## 5.3 Class GRID)
-
-[//]: # ()
-[//]: # (### 5.3.1 Creation)
-
-[//]: # ()
-[//]: # (Class `GRID` is used to store spatial gridded data,)
-
-[//]: # (`GRID&#40;&#41;` can also store one or more sets of data.)
-
-[//]: # (SHC is the object returned by `SHC&#40;&#41;.to_grid&#40;&#41;`,)
-
-[//]: # (or users can also manually create it by entering the coefficients `GRID&#40;value, lat, lon&#41;`.)
-
-[//]: # ()
-[//]: # (Its attribute `.value` in a 3-dimension `numpy.ndarray` in shape of `&#40;num, nlat, nlon&#41;`,)
-
-[//]: # (with first dimension points to the first set of data, while the second and the third point to the number of latitude and)
-
-[//]: # (longitude, respectively.)
-
-[//]: # (Thus `GRID&#40;&#41;` requires attributes `.lat` and `.lon` that represent geographic latitude and longitude sequences &#40;in unit)
-
-[//]: # (of degree&#41;.)
-
-[//]: # (Use `.is_series&#40;&#41;` to determine whether the stored data is multiple sets, i.e., whether `num == 1`.)
-
-[//]: # ()
-[//]: # (### 5.3.2 Filtering)
-
-[//]: # ()
-[//]: # (&#40;under construction&#41;)
-
-[//]: # ()
-[//]: # (Most GRACE filters are designed for spectral domain signals, i.e., they filter SHCs.)
-
-[//]: # (While there are still some practical filters implemented in the spatial domain, such as Yi et al. &#40;2021&#41; and Yang et)
-
-[//]: # (al. &#40;2024&#41;.)
-
-[//]: # (Thus `GRID&#40;&#41;` provides filtering method to do such kinds of spatial filters,)
-
-[//]: # (and the usage is similar with that in `SHC&#40;&#41;`:)
-
-[//]: # (Use `.filter&#40;method: str, param: tuple&#41;` to perform relevant spatial filtering.)
-
-[//]: # ()
-[//]: # (### 5.3.3 Seismic Correction)
-
-[//]: # ()
-[//]: # (Use `.seismic&#40;date: iter, events: pathlib.Path&#41;` to perform the seismic correction with several seismic events &#40;in json)
-
-[//]: # (file&#41; given by users, see Tang et al. &#40;2020&#41;.)
-
-[//]: # (Parameters `dates` and `events` are required,)
-
-[//]: # (with the former describes the times of `.value`,)
-
-[//]: # (and the latter describes the direction of the json file that describes the seismic events.)
-
-[//]: # (Path `setting/post_processing/earthquakes.json` provided several preset events,)
-
-[//]: # (and users can add other events later or specify another file path.)
-
-[//]: # ()
-[//]: # (### 5.3.4 Leakage Correction)
-
-[//]: # ()
-[//]: # (Use `.leakage&#40;method: str, basin: np.ndarray, filter_type: str, filter_params: tuple, lmax: int, **params&#41;` to deduct)
-
-[//]: # (the leakage effect caused by the spectral truncation and filtering.)
-
-[//]: # ()
-[//]: # (The currently supported spectral filters and their usages are:)
-
-[//]: # ()
-[//]: # (1. **"iterative"**, see Wahr et al. &#40;1998&#41;;)
-
-[//]: # (2. **"addictive"**, see Klees et al. &#40;2007&#41;;)
-
-[//]: # (3. **"multiplicative"**, see Longuevergne et al. &#40;2010&#41;;)
-
-[//]: # (4. **"scaling"**, see Landerer et al. &#40;2012&#41;;)
-
-[//]: # (5. **"scaling grid"**, see Landerer et al. &#40;2012&#41;;)
-
-[//]: # (6. **"forward modeling"**, see Chen et al. &#40;2015&#41;;)
-
-[//]: # (7. **"data_driven"**, see Vishwakarma et al. &#40;2017&#41;;)
-
-[//]: # (8. **"buffer_zone"**, see Chen et al. &#40;2019&#41;.)
-
-[//]: # ()
-[//]: # (Unlike the spectral filters, there are significant differences in the parameters required for different methods.)
-
-[//]: # (Please refer to the user's manual &#40;under contraction&#41; or code comments for more details.)
-
-[//]: # ()
-[//]: # (### 5.3.5 Harmonic Analysis)
-
-[//]: # ()
-[//]: # (Use `.to_SHC&#40;lmax: int&#41;` to perform a harmonic analysis &#40;HMA&#41; on the gridded data into SHCs with maximum degree)
-
-[//]: # (of `lmax`, and an instance of `SHC` will be returned.)
-
-[//]: # ()
-[//]: # (### 5.3.6 Output files)
-
-[//]: # ()
-[//]: # (Use `.savefile&#40;filepath: pathlib.Path, time_dim, **params&#41;` to store gridded data in the given path,)
-
-[//]: # (and three formats of `.npz`, `.nc`, and `.hdf5` are supported for now.)
-
-[//]: # (Parameter `time_dim` is the time dimension and needs to be consistent with the length of the first dimension)
-
-[//]: # (of `.value`, and users can input additional parameters `value_description: str` to add descriptions or comments to the)
-
-[//]: # (data in saved file.)
-
-[//]: # ()
-[//]: # (## 5.4. Error Assessment)
-
-[//]: # ()
-[//]: # (&#40;under construction&#41;)
-
 # 6. Contributing
 
-(under construction)
+Fan Yang (fany@plan.aau.dk) led the scientific research and conducted rigorous data validation.
+
+Shuhao Liu (liushuhao@hust.edu.cn) contributed to the software architecture design and core functionality implementation.
 
 # 7. License
 
@@ -491,6 +174,7 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
 # 8. Additional Scientific Descriptions
 
 ## 8.1 Data Collection
@@ -529,14 +213,6 @@ the degree-1 coefficients needs to be added back,
 and C20, C30 coefficients with large uncertainties also needs to be replaced with estimates from other techniques,
 such as satellite laser ranging (SLR).
 
-[//]: # (Path `/pysrc/auxiliary/load_file/LoadL2SH.py` provides functions to load GRACE level-2 products,)
-
-[//]: # (and path `/pysrc/auxiliary/load_file/LoadL2LowDeg.py` provides those of the low-degree coefficient.)
-
-[//]: # (Path `/pysrc/post_processing/replace_low_deg/ReplaceLowDegree.py` includes the source file to apply the replacing)
-
-[//]: # (low-degree coefficients on given SHC.)
-
 ## 8.3 Post-processing: Conversion between SHC and GRID
 
 GRACE level-2 products reflects the distribution of dimensionless geopotential,
@@ -551,22 +227,6 @@ Indeed, by performing spherical harmonic synthesis on the SHC,
 corresponding grid data can be obtained,
 from which we can easily see the spatial distribution of signals.
 On the contrary, the corresponding SHC can also be obtained through spherical harmonic analysis of grid data.
-
-[//]: # (Path `/pysrc/post_processing/convert_field_physical_quantity/` includes the source files to convert the physical)
-
-[//]: # (quantity like equivalent water height &#40;EWH&#41;,)
-
-[//]: # (and the required Love number can be obtained by the source files in `/pysrc/post_processing/Love_number/LoveNumber.py`.)
-
-[//]: # ()
-
-[//]: # (Path `/pysrc/post_processing/convert_field_physical_quantity/` includes the source files to do the harmonic synthesis)
-
-[//]: # (and analysis.)
-
-[//]: # (and the required associated Legendre polynomial can be obtained by the auxiliary methods in source)
-
-[//]: # (file `/pysrc/auxiliary/tools/MathTools.py`.)
 
 ## 8.4 Post-processing: Corrections
 
