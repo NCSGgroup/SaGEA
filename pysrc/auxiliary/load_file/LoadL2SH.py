@@ -67,7 +67,8 @@ def match_dates_from_filename(filename):
     return this_date_begin, this_date_end
 
 
-def load_SHC(*filepath, key: str, lmax: int, lmcs_in_queue=None, get_dates=False, begin_date=None, end_date=None):
+def load_SHC(*filepath, key: str, lmax: int, lmcs_in_queue=None, get_dates=False, begin_date=None, end_date=None,
+             dates_excluded=None):
     """
 
     :param filepath: path of SH file
@@ -77,10 +78,11 @@ def load_SHC(*filepath, key: str, lmax: int, lmcs_in_queue=None, get_dates=False
     :param get_dates: bool, if True return dates.
     :param begin_date: beginning date to load
     :param end_date: ending date to load
+    :param dates_excluded: months to exclude
     :return: if get_dates:
-                cqlm, sqlm, dates_begin, dates_end
+                SHC instance, dates_begin, dates_end
             else:
-                cqlm, sqlm
+                SHC instance
     """
 
     def are_all_num(x: list):
@@ -111,6 +113,7 @@ def load_SHC(*filepath, key: str, lmax: int, lmcs_in_queue=None, get_dates=False
 
             with open(filepath[0]) as f:
                 txt_list = f.readlines()
+
                 for i in range(len(txt_list)):
                     if txt_list[i].replace(" ", "").startswith(key):
                         this_line = txt_list[i].split()
@@ -131,6 +134,7 @@ def load_SHC(*filepath, key: str, lmax: int, lmcs_in_queue=None, get_dates=False
 
             if get_dates:
                 this_date_begin, this_date_end = match_dates_from_filename(filepath[0].name)
+
                 # return clm, slm, [this_date_begin], [this_date_end]
                 return SHC(clm, slm), [this_date_begin], [this_date_end]
 
@@ -148,13 +152,24 @@ def load_SHC(*filepath, key: str, lmax: int, lmcs_in_queue=None, get_dates=False
                     files_to_load.append(file_list[i])
 
             return load_SHC(*files_to_load, key=key, lmax=lmax, lmcs_in_queue=lmcs_in_queue,
-                            get_dates=get_dates, begin_date=begin_date, end_date=end_date)
+                            get_dates=get_dates, begin_date=begin_date, end_date=end_date,
+                            dates_excluded=dates_excluded)
 
     else:
         shc = None
         dates_begin, dates_end = [], []
 
         for i in range(len(filepath)):
+            if dates_excluded is not None:
+                this_date_begin, this_date_end = match_dates_from_filename(filepath[i].name)
+                this_ave_date = TimeTool.get_average_dates(this_date_begin, this_date_end)
+
+                if datetime.date(this_ave_date.year, this_ave_date.month, 1) in [
+                    datetime.date(dates_excluded[d].year, dates_excluded[d].month, 1) for d in
+                    range(len(dates_excluded))
+                ]:
+                    continue
+
             load = load_SHC(filepath[i], key=key, lmax=lmax, lmcs_in_queue=lmcs_in_queue,
                             get_dates=get_dates, begin_date=begin_date, end_date=end_date)
 
