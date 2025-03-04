@@ -186,6 +186,9 @@ class GRID(CoreGRID):
     def __init__(self, grid, lat, lon, option=1):
         super().__init__(grid, lat, lon, option)
 
+    def get_length(self):
+        return self.value.shape[0]
+
     def to_SHC(self, lmax=None, special_type: Enums.PhysicalDimensions = None):
         grid_space = self.get_grid_space()
 
