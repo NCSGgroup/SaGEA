@@ -18,7 +18,8 @@ matplotlib.rcParams.update(config)
 
 
 def plot_grids(grid: np.ndarray, lat, lon, common_colorbar=False, projection=None, vmin=None, vmax=None,
-               extent=None, subtitle=None, title=None, save=None):
+               extent=None, subtitle=None, title=None, save=None, cmap=None, cb_extend=None, filling_type=None,
+               contour_num=20, gridlines=False):
     """
 
     :param grid: 2-d array grid or 3-d array grids
@@ -28,15 +29,22 @@ def plot_grids(grid: np.ndarray, lat, lon, common_colorbar=False, projection=Non
     :param projection:
     :param vmin: num or list of num. num for single grid, list of same length with grids for multiple grids
     :param vmax: num or list of num. num for single grid, list of same length with grids for multiple grids
-    :param extent:
+    :param extent: (lonmin, lonmax, latmin, latmax)
     :param subtitle: str or list of str. str for single grid, list of same length with grids for multiple grids
-    :param title: str or list of str. str for single grid, list of same length with grids for multiple grids
-    :param save: str or list of str. str for single grid, list of same length with grids for multiple grids
-    :param save: str or list of str. str for single grid, list of same length with grids for multiple grids
+    :param title:
+    :param save:
+    :param cmap:
+    :param cb_extend:
+    :param filling_type: "gridded", "contour", "contour_filled"
+    :param contour_num: int, work only if filling_type in ("contour", "contour_filled")
+    :param gridlines: bool
     :return:
     """
     assert grid.ndim in (2, 3)
     assert type(vmin) == type(vmax)
+    if filling_type is None:
+        filling_type = "gridded"
+    assert filling_type in ["gridded", "contour", "contour_filled"]
 
     if grid.ndim == 2:
         grid = np.array([grid])
@@ -67,9 +75,9 @@ def plot_grids(grid: np.ndarray, lat, lon, common_colorbar=False, projection=Non
         axes_loc = (
             (0.05, 0.3),  # plot grids
 
-            (0.05, 0.005),  # plot color bars
+            (0.05, 0.015),  # plot color bars
 
-            (0.025, 0.),  # plot subtitles
+            (0.025, -0.025),  # plot subtitles
 
             (0.3, 0.8),  # plot title
         )
@@ -234,12 +242,49 @@ def plot_grids(grid: np.ndarray, lat, lon, common_colorbar=False, projection=Non
             vcenter = (vmax[i] + vmin[i]) / 2
             norm = matplotlib.colors.TwoSlopeNorm(vmin=vmin[i], vmax=vmax[i], vcenter=vcenter)
 
-        p = ax_grid.pcolormesh(
-            lon2d, lat2d, grid[i],
-            cmap=cmaps.matlab_jet,
-            transform=ccrs.PlateCarree(),
-            norm=norm
-        )
+        if filling_type == "gridded":
+            p = ax_grid.pcolormesh(
+                lon2d, lat2d, grid[i],
+                # cmap=cmaps.matlab_jet,
+                cmap=cmap if cmap is not None else cmaps.matlab_jet,
+                transform=ccrs.PlateCarree(),
+                norm=norm
+            )
+
+        else:
+            p = ax_grid.pcolormesh(
+                lon2d[:1, :1], lat2d[:1, :1], grid[i][:1, :1],
+                # lon2d, lat2d, grid[i],
+                # cmap=cmaps.matlab_jet,
+                cmap=cmap if cmap is not None else cmaps.matlab_jet,
+                transform=ccrs.PlateCarree(),
+                norm=norm
+            )
+
+            if filling_type == "contour":
+                ax_grid.contour(
+                    lon2d, lat2d, grid[i], contour_num,
+                    # cmap=cmaps.matlab_jet,
+                    cmap=cmap if cmap is not None else cmaps.matlab_jet,
+                    transform=ccrs.PlateCarree(),
+                    norm=norm
+                )
+
+            elif filling_type == "contour_filled":
+                ax_grid.contourf(
+                    lon2d, lat2d, grid[i], contour_num,
+                    # cmap=cmaps.matlab_jet,
+                    cmap=cmap if cmap is not None else cmaps.matlab_jet,
+                    transform=ccrs.PlateCarree(),
+                    norm=norm
+                )
+
+
+            else:
+                assert False
+
+        if gridlines:
+            ax_grid.gridlines()
 
         if extent is not None:
             ax_grid.set_extent(extent)
@@ -269,7 +314,7 @@ def plot_grids(grid: np.ndarray, lat, lon, common_colorbar=False, projection=Non
                           fraction=1, ax=ax_cb,
                           #  ticks=np.linspace(vmin[i], vmax[i], 3)
                           aspect=30,
-                          extend='both',
+                          extend=cb_extend if cb_extend is not None else 'both',
                           )
         cb.ax.tick_params(direction='in')
 
