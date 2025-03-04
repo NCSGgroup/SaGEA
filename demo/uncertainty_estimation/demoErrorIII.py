@@ -173,7 +173,7 @@ def demo():
 
     print("loading files...", end=" ")
     '''load GSM'''
-    shc, dates_begin, dates_end = load_SHC(gsm_path, key=gsm_key, lmax=lmax, lmcs_in_queue=(2, 3, 4, 5),
+    shc, dates_begin, dates_end = load_SHC(gsm_path, key=gsm_key, lmax=lmax, read_rows=(2, 3, 4, 5),
                                            get_dates=True, begin_date=begin_date, end_date=end_date)
     dates_ave = TimeTool.get_average_dates(dates_begin, dates_end)
 
@@ -181,18 +181,18 @@ def demo():
     low_degs = load_low_degs(*low_deg_filepaths)
 
     '''load GAA'''
-    shc_gaa, _, _ = load_SHC(gaa_path, key=gaa_key, lmax=lmax, lmcs_in_queue=(2, 3, 4, 5),
+    shc_gaa, _, _ = load_SHC(gaa_path, key=gaa_key, lmax=lmax, read_rows=(2, 3, 4, 5),
                              get_dates=True, begin_date=begin_date, end_date=end_date)
 
     '''load GAD'''
-    shc_gad, _, _ = load_SHC(gad_path, key=gad_key, lmax=lmax, lmcs_in_queue=(2, 3, 4, 5),
+    shc_gad, _, _ = load_SHC(gad_path, key=gad_key, lmax=lmax, read_rows=(2, 3, 4, 5),
                              get_dates=True, begin_date=begin_date, end_date=end_date)
     '''load GIA'''
-    shc_gia_trend = load_SHC(gia_filepath, key='', lmax=lmax, lmcs_in_queue=(1, 2, 3, 4))
+    shc_gia_trend = load_SHC(gia_filepath, key='', lmax=lmax, read_rows=(1, 2, 3, 4))
     shc_gia = shc_gia_trend.expand(dates_ave)
 
     '''load basin'''
-    shc_basin = load_SHC(basin_path, key='', lmax=lmax, lmcs_in_queue=(1, 2, 3, 4))
+    shc_basin = load_SHC(basin_path, key='', lmax=lmax, read_rows=(1, 2, 3, 4))
 
     grid_basin = shc_basin.to_grid(grid_space=grid_space)
     grid_basin.limiter(threshold=0.5)

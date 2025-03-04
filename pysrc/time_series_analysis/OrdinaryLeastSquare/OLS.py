@@ -67,7 +67,7 @@ class OLSFor1d:
         else:
             fit_function = fit_function_without_semiannual
 
-        self.__times = times
+        self.__times = np.array(times)
         fit_result = curve_fit(fit_function, times, values)
         z = fit_result[0][0]
         self.__z = z

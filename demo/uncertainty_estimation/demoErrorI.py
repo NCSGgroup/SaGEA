@@ -71,7 +71,7 @@ def demo2():
 
     print("post-processing...", end=" ")
     basin_path = FileTool.get_project_dir("data/basin_mask/SH/Ocean_maskSH.dat")
-    shc_basin = load_SHC(basin_path, key='', lmax=lmax, lmcs_in_queue=(1, 2, 3, 4))
+    shc_basin = load_SHC(basin_path, key='', lmax=lmax, read_rows=(1, 2, 3, 4))
     grid_basin = shc_basin.to_grid(grid_space=grid_space)
     grid_basin.limiter(threshold=0.5)
     mask_ocean = grid_basin.value[0]

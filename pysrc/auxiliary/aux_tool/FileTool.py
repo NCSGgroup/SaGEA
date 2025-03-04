@@ -120,7 +120,8 @@ class FileTool:
         iterlist = list(fp.iterdir())
         for i in range(len(iterlist)):
             if iterlist[i].is_file():
-                file_list.append(iterlist[i])
+                if not iterlist[i].name.startswith('.'):
+                    file_list.append(iterlist[i])
 
             elif sub:
                 file_list += FileTool.get_files_in_dir(iterlist[i], sub=sub)

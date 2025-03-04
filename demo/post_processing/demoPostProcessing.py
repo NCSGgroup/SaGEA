@@ -188,7 +188,7 @@ def demo3():
     filter_method, filter_params = Enums.SHCFilterType.Gaussian, (300,)
     """end of input"""
 
-    shc, dates_begin, dates_end = load_SHC(gsm_path, key=gsm_key, lmax=lmax, lmcs_in_queue=(2, 3, 4, 5),
+    shc, dates_begin, dates_end = load_SHC(gsm_path, key=gsm_key, lmax=lmax, read_rows=(2, 3, 4, 5),
                                            begin_date=begin_date, end_date=end_date, get_dates=True)
     dates_ave = TimeTool.get_average_dates(dates_begin, dates_end)
 

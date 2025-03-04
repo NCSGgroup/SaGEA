@@ -160,7 +160,7 @@ def demo1():
         FileTool.get_project_dir('data/auxiliary/GIF48.gfc'),
         key='gfc',
         lmax=lmax,
-        lmcs_in_queue=(2, 3, 4, 5)
+        read_rows=(2, 3, 4, 5)
     ).get_cs2d()
 
     cqlm, sqlm = np.array([cqlm[0]] * multi_times), np.array([sqlm[0]] * multi_times)
@@ -169,7 +169,7 @@ def demo1():
     basin_conservation_path = FileTool.get_project_dir('data/basin_mask/Ocean_maskSH.dat')
 
     paths = [basin_path, basin_conservation_path]
-    basin_shc = load_SHC(*paths, key="", lmax=lmax, lmcs_in_queue=(1, 2, 3, 4))
+    basin_shc = load_SHC(*paths, key="", lmax=lmax, read_rows=(1, 2, 3, 4))
     basin_grid = basin_shc.to_grid(grid_space=spatial_resolution)
 
     basins = basin_grid.value

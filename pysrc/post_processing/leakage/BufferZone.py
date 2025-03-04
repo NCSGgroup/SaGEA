@@ -101,7 +101,7 @@ if __name__ == '__main__':
     lmax = 60
 
     basin_path = FileTool.get_project_dir('data/auxiliary/ocean360_grndline.sh')
-    basin_shc = load_SHC(basin_path, key="", lmcs_in_queue=(1, 2, 3, 4), lmax=lmax)
+    basin_shc = load_SHC(basin_path, key="", read_rows=(1, 2, 3, 4), lmax=lmax)
     basin_grid = basin_shc.to_grid(grid_space=grid_space).value[0]
 
     lat, lon = MathTool.get_global_lat_lon_range(grid_space)

@@ -1,3 +1,4 @@
+import pathlib
 import re
 import datetime
 import json
@@ -42,15 +43,15 @@ def match_dates_from_filename(filename):
 
             match_flag = True
 
-    '''date format: yyyymm'''
+    '''date format: yyyy-mm'''
     if not match_flag:
-        date_begin_end_pattern = r"_(\d{4})(\d{2})_"
+        date_begin_end_pattern = r"(\d{4})(-|_|)(\d{2})"
         date_begin_end_searched = re.search(date_begin_end_pattern, filename)
 
         if date_begin_end_searched is not None:
             year_month = date_begin_end_searched.groups()
             year = int(year_month[0])
-            month = int(year_month[1])
+            month = int(year_month[2])
 
             this_date_begin = datetime.date(int(year), month, 1)
             if month < 12:
@@ -67,14 +68,14 @@ def match_dates_from_filename(filename):
     return this_date_begin, this_date_end
 
 
-def load_SHC(*filepath, key: str, lmax: int, lmcs_in_queue=None, get_dates=False, begin_date=None, end_date=None,
+def load_SHC(*filepath, key: str, lmax: int, read_rows=None, get_dates=False, begin_date=None, end_date=None,
              dates_excluded=None):
     """
 
     :param filepath: path of SH file
     :param key: '' if there is not any key.
     :param lmax: max degree and order.
-    :param lmcs_in_queue: iter, Number of columns where degree l, order m, coefficient clm, and slm are located.
+    :param read_rows: iter, Number of columns where degree l, order m, coefficient clm, and slm are located.
     :param get_dates: bool, if True return dates.
     :param begin_date: beginning date to load
     :param end_date: ending date to load
@@ -86,7 +87,7 @@ def load_SHC(*filepath, key: str, lmax: int, lmcs_in_queue=None, get_dates=False
     """
 
     def are_all_num(x: list):
-        for i in lmcs_in_queue:
+        for i in read_rows:
             if x[i - 1].replace('e', '').replace('E', '').replace('E', '').replace('E', '').replace('-',
                                                                                                     '').replace(
                 '+', '').replace('.', '').isnumeric():
@@ -96,22 +97,35 @@ def load_SHC(*filepath, key: str, lmax: int, lmcs_in_queue=None, get_dates=False
 
         return True
 
+    filepath_to_load = list(filepath)
+    for i in range(len(filepath_to_load)):
+        assert type(filepath_to_load[i]) in (str,) or isinstance(filepath_to_load[i], pathlib.PurePath)
+
+        if type(filepath_to_load[i]) is str:
+            filepath_to_load[i] = pathlib.Path(filepath_to_load[i])
+
+    if begin_date is None:
+        begin_date = datetime.date(1500, 1, 1)
+    if end_date is None:
+        end_date = datetime.date(2999, 12, 31)
+
     if len(filepath) == 1:
-        assert filepath[0].exists(), f"{filepath[0]} does not exist"
 
-        if filepath[0].is_file():
-            if lmcs_in_queue is None:
-                lmcs_in_queue = [1, 2, 3, 4] if key == "" else [2, 3, 4, 5]
+        assert filepath_to_load[0].exists(), f"{filepath_to_load[0]} does not exist"
 
-            l_queue = lmcs_in_queue[0]
-            m_queue = lmcs_in_queue[1]
-            c_queue = lmcs_in_queue[2]
-            s_queue = lmcs_in_queue[3]
+        if filepath_to_load[0].is_file():
+            if read_rows is None:
+                read_rows = [1, 2, 3, 4] if key == "" else [2, 3, 4, 5]
+
+            l_queue = read_rows[0]
+            m_queue = read_rows[1]
+            c_queue = read_rows[2]
+            s_queue = read_rows[3]
 
             mat_shape = (lmax + 1, lmax + 1)
             clm, slm = np.zeros(mat_shape), np.zeros(mat_shape)
 
-            with open(filepath[0]) as f:
+            with open(filepath_to_load[0]) as f:
                 txt_list = f.readlines()
 
                 for i in range(len(txt_list)):
@@ -141,8 +155,8 @@ def load_SHC(*filepath, key: str, lmax: int, lmcs_in_queue=None, get_dates=False
             else:
                 return SHC(clm, slm)
 
-        elif filepath[0].is_dir():
-            file_list = FileTool.get_files_in_dir(filepath[0], sub=True)
+        elif filepath_to_load[0].is_dir():
+            file_list = FileTool.get_files_in_dir(filepath_to_load[0], sub=True)
             file_list.sort()
 
             files_to_load = []
@@ -151,7 +165,7 @@ def load_SHC(*filepath, key: str, lmax: int, lmcs_in_queue=None, get_dates=False
                 if this_begin_date >= begin_date and this_end_date <= end_date:
                     files_to_load.append(file_list[i])
 
-            return load_SHC(*files_to_load, key=key, lmax=lmax, lmcs_in_queue=lmcs_in_queue,
+            return load_SHC(*files_to_load, key=key, lmax=lmax, read_rows=read_rows,
                             get_dates=get_dates, begin_date=begin_date, end_date=end_date,
                             dates_excluded=dates_excluded)
 
@@ -159,7 +173,7 @@ def load_SHC(*filepath, key: str, lmax: int, lmcs_in_queue=None, get_dates=False
         shc = None
         dates_begin, dates_end = [], []
 
-        for i in range(len(filepath)):
+        for i in range(len(filepath_to_load)):
             if dates_excluded is not None:
                 this_date_begin, this_date_end = match_dates_from_filename(filepath[i].name)
                 this_ave_date = TimeTool.get_average_dates(this_date_begin, this_date_end)
@@ -170,7 +184,7 @@ def load_SHC(*filepath, key: str, lmax: int, lmcs_in_queue=None, get_dates=False
                 ]:
                     continue
 
-            load = load_SHC(filepath[i], key=key, lmax=lmax, lmcs_in_queue=lmcs_in_queue,
+            load = load_SHC(filepath_to_load[i], key=key, lmax=lmax, read_rows=read_rows,
                             get_dates=get_dates, begin_date=begin_date, end_date=end_date)
 
             if type(load) is tuple:

@@ -39,7 +39,7 @@ class ExtractSpectral:
             if issubclass(type(basin[0]), Path):
                 path = basin[0]
                 lmax = self._configuration.lmax
-                self.basin_clm, self.basin_slm = load_SHC(path, key='', lmax=lmax, lmcs_in_queue=(1, 2, 3, 4))
+                self.basin_clm, self.basin_slm = load_SHC(path, key='', lmax=lmax, read_rows=(1, 2, 3, 4))
 
             elif type(basin[0]) is SHC:
                 basin_cqlm, basin_sqlm = basin[0].get_cs2d()
