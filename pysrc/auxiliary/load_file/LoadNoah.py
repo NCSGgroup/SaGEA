@@ -7,7 +7,7 @@ from netCDF4 import Dataset
 from pysrc.auxiliary.aux_tool.FileTool import FileTool
 from pysrc.auxiliary.aux_tool.MathTool import MathTool
 from pysrc.auxiliary.aux_tool.TimeTool import TimeTool
-from pysrc.data_class.DataClass import GRID
+from pysrc.data_class.GRID import GRID
 
 
 class LoadNOAH21:

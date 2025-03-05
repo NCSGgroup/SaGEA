@@ -10,7 +10,7 @@ from pysrc.auxiliary.preference.EnumClasses import L2ProductType, L2InstituteTyp
 from pysrc.auxiliary.scripts.MatchConfigWithEnums import match_config
 from pysrc.auxiliary.aux_tool.FileTool import FileTool
 from pysrc.auxiliary.aux_tool.TimeTool import TimeTool
-from pysrc.data_class.DataClass import SHC
+from pysrc.data_class.SHC import SHC
 
 
 def match_dates_from_filename(filename):

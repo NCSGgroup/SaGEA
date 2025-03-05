@@ -1,10 +1,8 @@
-import pathlib
 from pathlib import Path
 
 import numpy as np
 
-from pysrc.auxiliary.core_data_class.CoreGRID import CoreGRID
-from pysrc.data_class.DataClass import GRID
+from pysrc.data_class.GRID import GRID
 from pysrc.post_processing.extract_basin_signal.ExtractSpatialSignalConfig import ExtractSpatialSignalConfig
 
 from pysrc.auxiliary.load_file.LoadL2SH import load_SHC
@@ -59,7 +57,7 @@ class ExtractSpatial:
         """
         :param grid: 2d-array of gridded signal or 3d-array for series
         """
-        if issubclass(type(grid), CoreGRID):
+        if isinstance(type(grid), GRID):
             grid = grid.value
 
         if grid.ndim == 2:
@@ -69,7 +67,7 @@ class ExtractSpatial:
         return self
 
     def set_weight(self, grid: np.ndarray or GRID):
-        if issubclass(type(grid), CoreGRID):
+        if isinstance(type(grid), GRID):
             grid = grid.value
 
         if grid.ndim == 2:

@@ -6,7 +6,7 @@ import pysrc.auxiliary.preference.EnumClasses as Enums
 from pysrc.auxiliary.aux_tool.FileTool import FileTool
 from pysrc.auxiliary.scripts.PlotGrids import plot_grids
 
-from pysrc.data_class.DataClass import SHC
+from pysrc.data_class.SHC import SHC
 from pysrc.uncertainty_estimating.monte_carlo.MonteCarlo import MonteCarlo
 
 

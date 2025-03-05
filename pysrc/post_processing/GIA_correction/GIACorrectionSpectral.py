@@ -2,7 +2,7 @@ import copy
 
 import numpy as np
 
-from pysrc.data_class.DataClass import SHC
+from pysrc.data_class.SHC import SHC
 from pysrc.auxiliary.aux_tool.TimeTool import TimeTool
 
 

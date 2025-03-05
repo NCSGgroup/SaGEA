@@ -4,7 +4,7 @@ import numpy as np
 import geopandas as gpd
 import shapely.vectorized
 
-from pysrc.data_class.DataClass import GRID
+from pysrc.data_class.GRID import GRID
 from pysrc.auxiliary.aux_tool.MathTool import MathTool
 
 

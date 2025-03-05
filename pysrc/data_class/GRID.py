@@ -10,17 +10,10 @@ import numpy as np
 from pysrc.auxiliary.aux_tool.FileTool import FileTool
 from pysrc.auxiliary.aux_tool.MathTool import MathTool
 from pysrc.auxiliary.aux_tool.TimeTool import TimeTool
-from pysrc.auxiliary.core_data_class.CoreGRID import CoreGRID
-from pysrc.auxiliary.core_data_class.CoreSHC import CoreSHC
 import pysrc.auxiliary.preference.EnumClasses as Enums
-from pysrc.auxiliary.preference.EnumClasses import match_string
 
-from pysrc.post_processing.Love_number.LoveNumber import LoveNumber
-from pysrc.post_processing.convert_field_physical_quantity.ConvertSHC import ConvertSHC
 from pysrc.post_processing.de_aliasing.DeAliasing import DeAliasing
 from pysrc.post_processing.filter.GetSHCFilter import get_filter
-from pysrc.post_processing.filter.VariableScale import VariableScale
-from pysrc.post_processing.geometric_correction.GeometricalCorrection import GeometricalCorrection
 from pysrc.post_processing.harmonic.Harmonic import Harmonic
 from pysrc.post_processing.leakage.Addictive import Addictive
 from pysrc.post_processing.leakage.BufferZone import BufferZone
@@ -30,166 +23,84 @@ from pysrc.post_processing.leakage.Iterative import Iterative
 from pysrc.post_processing.leakage.Multiplicative import Multiplicative
 from pysrc.post_processing.leakage.Scaling import Scaling
 from pysrc.post_processing.leakage.ScalingGrid import ScalingGrid
-from pysrc.post_processing.replace_low_deg.ReplaceLowDegree import ReplaceLowDegree
 from pysrc.post_processing.seismic_correction.SeismicCorrection import SeismicCorrection
 
 
-class SHC(CoreSHC):
-    def __init__(self, c, s=None):
-        super().__init__(c, s)
-
-    def __add__(self, other):
-        assert issubclass(type(other), CoreSHC)
-
-        return SHC(self.value + other.value)
-
-    def __sub__(self, other):
-        assert issubclass(type(other), CoreSHC)
-
-        return SHC(self.value - other.value)
-
-    def get_degree_rms(self):
-        cqlm, sqlm = self.get_cs2d()
-        return MathTool.get_degree_rms(cqlm, sqlm)
-
-    def get_degree_rss(self):
-        cqlm, sqlm = self.get_cs2d()
-        return MathTool.get_degree_rss(cqlm, sqlm)
-
-    def get_std(self):
-        cs_std = np.std(self.value, axis=0)
-        return SHC(cs_std)
-
-    def convert_type(self, from_type=None, to_type=None):
-        types = list(Enums.PhysicalDimensions)
-        types_string = [i.name.lower() for i in types]
-        types += types_string
-
-        if from_type is None:
-            from_type = Enums.PhysicalDimensions.Dimensionless
-        if to_type is None:
-            to_type = Enums.PhysicalDimensions.Dimensionless
-
-        assert (from_type.lower() if type(
-            from_type) is str else from_type) in types, f"from_type must be one of {types}"
-        assert (to_type.lower() if type(
-            to_type) is str else to_type) in types, f"to_type must be one of {types}"
-
-        if from_type is None:
-            from_type = Enums.PhysicalDimensions.Dimensionless
-        if to_type is None:
-            to_type = Enums.PhysicalDimensions.Dimensionless
-
-        if type(from_type) is str:
-            from_type = match_string(from_type, Enums.PhysicalDimensions, ignore_case=True)
-        if type(to_type) is str:
-            to_type = match_string(to_type, Enums.PhysicalDimensions, ignore_case=True)
-        lmax = self.get_lmax()
-        LN = LoveNumber()
-        LN.configuration.set_lmax(lmax)
-
-        ln = LN.get_Love_number()
-
-        convert = ConvertSHC()
-        convert.configuration.set_Love_number(ln).set_input_type(from_type).set_output_type(to_type)
-
-        self.value = convert.apply_to(self.value)
-        return self
-
-    def to_grid(self, grid_space=None, special_type: Enums.PhysicalDimensions = None):
-        """pure synthesis"""
-
-        if grid_space is None:
-            grid_space = int(180 / self.get_lmax())
-        assert special_type in (
-            None,
-            Enums.PhysicalDimensions.HorizontalDisplacementEast,
-            Enums.PhysicalDimensions.HorizontalDisplacementNorth,
-        )
-
-        lat, lon = MathTool.get_global_lat_lon_range(grid_space)
-
-        lmax = self.get_lmax()
-        har = Harmonic(lat, lon, lmax, option=1)
-
-        cqlm, sqlm = self.get_cs2d()
-        grid_data = har.synthesis(cqlm, sqlm, special_type=special_type)
-        grid = GRID(grid_data, lat, lon, option=1)
-
-        return grid
-
-    def filter(self, method: Enums.SHCFilterType or Enums.SHCDecorrelationType, param: tuple = None):
-        cqlm, sqlm = self.get_cs2d()
-        filtering = get_filter(method, param, lmax=self.get_lmax())
-        cqlm_f, sqlm_f = filtering.apply_to(cqlm, sqlm)
-        self.value = MathTool.cs_combine_to_triangle_1d(cqlm_f, sqlm_f)
-
-        return self
-
-    def geometric(self, assumption: Enums.GeometricCorrectionAssumption, log=False):
-        gc = GeometricalCorrection()
-        cqlm, sqlm = self.get_cs2d()
-        cqlm_new, sqlm_new = gc.apply_to(cqlm, sqlm, assumption=assumption, log=log)
-        self.value = MathTool.cs_combine_to_triangle_1d(cqlm_new, sqlm_new)
-
-        return self
-
-    def replace_low_degs(self, dates_begin, dates_end, low_deg: dict,
-                         deg1=True, c20=False, c30=False):
-        assert len(dates_begin) == len(dates_end) == len(self.value)
-        if deg1:
-            c10, c11, s11 = True, True, True
-        else:
-            c10, c11, s11 = False, False, False
-        replace_or_not = (c10, c11, s11, c20, c30)
-        low_ids = ("c10", "c11", "s11", "c20", "c30")
-        for i in range(len(low_ids)):
-            if replace_or_not:
-                assert low_ids[i] in low_deg.keys(), f"input low_deg should include key {low_ids[i]}"
-        replace_low_degs = ReplaceLowDegree()
-        replace_low_degs.configuration.set_replace_deg1(deg1).set_replace_c20(c20).set_replace_c30(c30)
-        replace_low_degs.set_low_degrees(low_deg)
-        cqlm, sqlm = replace_low_degs.apply_to(*self.get_cs2d(), begin_dates=dates_begin, end_dates=dates_end)
-        self.value = MathTool.cs_combine_to_triangle_1d(cqlm, sqlm)
-
-        return self
-
-    def expand(self, time):
-        assert not self.is_series()
-
-        year_frac = TimeTool.convert_date_format(time,
-                                                 input_type=TimeTool.DateFormat.ClassDate,
-                                                 output_type=TimeTool.DateFormat.YearFraction)
-
-        year_frac = np.array(year_frac)
-
-        trend = self.value[0]
-        value = year_frac[:, None] @ trend[None, :]
-        return SHC(value)
-
-    def synthesis(self, grid_space, from_type: Enums.PhysicalDimensions = None,
-                  to_type: Enums.PhysicalDimensions = None):
-
-        shc_copy = copy.deepcopy(self)
-
-        special_type = to_type if to_type in (
-            Enums.PhysicalDimensions.HorizontalDisplacementNorth,
-            Enums.PhysicalDimensions.HorizontalDisplacementEast) else None
-
-        shc_copy.convert_type(from_type=from_type, to_type=to_type)
-        grid = shc_copy.to_grid(grid_space=grid_space, special_type=special_type)
-
-        return grid
-
-
-class GRID(CoreGRID):
+class GRID:
     def __init__(self, grid, lat, lon, option=1):
-        super().__init__(grid, lat, lon, option)
+        """
+        To create a GRID object,
+        one needs to specify the data (grid) and corresponding latitude range (lat) and longitude range (lon).
+        :param grid: 2d- or 3d-array gridded signal, index ([num] ,lat, lon)
+        :param lat: co-latitude in [rad] if option=0 else latitude in [degree]
+        :param lon: longitude in [rad] if option=0 else longitude in [degree]
+        :param option: set 0 if input colat and lon are in [rad]
+        """
+        if np.ndim(grid) == 2:
+            grid = [grid]
+
+        assert np.shape(grid)[-2:] == (len(lat), len(lon))
+
+        self.value = np.array(grid)
+
+        if option == 0:
+            self.lat = 90 - np.degrees(lat)
+            self.lon = np.degrees(lon)
+
+        else:
+            self.lat = lat
+            self.lon = lon
+
+        pass
+
+    def append(self, grid, lat=None, lon=None, option=0):
+        """
+
+        :param grid: instantiated GRID or a 2d-array of index (lat, lon).
+                        If 2d-array, the lat and lon range should be the same with self.lat and self.lon;
+                        If instantiated GRID, params lat, lon and option are not needed.
+        :param lat: co-latitude in [rad] if option=0 else latitude in [degree]
+        :param lon: longitude in [rad] if option=0 else longitude in [degree]
+        :param option:
+        :return:
+        """
+        assert type(grid) in (GRID, np.ndarray)
+
+        if type(grid) is GRID:
+            assert lat is None and lon is None
+            assert grid.lat == self.lat
+            assert grid.lon == self.lon
+
+        else:
+            assert np.shape(grid)[-2:] == (len(self.lat), len(self.lon))
+            grid = GRID(grid, self.lat, self.lon, option)
+
+        array_to_append = grid.value if grid.is_series() else np.array([grid.value])
+        array_self = self.value if self.is_series() else [self.value]
+
+        self.value = np.concatenate([array_self, array_to_append])
+
+        return self
+
+    def is_series(self):
+        """
+        To determine whether the data stored in this class are one group or multiple groups.
+        :return: bool, True if it stores multiple groups, False if it stores only one group.
+        """
+        return len(np.shape(self.value)) == 3
+
+    def get_grid_space(self):
+        """
+        return: grid_space in unit [degree]
+        """
+        return round(self.lat[1] - self.lat[0], 2)
 
     def get_length(self):
         return self.value.shape[0]
 
     def to_SHC(self, lmax=None, special_type: Enums.PhysicalDimensions = None):
+        from pysrc.data_class.SHC import SHC
+
         grid_space = self.get_grid_space()
 
         assert special_type in (
@@ -238,7 +149,7 @@ class GRID(CoreGRID):
                 # extra params for model-driven methods
                 prefilter_type: Enums.SHCFilterType = Enums.SHCFilterType.Gaussian, prefilter_params: tuple = (50,),
                 # extra params for iterative
-                scale_type: str = "trend", shc_unfiltered: SHC = None,
+                scale_type: str = "trend", shc_unfiltered=None,
                 # extra params for scaling and scaling_grid
                 basin_conservation: np.ndarray = None, fm_iter_times: int = 30, log=False
                 # extra params for forward modeling
@@ -525,7 +436,3 @@ class GRID(CoreGRID):
             lon_group = h5file.create_group("lon")
             lon_group.create_dataset("description", data=f"geographical longitude in unit [degree]")
             lon_group.create_dataset("data", data=self.lon)
-
-
-if __name__ == '__main__':
-    pass

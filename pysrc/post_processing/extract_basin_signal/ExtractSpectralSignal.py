@@ -3,7 +3,7 @@ from pathlib import Path
 
 import numpy as np
 
-from pysrc.data_class.DataClass import SHC
+from pysrc.data_class.SHC import SHC
 from pysrc.post_processing.extract_basin_signal.ExtractSpectralSignalConfig import ExtractSpectralSignalConfig
 
 from pysrc.auxiliary.load_file.LoadL2SH import load_SHC

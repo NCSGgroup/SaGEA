@@ -1,6 +1,6 @@
 import numpy as np
 
-from pysrc.data_class.DataClass import SHC
+from pysrc.data_class.SHC import SHC
 from pysrc.post_processing.filter.DDK import DDK
 
 
