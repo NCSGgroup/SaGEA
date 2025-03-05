@@ -75,9 +75,13 @@ class LoadShp:
 
         return GRID(mask, lat, lon)
 
-    def get_SHC(self, lmax: int = None):
+    def get_SHC(self, lmax: int, spatial_accuracy: int = None):
+        if spatial_accuracy is not None:
+            grid_space = spatial_accuracy
+        else:
+            grid_space = int(180 / lmax)
 
-        grid = self.get_GRID()
+        grid = self.get_GRID(grid_space)
         shc = grid.to_SHC(lmax)
         return shc
 
