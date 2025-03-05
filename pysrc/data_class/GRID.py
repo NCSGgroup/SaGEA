@@ -38,7 +38,6 @@ class GRID:
         """
         if np.ndim(grid) == 2:
             grid = [grid]
-
         assert np.shape(grid)[-2:] == (len(lat), len(lon))
 
         self.value = np.array(grid)
@@ -275,11 +274,13 @@ class GRID:
 
         self.value = de_alias.apply_to(self.value, year_frac)
 
-    def integral(self, mask=None, average=True):
+    def __integral_for_one_basin(self, mask=None, average=True):
+        assert type(mask) in (np.ndarray,) or isinstance(mask, GRID) or mask is None
+
         if average:
             assert mask is not None
 
-        if isinstance(mask, CoreGRID):
+        if isinstance(mask, GRID):
             assert not mask.is_series()
             mask = mask.value[0]
 
@@ -296,6 +297,38 @@ class GRID:
             integral_result /= MathTool.get_acreage(mask)
 
         return integral_result
+
+    def integral(self, mask=None, average=True):
+        assert type(mask) in (np.ndarray,) or isinstance(mask, GRID) or mask is None
+
+        if mask is None:
+            return self.__integral_for_one_basin(mask, average=average)
+
+        else:
+            if isinstance(mask, GRID):
+                mask_value = mask.value
+            elif type(mask) in (np.ndarray,):
+                mask_value = mask
+            else:
+                assert False
+
+            assert mask_value.ndim in (2, 3)
+
+            if mask_value.ndim == 2:
+                return self.__integral_for_one_basin(mask, average=average)
+
+            else:
+                result_list = []
+                for i in range(mask_value.shape[0]):
+                    result = self.__integral_for_one_basin(mask_value[i], average=average)
+                    result_list.append(result)
+
+                return np.array(result_list)
+
+    def regional_extraction(self, grid_region, average=True):
+        assert isinstance(grid_region, GRID)
+
+        return self.integral(grid_region.value, average=average)
 
     def limiter(self, threshold=0, beyond=1, below=0):
         index_beyond = np.where(self.value >= threshold)

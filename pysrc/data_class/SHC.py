@@ -5,6 +5,7 @@ import numpy as np
 from pysrc.auxiliary.aux_tool.MathTool import MathTool
 import pysrc.auxiliary.preference.EnumClasses as Enums
 from pysrc.auxiliary.aux_tool.TimeTool import TimeTool
+from pysrc.auxiliary.preference.Constants import GeoConstants
 from pysrc.auxiliary.preference.EnumClasses import match_string
 
 from pysrc.post_processing.Love_number.LoveNumber import LoveNumber
@@ -306,3 +307,20 @@ class SHC:
         trend = self.value[0]
         value = year_frac[:, None] @ trend[None, :]
         return SHC(value)
+
+    def regional_extraction(self, shc_region, normalize="4pi", average=True):
+        assert normalize in ("4pi",)
+        assert isinstance(shc_region, SHC)
+
+        extraction = (shc_region.value @ self.value.T) * (GeoConstants.radius_earth ** 2)
+
+        if average:
+            extraction /= (shc_region.value[:, None, 0] * (GeoConstants.radius_earth ** 2))
+
+        else:
+            if normalize == "4pi":
+                extraction *= (4 * np.pi)
+            else:
+                assert False
+
+        return extraction
