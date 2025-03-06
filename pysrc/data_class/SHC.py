@@ -32,13 +32,18 @@ class SHC:
     def __init__(self, c, s=None):
         """
 
-        :param c: harmonic coefficients c in 2-dimension (l,m), or a series (q,l,m),
-                or 1-dimension array sorted by degree [c00, s11, c10, c11, s22, s21, ...] if s is None.
+        :param c: harmonic coefficients c in 2-dimension (l,m), or a series (q,l,m);
+                if s is None:
+                    1-dimension array sorted by degree [c00, s11, c10, c11, s22, s21, ...]
+                    or 1-dimension array sorted by degree [[c00, s11, c10, c11, s22, s21, ...],[...]]
         :param s: harmonic coefficients s in 2-dimension (l,m), or a series (q,l,m),
                 or None.
         """
         if s is None:
             self.value = np.array(c)
+            if len(self.value.shape) == 1:
+                self.value = np.array([self.value])
+
         else:
             assert np.shape(c) == np.shape(s)
 
@@ -85,7 +90,13 @@ class SHC:
         To determine whether the spherical harmonic coefficients stored in this class are one group or multiple groups.
         :return: bool, True if it stores multiple groups, False if it stores only one group.
         """
-        return np.shape(self.value)[0] != 1
+        return self.get_length() != 1
+
+    def get_length(self):
+        """
+        To get the number of sets.
+        """
+        return np.shape(self.value)[0]
 
     def get_lmax(self):
         """
@@ -142,12 +153,12 @@ class SHC:
         return SHC(cs)
 
     def __add__(self, other):
-        assert isinstance(type(other), SHC)
+        assert isinstance(other, SHC)
 
         return SHC(self.value + other.value)
 
     def __sub__(self, other):
-        assert isinstance(type(other), SHC)
+        assert isinstance(other, SHC)
 
         return SHC(self.value - other.value)
 
@@ -324,3 +335,12 @@ class SHC:
                 assert False
 
         return extraction
+
+
+if __name__ == '__main__':
+    shc = SHC(np.ones((5, 97, 97)), np.ones((5, 97, 97)))
+    shc_bg = SHC(np.ones((97, 97)) * 0.5, np.ones((97, 97)))
+
+    shc_2 = shc - shc_bg
+
+    print(shc_2.value)
