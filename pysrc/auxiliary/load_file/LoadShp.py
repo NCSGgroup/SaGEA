@@ -96,39 +96,3 @@ class LoadShp:
         assert identity_name in gdf.keys(), f"{identity_name} dose not exist in axes names: {gdf.keys()}"
 
         return gdf[identity_name]
-
-
-def demo():
-    from pysrc.auxiliary.scripts.PlotGrids import plot_grids
-    from pysrc.auxiliary.aux_tool.FileTool import FileTool
-
-    grid_space = 0.5
-
-    load = LoadShp()
-    load.configuration.set_path(FileTool.get_project_dir() / 'data/basin_mask/Shp/bas200k_shp')
-
-    pass
-
-    grid = load.get_GRID(grid_space=grid_space)
-    bound = load.get_bound()
-    names = load.get_attr("rivr_nm")
-
-    map_to_plot = np.zeros_like(grid.value[0])
-    for i in range(len(grid.value[1:])):
-        map_to_plot += grid.value[i] * i
-
-    for i in (20, 21, 22, 23, 24, 25):
-        plot_grids(
-            grid.value[i:i + 1],
-            lat=grid.lat,
-            lon=grid.lon,
-            # vmin=0,
-            # vmax=2,
-            subtitle=list(names[i:i + 1]),
-            # extent=bound[i]
-        )
-    pass
-
-
-if __name__ == '__main__':
-    demo()
