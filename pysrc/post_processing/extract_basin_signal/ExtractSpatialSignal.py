@@ -2,7 +2,7 @@ from pathlib import Path
 
 import numpy as np
 
-from pysrc.data_class.GRID import GRID
+from pysrc.data_class.GRD import GRD
 from pysrc.post_processing.extract_basin_signal.ExtractSpatialSignalConfig import ExtractSpatialSignalConfig
 
 from pysrc.auxiliary.load_file.LoadL2SH import load_SHC
@@ -53,11 +53,11 @@ class ExtractSpatial:
 
         return grid_basin
 
-    def set_signal(self, grid: np.ndarray or GRID):
+    def set_signal(self, grid: np.ndarray or GRD):
         """
         :param grid: 2d-array of gridded signal or 3d-array for series
         """
-        if isinstance(type(grid), GRID):
+        if isinstance(type(grid), GRD):
             grid = grid.value
 
         if grid.ndim == 2:
@@ -66,8 +66,8 @@ class ExtractSpatial:
         self.signal = grid
         return self
 
-    def set_weight(self, grid: np.ndarray or GRID):
-        if isinstance(type(grid), GRID):
+    def set_weight(self, grid: np.ndarray or GRD):
+        if isinstance(type(grid), GRD):
             grid = grid.value
 
         if grid.ndim == 2:

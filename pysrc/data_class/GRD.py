@@ -26,7 +26,7 @@ from pysrc.post_processing.leakage.ScalingGrid import ScalingGrid
 from pysrc.post_processing.seismic_correction.SeismicCorrection import SeismicCorrection
 
 
-class GRID:
+class GRD:
     def __init__(self, grid, lat, lon, option=1):
         """
         To create a GRID object,
@@ -63,16 +63,16 @@ class GRID:
         :param option:
         :return:
         """
-        assert type(grid) in (GRID, np.ndarray)
+        assert type(grid) in (GRD, np.ndarray)
 
-        if type(grid) is GRID:
+        if type(grid) is GRD:
             assert lat is None and lon is None
             assert grid.lat == self.lat
             assert grid.lon == self.lon
 
         else:
             assert np.shape(grid)[-2:] == (len(self.lat), len(self.lon))
-            grid = GRID(grid, self.lat, self.lon, option)
+            grid = GRD(grid, self.lat, self.lon, option)
 
         array_to_append = grid.value if grid.is_series() else np.array([grid.value])
         array_self = self.value if self.is_series() else [self.value]
@@ -197,7 +197,7 @@ class GRID:
             lk.configuration.set_GRACE_times(times)
             lk.configuration.set_model_times(reference["time"])
 
-            if isinstance(reference["model"], GRID):
+            if isinstance(reference["model"], GRD):
                 reference["model"] = reference["model"].value
             lk.configuration.set_model(reference["model"])
 
@@ -275,12 +275,12 @@ class GRID:
         self.value = de_alias.apply_to(self.value, year_frac)
 
     def __integral_for_one_basin(self, mask=None, average=True):
-        assert type(mask) in (np.ndarray,) or isinstance(mask, GRID) or mask is None
+        assert type(mask) in (np.ndarray,) or isinstance(mask, GRD) or mask is None
 
         if average:
             assert mask is not None
 
-        if isinstance(mask, GRID):
+        if isinstance(mask, GRD):
             assert not mask.is_series()
             mask = mask.value[0]
 
@@ -299,13 +299,13 @@ class GRID:
         return integral_result
 
     def integral(self, mask=None, average=True):
-        assert type(mask) in (np.ndarray,) or isinstance(mask, GRID) or mask is None
+        assert type(mask) in (np.ndarray,) or isinstance(mask, GRD) or mask is None
 
         if mask is None:
             return self.__integral_for_one_basin(mask, average=average)
 
         else:
-            if isinstance(mask, GRID):
+            if isinstance(mask, GRD):
                 mask_value = mask.value
             elif type(mask) in (np.ndarray,):
                 mask_value = mask
@@ -326,7 +326,7 @@ class GRID:
                 return np.array(result_list)
 
     def regional_extraction(self, grid_region, average=True):
-        assert isinstance(grid_region, GRID)
+        assert isinstance(grid_region, GRD)
 
         return self.integral(grid_region.value, average=average)
 

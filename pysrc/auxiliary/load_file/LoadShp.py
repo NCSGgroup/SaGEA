@@ -4,7 +4,7 @@ import numpy as np
 import geopandas as gpd
 import shapely.vectorized
 
-from pysrc.data_class.GRID import GRID
+from pysrc.data_class.GRD import GRD
 from pysrc.auxiliary.aux_tool.MathTool import MathTool
 
 
@@ -73,7 +73,7 @@ class LoadShp:
 
         mask, lat, lon = self.__load_mask(grid_space, identity_name)
 
-        return GRID(mask, lat, lon)
+        return GRD(mask, lat, lon)
 
     def get_SHC(self, lmax: int, spatial_accuracy: int = None):
         if spatial_accuracy is not None:

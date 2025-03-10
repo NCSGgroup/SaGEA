@@ -251,7 +251,7 @@ class SHC:
         return self
 
     def to_grid(self, grid_space=None, special_type: Enums.PhysicalDimensions = None):
-        from pysrc.data_class.GRID import GRID
+        from pysrc.data_class.GRD import GRD
 
         """pure synthesis"""
 
@@ -270,7 +270,7 @@ class SHC:
 
         cqlm, sqlm = self.get_cs2d()
         grid_data = har.synthesis(cqlm, sqlm, special_type=special_type)
-        grid = GRID(grid_data, lat, lon, option=1)
+        grid = GRD(grid_data, lat, lon, option=1)
 
         return grid
 

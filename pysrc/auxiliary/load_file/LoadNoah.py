@@ -7,7 +7,7 @@ from netCDF4 import Dataset
 from pysrc.auxiliary.aux_tool.FileTool import FileTool
 from pysrc.auxiliary.aux_tool.MathTool import MathTool
 from pysrc.auxiliary.aux_tool.TimeTool import TimeTool
-from pysrc.data_class.GRID import GRID
+from pysrc.data_class.GRD import GRD
 
 
 class LoadNOAH21:
@@ -100,4 +100,4 @@ def load_GLDAS_TWS(begin_date: datetime.date = None, end_date: datetime.date = N
     if de_average:
         grids -= np.mean(grids, axis=0)
 
-    return GRID(grids, lat=lat, lon=lon), times
+    return GRD(grids, lat=lat, lon=lon), times
