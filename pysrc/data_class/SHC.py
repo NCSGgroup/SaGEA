@@ -225,15 +225,11 @@ class SHC:
         assert (to_type.lower() if type(
             to_type) is str else to_type) in types, f"to_type must be one of {types}"
 
-        if from_type is None:
-            from_type = Enums.PhysicalDimensions.Dimensionless
-        if to_type is None:
-            to_type = Enums.PhysicalDimensions.Dimensionless
-
         if type(from_type) is str:
             from_type = match_string(from_type, Enums.PhysicalDimensions, ignore_case=True)
         if type(to_type) is str:
             to_type = match_string(to_type, Enums.PhysicalDimensions, ignore_case=True)
+
         lmax = self.get_lmax()
         LN = LoveNumber()
         LN.configuration.set_lmax(lmax)
