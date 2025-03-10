@@ -154,11 +154,13 @@ class SHC:
 
     def __add__(self, other):
         assert isinstance(other, SHC)
+        assert self.get_lmax() == other.get_lmax()
 
         return SHC(self.value + other.value)
 
     def __sub__(self, other):
         assert isinstance(other, SHC)
+        assert self.get_lmax() == other.get_lmax()
 
         return SHC(self.value - other.value)
 
