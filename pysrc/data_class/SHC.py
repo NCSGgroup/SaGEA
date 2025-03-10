@@ -140,8 +140,8 @@ class SHC:
             self.__de_average()
 
         else:
-            assert isinstance(type(background), SHC)
-            assert not background.value
+            assert isinstance(background, SHC)
+            assert not background.is_series()
 
             self.value -= background.value
 
@@ -335,12 +335,3 @@ class SHC:
                 assert False
 
         return extraction
-
-
-if __name__ == '__main__':
-    shc = SHC(np.ones((5, 97, 97)), np.ones((5, 97, 97)))
-    shc_bg = SHC(np.ones((97, 97)) * 0.5, np.ones((97, 97)))
-
-    shc_2 = shc - shc_bg
-
-    print(shc_2.value)
