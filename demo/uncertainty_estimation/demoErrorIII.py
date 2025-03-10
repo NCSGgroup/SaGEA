@@ -75,7 +75,7 @@ def demo_single_postprocessing(params, low_degs=None, shc_gsm=None, shc_gad=None
         shc_gia.convert_type(from_type=Enums.PhysicalDimensions.Dimensionless, to_type=Enums.PhysicalDimensions.EWH)
         shc_gsm.subtract(shc_gia)
 
-    grid = shc_gsm.to_grid(grid_space)
+    grid = shc_gsm.to_GRD(grid_space)
 
     if leakage == Enums.LeakageMethod.ForwardModeling:
         mask_reverse = 1 - mask
@@ -194,7 +194,7 @@ def demo():
     '''load basin'''
     shc_basin = load_SHC(basin_path, key='', lmax=lmax, read_rows=(1, 2, 3, 4))
 
-    grid_basin = shc_basin.to_grid(grid_space=grid_space)
+    grid_basin = shc_basin.to_GRD(grid_space=grid_space)
     grid_basin.limiter(threshold=0.5)
     mask_ocean = grid_basin.value[0]
     print("done!")

@@ -252,7 +252,7 @@ class SHC:
 
         return self
 
-    def to_grid(self, grid_space=None, special_type: Enums.PhysicalDimensions = None):
+    def to_GRD(self, grid_space=None, special_type: Enums.PhysicalDimensions = None):
         from pysrc.data_class.GRD import GRD
 
         """pure synthesis"""

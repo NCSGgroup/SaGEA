@@ -72,11 +72,11 @@ def demo1():
     # shc.filter(method=decorrelation_method, param=decorrelation_param)  # decorrelation filter
     shc.filter(method=filter_method, param=filter_params)  # average filter
 
-    grid = shc.to_grid(grid_space)  # harmonic synthesis to grid
+    grid = shc.to_GRD(grid_space)  # harmonic synthesis to grid
 
     # grid.seismic()  # seismic correction
 
-    grid_basin = shc_basin.to_grid(grid_space=grid_space)
+    grid_basin = shc_basin.to_GRD(grid_space=grid_space)
     grid_basin.limiter(threshold=0.5)
     mask_ocean = grid_basin.value[0]  # project basin mask in SHC into grid (1, 0)
 
@@ -156,7 +156,7 @@ def demo2():
     shc.filter(method=decorrelation_method, param=decorrelation_param)  # decorrelation filter
     shc.filter(method=filter_method, param=filter_params)  # average filter
 
-    grid = shc.to_grid(grid_space)  # harmonic synthesis to grid
+    grid = shc.to_GRD(grid_space)  # harmonic synthesis to grid
 
     grid.leakage(
         method=leakage, basin=this_basin_mask, filter_type=filter_method, filter_params=filter_params, lmax=lmax,
@@ -213,7 +213,7 @@ def demo3():
     shc.filter(method=decorrelation_method, param=decorrelation_param)  # de-correlation filtering
     shc.filter(method=filter_method, param=filter_params)  # average filtering
 
-    grid = shc.to_grid(grid_space)
+    grid = shc.to_GRD(grid_space)
 
     '''validation'''
     validation_path = FileTool.get_project_dir("validation/demo_postprocessing_demo3_global_pressure.npy")

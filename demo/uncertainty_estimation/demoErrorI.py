@@ -34,7 +34,7 @@ def demo1():
     shc_noise.convert_type(from_type=Enums.PhysicalDimensions.Dimensionless, to_type=Enums.PhysicalDimensions.EWH)
     # shc_noise.filter(Enums.SHCDecorrelationType.PnMm, (3, 5))
     shc_noise.filter(Enums.SHCFilterType.DDK, (3,))
-    grid_noise = shc_noise.to_grid(grid_space=grid_space)
+    grid_noise = shc_noise.to_GRD(grid_space=grid_space)
     print("done!")
 
     print("get statistic")
@@ -72,7 +72,7 @@ def demo2():
     print("post-processing...", end=" ")
     basin_path = FileTool.get_project_dir("data/basin_mask/SH/Ocean_maskSH.dat")
     shc_basin = load_SHC(basin_path, key='', lmax=lmax, read_rows=(1, 2, 3, 4))
-    grid_basin = shc_basin.to_grid(grid_space=grid_space)
+    grid_basin = shc_basin.to_GRD(grid_space=grid_space)
     grid_basin.limiter(threshold=0.5)
     mask_ocean = grid_basin.value[0]
 
@@ -80,7 +80,7 @@ def demo2():
 
     filter_method, filter_params = Enums.SHCFilterType.DDK, (3,)
     shc_noise.filter(filter_method, filter_params)
-    grid_noise = shc_noise.to_grid(grid_space=grid_space)
+    grid_noise = shc_noise.to_GRD(grid_space=grid_space)
 
     leakage = Enums.LeakageMethod.BufferZone
 

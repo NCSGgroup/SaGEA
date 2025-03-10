@@ -55,7 +55,7 @@ def demo1():
     grid_space = 1
     grids = []
     for i in range(len(shcs)):
-        grids.append(shcs[i].to_grid(grid_space=grid_space))
+        grids.append(shcs[i].to_GRD(grid_space=grid_space))
 
     '''tch for grid'''
     grids_value = [grids[i].value for i in range(len(grids))]
