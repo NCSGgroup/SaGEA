@@ -160,14 +160,25 @@ def load_SHC(*filepath, key: str, lmax: int, read_rows=None, get_dates=False, be
             file_list.sort()
 
             files_to_load = []
+
+            if dates_excluded is not None:
+                excluded_year_month = [(dates_excluded[i].year, dates_excluded[i].month) for i in
+                                       range(len(dates_excluded))]
+            else:
+                excluded_year_month = []
+
             for i in range(len(file_list)):
                 this_begin_date, this_end_date = match_dates_from_filename(file_list[i].name)
+                this_ave_date = TimeTool.get_average_dates(this_begin_date, this_end_date)
+                if (this_ave_date.year, this_ave_date.month) in excluded_year_month:
+                    continue
+
                 if this_begin_date >= begin_date and this_end_date <= end_date:
                     files_to_load.append(file_list[i])
 
             return load_SHC(*files_to_load, key=key, lmax=lmax, read_rows=read_rows,
                             get_dates=get_dates, begin_date=begin_date, end_date=end_date,
-                            dates_excluded=dates_excluded)
+                            dates_excluded=None)
 
     else:
         shc = None
@@ -178,11 +189,11 @@ def load_SHC(*filepath, key: str, lmax: int, read_rows=None, get_dates=False, be
                 this_date_begin, this_date_end = match_dates_from_filename(filepath[i].name)
                 this_ave_date = TimeTool.get_average_dates(this_date_begin, this_date_end)
 
-                if datetime.date(this_ave_date.year, this_ave_date.month, 1) in [
-                    datetime.date(dates_excluded[d].year, dates_excluded[d].month, 1) for d in
-                    range(len(dates_excluded))
-                ]:
-                    continue
+                # if datetime.date(this_ave_date.year, this_ave_date.month, 1) in [
+                #     datetime.date(dates_excluded[d].year, dates_excluded[d].month, 1) for d in
+                #     range(len(dates_excluded))
+                # ]:
+                #     continue
 
             load = load_SHC(filepath_to_load[i], key=key, lmax=lmax, read_rows=read_rows,
                             get_dates=get_dates, begin_date=begin_date, end_date=end_date)
