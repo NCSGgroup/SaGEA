@@ -52,6 +52,18 @@ class GRD:
 
         pass
 
+    def __add__(self, other):
+        assert isinstance(other, GRD)
+        assert other.lat == self.lat and other.lon == self.lon
+
+        return GRD(self.value + other.value, lat=self.lat, lon=self.lon)
+
+    def __sub__(self, other):
+        assert isinstance(other, GRD)
+        assert other.lat == self.lat and other.lon == self.lon
+
+        return GRD(self.value - other.value, lat=self.lat, lon=self.lon)
+
     def append(self, grid, lat=None, lon=None, option=0):
         """
 
