@@ -10,6 +10,7 @@ from pysrc.auxiliary.preference.EnumClasses import L2ProductType, L2InstituteTyp
 from pysrc.auxiliary.scripts.MatchConfigWithEnums import match_config
 from pysrc.auxiliary.aux_tool.FileTool import FileTool
 from pysrc.auxiliary.aux_tool.TimeTool import TimeTool
+from pysrc.data_class.DateSeries import DateSeries
 from pysrc.data_class.SHC import SHC
 
 
@@ -148,9 +149,13 @@ def load_SHC(*filepath, key: str, lmax: int, read_rows=None, get_dates=False, be
 
             if get_dates:
                 this_date_begin, this_date_end = match_dates_from_filename(filepath[0].name)
+                shc = SHC(clm, slm)
 
-                # return clm, slm, [this_date_begin], [this_date_end]
-                return SHC(clm, slm), [this_date_begin], [this_date_end]
+                ds_begin = DateSeries(this_date_begin)
+                ds_end = DateSeries(this_date_end)
+                shc.dates_series = (ds_begin, ds_end)
+
+                return shc, [this_date_begin], [this_date_end]
 
             else:
                 return SHC(clm, slm)
@@ -185,15 +190,6 @@ def load_SHC(*filepath, key: str, lmax: int, read_rows=None, get_dates=False, be
         dates_begin, dates_end = [], []
 
         for i in range(len(filepath_to_load)):
-            if dates_excluded is not None:
-                this_date_begin, this_date_end = match_dates_from_filename(filepath[i].name)
-                this_ave_date = TimeTool.get_average_dates(this_date_begin, this_date_end)
-
-                # if datetime.date(this_ave_date.year, this_ave_date.month, 1) in [
-                #     datetime.date(dates_excluded[d].year, dates_excluded[d].month, 1) for d in
-                #     range(len(dates_excluded))
-                # ]:
-                #     continue
 
             load = load_SHC(filepath_to_load[i], key=key, lmax=lmax, read_rows=read_rows,
                             get_dates=get_dates, begin_date=begin_date, end_date=end_date)
@@ -207,7 +203,11 @@ def load_SHC(*filepath, key: str, lmax: int, read_rows=None, get_dates=False, be
             if shc is None:
                 shc = load_shc
             else:
-                shc.append(load_shc)
+                shc.append(
+                    load_shc,
+                    date_begin=load_shc.dates_series[0] if get_dates else None,
+                    date_end=load_shc.dates_series[1] if get_dates else None
+                )
 
             if get_dates:
                 assert len(load) == 3
@@ -216,6 +216,10 @@ def load_SHC(*filepath, key: str, lmax: int, read_rows=None, get_dates=False, be
                 dates_end.append(d_end[0])
 
         if get_dates:
+            ds_begin = DateSeries(dates_begin)
+            ds_end = DateSeries(dates_end)
+            shc.dates_series = (ds_begin, ds_end)
+
             return shc, dates_begin, dates_end
         else:
             return shc

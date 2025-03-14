@@ -1,4 +1,5 @@
 import copy
+import warnings
 
 import numpy as np
 
@@ -20,13 +21,16 @@ class SHC:
     """
     This class is to store the spherical harmonic coefficients for the use in necessary data processing.
 
-    Attribute self.cs stores the coefficients in 1d-array combined with c and s, or 2d-array for series.
+    Attribute self.value stores the coefficients in 1d-array combined with c and s, or 2d-array for series.
     which are sorted by degree, for example,
     [c[0,0]; s[1,1], c[1,0], c[1,1]; s[2,2], s[2,1], c[2,0], c[2,1], c[2,2]; s[3,3], s[3,2], s[3,1], c[3,0], ...],
     or
     [[c1[0,0]; s1[1,1], c1[1,0], c1[1,1]; s1[2,2], s1[2,1], c1[2,0], c1[2,1], c1[2,2]; ...],
      [c2[0,0]; s2[1,1], c2[1,0], c2[1,1]; s2[2,2], s2[2,1], c2[2,0], c2[2,1], c2[2,2]; ...],
      [                                        ...                                         ]]
+
+    Attribute self.dates_series stores begin and end times in tuple of
+        (ds_begin: DateSeries, ds_end: DateSeries), not necessary.
     """
 
     def __init__(self, c, s=None):
@@ -62,14 +66,46 @@ class SHC:
 
         assert len(np.shape(self.value)) == 2
 
-    def append(self, *params):
+        self.dates_series = None
+
+    def get_date_series(self):
+        """
+        return:
+            if self.is_with_date() is True: tuple of
+                (DateSeries of beginning dates, DateSeries of ending dates)
+            else: None
+        """
+
+        if not self.is_with_date():
+            warnings.warn("No date information in this SHC instance.")
+            return None
+        else:
+            return self.dates_series[0], self.dates_series[1]
+
+    def get_dates(self, in_format: TimeTool.DateFormat = None):
+        if not self.is_with_date():
+            warnings.warn("No date information in this SHC instance.")
+            return None
+        else:
+            ds_begin = self.dates_series[0]
+            ds_end = self.dates_series[1]
+            return ds_begin.get_dates(in_format), ds_end.get_dates(in_format)
+
+    def is_with_date(self):
+        return self.dates_series is not None
+
+    def append(self, *params, date_begin=None, date_end=None):
         """
 
         :param params: One parameter of instantiated SHC,
          or two parameters of c and s with the same input requirement as SHC.
-        :return:
+        :param date_begin: datetime.date, necessary is self.is_with_date() is True.
+        :param date_end: datetime.date, necessary is self.is_with_date() is True.
+        :return: self
         """
         assert len(params) in (1, 2)
+        if self.is_with_date():
+            assert (date_begin is not None) and (date_end is not None)
 
         if len(params) == 1:
             if issubclass(type(params[0]), SHC):
@@ -83,6 +119,10 @@ class SHC:
         assert np.shape(shc.value)[-1] == np.shape(self.value)[-1]
 
         self.value = np.concatenate([self.value, shc.value])
+        if self.is_with_date():
+            self.dates_series[0].append(date_begin)
+            self.dates_series[1].append(date_end)
+
         return self
 
     def is_series(self):
@@ -273,6 +313,8 @@ class SHC:
         cqlm, sqlm = self.get_cs2d()
         grid_data = har.synthesis(cqlm, sqlm, special_type=special_type)
         grid = GRD(grid_data, lat, lon, option=1)
+
+        grid.dates_series = self.dates_series
 
         return grid
 

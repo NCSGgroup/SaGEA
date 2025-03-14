@@ -50,6 +50,7 @@ class GRD:
             self.lat = lat
             self.lon = lon
 
+        self.dates_series = None
         pass
 
     def __add__(self, other):
@@ -63,6 +64,32 @@ class GRD:
         assert other.lat == self.lat and other.lon == self.lon
 
         return GRD(self.value - other.value, lat=self.lat, lon=self.lon)
+
+    def get_date_series(self):
+        """
+        return:
+            if self.is_with_date() is True: tuple of
+                (DateSeries of beginning dates, DateSeries of ending dates)
+            else: None
+        """
+
+        if not self.is_with_date():
+            warnings.warn("No date information in this SHC instance.")
+            return None
+        else:
+            return self.dates_series[0], self.dates_series[1]
+
+    def get_dates(self, in_format: TimeTool.DateFormat = None):
+        if not self.is_with_date():
+            warnings.warn("No date information in this SHC instance.")
+            return None
+        else:
+            ds_begin = self.dates_series[0]
+            ds_end = self.dates_series[1]
+            return ds_begin.get_dates(in_format), ds_end.get_dates(in_format)
+
+    def is_with_date(self):
+        return self.dates_series is not None
 
     def append(self, grid, lat=None, lon=None, option=0):
         """
