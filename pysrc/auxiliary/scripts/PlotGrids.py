@@ -34,7 +34,7 @@ def plot_grids(grid: np.ndarray, lat, lon, common_colorbar=False, projection=Non
     :param title:
     :param save:
     :param cmap:
-    :param cb_extend:
+    :param cb_extend: 'neither', 'both', 'min', 'max'
     :param filling_type: "gridded", "contour", "contour_filled"
     :param contour_num: int, work only if filling_type in ("contour", "contour_filled")
     :param gridlines: bool

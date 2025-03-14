@@ -46,7 +46,7 @@ class LoadShp:
         shp_path: pathlib.Path
         grid_space: int ot float, space of global grid
         mode: str, "point" or "polygon"
-        around_polar: "North", "South", or None
+        around_polar: "North", "South", or None, EXPERIMENTAL.
 
         return:
         list: list[np.ndarray], list of individual global grid masks
