@@ -34,9 +34,3 @@ class DateSeries:
         self.__value.append(date)
 
         return None
-
-
-if __name__ == '__main__':
-    ds = DateSeries([datetime.date(2020, 1, 1), datetime.date(2020, 1, 2)])
-
-    print(ds.get_length())
