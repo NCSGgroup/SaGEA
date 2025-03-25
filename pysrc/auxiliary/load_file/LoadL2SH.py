@@ -55,12 +55,7 @@ def match_dates_from_filename(filename):
             month = int(year_month[2])
 
             this_date_begin = datetime.date(int(year), month, 1)
-            if month < 12:
-                this_date_end = datetime.date(year, month + 1, 1) - datetime.timedelta(days=1)
-            elif month == 12:
-                this_date_end = datetime.date(year + 1, 1, 1) + datetime.timedelta(days=1)
-            else:
-                assert False
+            this_date_end = TimeTool.get_the_final_day_of_this_month(year=year, month=month)
 
             match_flag = True
 
