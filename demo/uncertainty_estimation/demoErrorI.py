@@ -1,3 +1,5 @@
+import sys
+sys.path.append('./')
 import numpy as np
 
 from pysrc.auxiliary.load_file.LoadL2SH import load_SHC
