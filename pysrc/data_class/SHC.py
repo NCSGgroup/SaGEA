@@ -19,21 +19,29 @@ from pysrc.post_processing.replace_low_deg.ReplaceLowDegree import ReplaceLowDeg
 
 class SHC:
     """
-    This class is to store the spherical harmonic coefficients for the use in necessary data processing.
+    This class is to store the spherical harmonic coefficients (SHCs) for the use in necessary data processing.
 
-    Attribute self.value stores the coefficients in 1d-array combined with c and s, or 2d-array for series.
+    Attribute self.value stores the coefficients in 2d-array (in numpy.ndarray) combined with c and s.
     which are sorted by degree, for example,
-    [c[0,0]; s[1,1], c[1,0], c[1,1]; s[2,2], s[2,1], c[2,0], c[2,1], c[2,2]; s[3,3], s[3,2], s[3,1], c[3,0], ...],
-    or
-    [[c1[0,0]; s1[1,1], c1[1,0], c1[1,1]; s1[2,2], s1[2,1], c1[2,0], c1[2,1], c1[2,2]; ...],
+    numpy.ndarray: [[c1[0,0]; s1[1,1], c1[1,0], c1[1,1]; s1[2,2], s1[2,1], c1[2,0], c1[2,1], c1[2,2]; ...],
      [c2[0,0]; s2[1,1], c2[1,0], c2[1,1]; s2[2,2], s2[2,1], c2[2,0], c2[2,1], c2[2,2]; ...],
-     [                                        ...                                         ]]
+     [                                        ...                                         ]].
+    Note that even it stores only one set of SHCs, the array is still 2-dimension, i.e.,
+    [[c1[0,0]; s1[1,1], c1[1,0], c1[1,1]; s1[2,2], s1[2,1], c1[2,0], c1[2,1], c1[2,2]; ...]].
 
-    Attribute self.dates_series stores begin and end times in tuple of
-        (ds_begin: DateSeries, ds_end: DateSeries), not necessary.
+    Attribute self.dates stores beginning and ending dates (in datetime.date) in list as
+        list: [
+            [begin_1: datetime,date, begin_2: datetime,date, ...],
+            [end_1: datetime,date, end_2: datetime,date, ...],
+        ] if needed, else None.
+
+    Attribute self.normalization indicates the normalization of the SHCs (in EnumClasses.SHNormalization), for example,
+    EnumClasses.SHNormalization.full.
+
+    Attribute self.physical_dimension indicates the physical dimension of the SHCs (in EnumClasses.PhysicalDimensions).
     """
 
-    def __init__(self, c, s=None):
+    def __init__(self, c, s=None, dates=None, normalization=None, physical_dimension=None):
         """
 
         :param c: harmonic coefficients c in 2-dimension (l,m), or a series (q,l,m);
@@ -42,6 +50,13 @@ class SHC:
                     or 1-dimension array sorted by degree [[c00, s11, c10, c11, s22, s21, ...],[...]]
         :param s: harmonic coefficients s in 2-dimension (l,m), or a series (q,l,m),
                 or None.
+        :param dates: beginning and ending dates in list like
+                [
+                    [begin_1: datetime,date, begin_2: datetime,date, ..., begin_n: datetime,date],
+                    [end_1: datetime,date, end_2: datetime,date, ..., end_n: datetime,date],
+                ],
+        :param normalization: in EnumClasses.SHNormalization, default EnumClasses.SHNormalization.full.
+        :param physical_dimension: in EnumClasses.PhysicalDimensions, default EnumClasses.PhysicalDimensions.Dimensionless.
         """
         if s is None:
             self.value = np.array(c)
@@ -66,13 +81,13 @@ class SHC:
 
         assert len(np.shape(self.value)) == 2
 
-        self.dates_series = None
+        self.dates = None
 
-    def get_date_series(self):
+    def get_dates(self, astype: TimeTool.DateFormat = None):
         """
         return:
             if self.is_with_date() is True: tuple of
-                (DateSeries of beginning dates, DateSeries of ending dates)
+                (datetime.date of beginning dates, datetime.date of ending dates)
             else: None
         """
 
@@ -80,19 +95,26 @@ class SHC:
             warnings.warn("No date information in this SHC instance.")
             return None
         else:
-            return self.dates_series[0], self.dates_series[1]
+            dates_begin, dates_end = self.dates
 
-    def get_dates(self, in_format: TimeTool.DateFormat = None):
-        if not self.is_with_date():
-            warnings.warn("No date information in this SHC instance.")
-            return None
-        else:
-            ds_begin = self.dates_series[0]
-            ds_end = self.dates_series[1]
-            return ds_begin.get_dates(in_format), ds_end.get_dates(in_format)
+            if astype is None:
+                return dates_begin, dates_end
+            else:
+                db = TimeTool.convert_date_format(
+                    dates_begin,
+                    input_type=TimeTool.DateFormat.ClassDate,
+                    output_type=astype
+                )
+                de = TimeTool.convert_date_format(
+                    dates_end,
+                    input_type=TimeTool.DateFormat.ClassDate,
+                    output_type=astype
+                )
+
+                return db, de
 
     def is_with_date(self):
-        return self.dates_series is not None
+        return self.dates is not None
 
     def append(self, *params, date_begin=None, date_end=None):
         """
@@ -120,8 +142,8 @@ class SHC:
 
         self.value = np.concatenate([self.value, shc.value])
         if self.is_with_date():
-            self.dates_series[0].append(date_begin)
-            self.dates_series[1].append(date_end)
+            self.dates[0].append(date_begin)
+            self.dates[1].append(date_end)
 
         return self
 
@@ -138,6 +160,9 @@ class SHC:
         """
         return np.shape(self.value)[0]
 
+    def __len__(self):
+        return self.get_length()
+
     def get_lmax(self):
         """
 
@@ -148,13 +173,14 @@ class SHC:
 
         return lmax
 
-    def get_cs2d(self):
+    def get_cs2d(self, fill_value=0):
         """
         return: cqlm, sqlm. Both cqlm and sqlm are 3-dimension, EVEN IF NOT self.is_series()
         """
         lmax = self.get_lmax()
 
         num_of_series = np.shape(self.value)[0]
+
         cqlm = np.zeros((num_of_series, lmax + 1, lmax + 1))
         sqlm = np.zeros((num_of_series, lmax + 1, lmax + 1))
 
@@ -171,6 +197,9 @@ class SHC:
             self.value -= np.mean(self.value, axis=0)
         else:
             raise Exception
+
+    def get_average(self):
+        return SHC(np.mean(self.value, axis=0))
 
     def de_background(self, background=None):
         """
@@ -248,6 +277,10 @@ class SHC:
         cqlm, sqlm = self.get_cs2d()
         return MathTool.get_degree_rss(cqlm, sqlm)
 
+    def get_cumulative_degree_rss(self):
+        cqlm, sqlm = self.get_cs2d()
+        return MathTool.get_cumulative_rss(cqlm, sqlm)
+
     def get_std(self):
         cs_std = np.std(self.value, axis=0)
         return SHC(cs_std)
@@ -314,7 +347,7 @@ class SHC:
         grid_data = har.synthesis(cqlm, sqlm, special_type=special_type)
         grid = GRD(grid_data, lat, lon, option=1)
 
-        grid.dates_series = self.dates_series
+        grid.dates_series = self.dates
 
         return grid
 
