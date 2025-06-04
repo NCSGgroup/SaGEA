@@ -1,3 +1,5 @@
+import sys
+sys.path.append('./')
 import copy
 import itertools
 from datetime import date

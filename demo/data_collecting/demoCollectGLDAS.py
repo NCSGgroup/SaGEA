@@ -1,3 +1,6 @@
+import sys
+sys.path.append('./')
+
 from pysrc.auxiliary.aux_tool.FileTool import FileTool
 from pysrc.data_collection.collect_GLDAS.CollectGLDAS import CollectGLDAS
 

@@ -1,6 +1,8 @@
 """
 This demo is a validation for downloading GRACE Level-2 products
 """
+import sys
+sys.path.append('./')
 
 from pysrc.auxiliary.aux_tool.FileTool import FileTool
 from pysrc.data_collection.collect_GRACE_L2.CollectL2SH import CollectL2SH
