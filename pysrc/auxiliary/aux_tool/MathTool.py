@@ -581,7 +581,15 @@ class MathTool:
 
     @staticmethod
     def get_acreage(basin):
-        acreage = MathTool.global_integral(np.array([basin]))[0]
+
+        assert len(basin.shape) in (2, 3)
+
+        if len(basin.shape) == 2:
+            acreage = MathTool.global_integral(np.array([basin]))[0]
+        elif len(basin.shape) == 3:
+            acreage = MathTool.global_integral(basin)
+        else:
+            assert False
 
         return acreage
 
@@ -664,6 +672,16 @@ class MathTool:
             rss[:, i] = rss_this_degree
 
         return rss
+
+    @staticmethod
+    def get_cumulative_rss(cqlm, sqlm):
+        assert np.shape(cqlm) == np.shape(sqlm)
+        rss = MathTool.get_degree_rss(cqlm, sqlm)
+        crss = np.zeros_like(rss)
+        for i in range(rss.shape[1]):
+            crss[:, i] = np.sqrt(np.sum(rss[:, :i + 1] ** 2, axis=1))
+
+        return crss
 
 
 if __name__ == '__main__':
