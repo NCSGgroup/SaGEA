@@ -125,7 +125,7 @@ class GRD:
         To determine whether the data stored in this class are one group or multiple groups.
         :return: bool, True if it stores multiple groups, False if it stores only one group.
         """
-        return len(np.shape(self.value)) == 3
+        return len(self) > 1
 
     def get_grid_space(self):
         """
@@ -135,6 +135,9 @@ class GRD:
 
     def get_length(self):
         return self.value.shape[0]
+
+    def __len__(self):
+        return self.get_length()
 
     def to_SHC(self, lmax=None, special_type: Enums.PhysicalDimensions = None):
         from pysrc.data_class.SHC import SHC
