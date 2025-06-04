@@ -145,9 +145,7 @@ def load_SHC(*filepath, key: str, lmax: int, read_rows=None, get_dates=False, be
                 this_date_begin, this_date_end = match_dates_from_filename(filepath[0].name)
                 shc = SHC(clm, slm)
 
-                ds_begin = DateSeries(this_date_begin)
-                ds_end = DateSeries(this_date_end)
-                shc.dates_series = (ds_begin, ds_end)
+                shc.dates = ([this_date_begin], [this_date_end])
 
                 return shc, [this_date_begin], [this_date_end]
 
@@ -199,8 +197,8 @@ def load_SHC(*filepath, key: str, lmax: int, read_rows=None, get_dates=False, be
             else:
                 shc.append(
                     load_shc,
-                    date_begin=load_shc.dates_series[0] if get_dates else None,
-                    date_end=load_shc.dates_series[1] if get_dates else None
+                    date_begin=load_shc.dates[0] if get_dates else None,
+                    date_end=load_shc.dates[1] if get_dates else None
                 )
 
             if get_dates:
@@ -210,9 +208,7 @@ def load_SHC(*filepath, key: str, lmax: int, read_rows=None, get_dates=False, be
                 dates_end.append(d_end[0])
 
         if get_dates:
-            ds_begin = DateSeries(dates_begin)
-            ds_end = DateSeries(dates_end)
-            shc.dates_series = (ds_begin, ds_end)
+            shc.dates = (dates_begin, dates_end)
 
             return shc, dates_begin, dates_end
         else:
