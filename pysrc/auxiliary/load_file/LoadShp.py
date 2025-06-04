@@ -176,7 +176,7 @@ class LoadShp:
 
         return bound
 
-    def get_GRID(self, grid_space, mode="polygon", around_polar=None):
+    def get_GRD(self, grid_space, mode="polygon", around_polar=None):
         assert mode in ["point", "polygon", "multipoint"]
 
         mask, lat, lon = self.__load_mask(grid_space, mode=mode, around_polar=around_polar)
@@ -189,7 +189,7 @@ class LoadShp:
         else:
             grid_space = int(180 / lmax)
 
-        grid = self.get_GRID(grid_space)
+        grid = self.get_GRD(grid_space)
         shc = grid.to_SHC(lmax)
         return shc
 
