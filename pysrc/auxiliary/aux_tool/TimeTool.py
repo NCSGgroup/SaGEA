@@ -12,6 +12,7 @@ class TimeTool:
         YMD = 4
         YearFraction = 5
         TimeDelta = 6
+        YMD_dash = 7
 
     @staticmethod
     def convert_date_format(date, input_type: DateFormat = DateFormat.ClassDate,
@@ -24,6 +25,7 @@ class TimeTool:
         DateFormat.YearDay -> str in format of 'yyyyddd', y: year; d: the d-th day of this year. e.g., '2002031'.
         DateFormat.MJD -> int, Modified Julian Day.
         DateFormat.YMD -> str in format of 'yyyymmdd', y: year; m:month; d: day. e.g., '20020131'.
+        DateFormat.YMD_dash -> str in format of 'yyyy-mm-dd', y: year; m:month; d: day. e.g., '2002-01-31'.
         DateFormat.TimeDelta -> int, days from from_date.
         :return:
         """
@@ -51,6 +53,18 @@ class TimeTool:
                 year_str = d_str[:4]
                 month_str = d_str[4:6]
                 day_str = d_str[6:]
+
+                result = datetime.date(int(year_str), int(month_str), int(day_str))
+
+            elif i_type == TimeTool.DateFormat.YMD_dash:
+                d_str = str(d)
+                assert len(d_str) in (8, 9, 10)
+                ymd = d_str.split("-")
+                assert len(ymd) == 3
+
+                year_str = ymd[0]
+                month_str = ymd[1]
+                day_str = ymd[2]
 
                 result = datetime.date(int(year_str), int(month_str), int(day_str))
 
@@ -98,6 +112,12 @@ class TimeTool:
                 month_str = str(month).rjust(2, '0')
                 day_str = str(day).rjust(2, '0')
                 result = f'{year_str}{month_str}{day_str}'
+
+            elif o_type == TimeTool.DateFormat.YMD_dash:
+                year_str = str(year)
+                month_str = str(month).rjust(2, '0')
+                day_str = str(day).rjust(2, '0')
+                result = f'{year_str}-{month_str}-{day_str}'
 
             elif o_type == TimeTool.DateFormat.YearFraction:
                 days_of_year = (d - datetime.date(year, 1, 1)).days + 0.5
