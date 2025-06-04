@@ -136,7 +136,7 @@ def demo2():
     shc_gia = shc_gia_trend.expand(dates_ave)  # project GIA trend into (monthly) signals along with GRACE times
 
     load_shp = LoadShp(basin_path_shp)
-    grid_basin = load_shp.get_GRID(grid_space=grid_space)  # load basin mask (in GRID)
+    grid_basin = load_shp.get_GRD(grid_space=grid_space)  # load basin mask (in GRID)
     this_basin_mask = grid_basin.value[basin_index]
 
     grid_gldas, dates_gldas = load_GLDAS_TWS(begin_date, end_date)
