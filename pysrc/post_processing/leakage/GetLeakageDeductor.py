@@ -17,7 +17,7 @@ def get_leakage_deductor(method: LeakageMethod):
     if method == LeakageMethod.Multiplicative:
         leakage = Multiplicative()
 
-    elif method == LeakageMethod.Addictive:
+    elif method == LeakageMethod.Additive:
         leakage = Addictive()
 
     elif method == LeakageMethod.Scaling:
