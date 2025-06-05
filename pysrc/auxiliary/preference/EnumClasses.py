@@ -122,7 +122,7 @@ class SHCDecorrelationType(Enum):
 
 
 class LeakageMethod(Enum):
-    Addictive = 1
+    Additive = 1
     Multiplicative = 2
     Scaling = 3
     ScalingGrid = 4

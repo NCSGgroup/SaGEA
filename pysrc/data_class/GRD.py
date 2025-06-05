@@ -198,7 +198,7 @@ class GRD:
 
         assert method in Enums.LeakageMethod
         methods_of_model_driven = (
-            Enums.LeakageMethod.Addictive, Enums.LeakageMethod.Multiplicative,
+            Enums.LeakageMethod.Additive, Enums.LeakageMethod.Multiplicative,
             Enums.LeakageMethod.Scaling, Enums.LeakageMethod.ScalingGrid
         )
 
@@ -220,7 +220,7 @@ class GRD:
         if method in methods_of_model_driven:
             assert {"time", "model"}.issubset(set(reference.keys()))
 
-            if method == Enums.LeakageMethod.Addictive:
+            if method == Enums.LeakageMethod.Additive:
                 lk = Addictive()
 
             elif method == Enums.LeakageMethod.Multiplicative:

@@ -121,7 +121,7 @@ def demo2():
     basin_path_shp, basin_index = FileTool.get_project_dir("data/basin_mask/Shp/bas200k_shp"), 50
     decorrelation_method, decorrelation_param = Enums.SHCDecorrelationType.SlideWindowSwenson2006, (3, 10, 10, 30, 5)
     filter_method, filter_params = Enums.SHCFilterType.DDK, (3,)
-    leakage = Enums.LeakageMethod.Addictive
+    leakage = Enums.LeakageMethod.Additive
     """end of input"""
 
     '''load GSM'''
