@@ -8,18 +8,11 @@ import cmaps
 import matplotlib
 from matplotlib import pyplot as plt
 
-config = {
-    "font.family": 'serif',
-    "font.size": 16,
-    "mathtext.fontset": 'stix',
-    "font.serif": ['Times New Roman'],
-}
-matplotlib.rcParams.update(config)
 
-
-def plot_grids(grid: np.ndarray, lat, lon, common_colorbar=False, projection=None, vmin=None, vmax=None,
+def plot_grids(grid: np.ndarray, lat, lon, common_colorbar=False, projection=None, vmin=None, vmax=None, vcenter=None,
                extent=None, subtitle=None, title=None, save=None, cmap=None, cb_extend=None, filling_type=None,
-               contour_num=20, gridlines=False):
+               contour_num=20, gridlines=None, frame_line=None, add_line_lats=None, add_line_lats_color=None,
+               add_line_lons=None, add_line_lons_color=None, save_transparent=False):
     """
 
     :param grid: 2-d array grid or 3-d array grids
@@ -28,6 +21,7 @@ def plot_grids(grid: np.ndarray, lat, lon, common_colorbar=False, projection=Non
     :param common_colorbar:
     :param projection:
     :param vmin: num or list of num. num for single grid, list of same length with grids for multiple grids
+    :param vcenter: num or list of num.
     :param vmax: num or list of num. num for single grid, list of same length with grids for multiple grids
     :param extent: (lonmin, lonmax, latmin, latmax)
     :param subtitle: str or list of str. str for single grid, list of same length with grids for multiple grids
@@ -37,24 +31,44 @@ def plot_grids(grid: np.ndarray, lat, lon, common_colorbar=False, projection=Non
     :param cb_extend: 'neither', 'both', 'min', 'max'
     :param filling_type: "gridded", "contour", "contour_filled"
     :param contour_num: int, work only if filling_type in ("contour", "contour_filled")
-    :param gridlines: bool
+    :param gridlines:
+    :param frame_line:
+    :param add_line_lats:
+    :param add_line_lons:
+    :param save_transparent:
     :return:
     """
+
+    config = {
+        "font.family": 'serif',
+        "font.size": 16,
+        "mathtext.fontset": 'stix',
+        "font.serif": ['Times New Roman'],
+    }
+    matplotlib.rcParams.update(config)
+
     assert grid.ndim in (2, 3)
     assert type(vmin) == type(vmax)
     if filling_type is None:
         filling_type = "gridded"
     assert filling_type in ["gridded", "contour", "contour_filled"]
 
+    if gridlines is None:
+        gridlines = (extent is not None)
+    if frame_line is None:
+        frame_line = True
+
     if grid.ndim == 2:
         grid = np.array([grid])
     ngrid = np.shape(grid)[0]
 
     if type(vmin) in (list, tuple,):
-        pass
+        if vcenter is None:
+            vcenter = [vcenter] * ngrid
     else:
         vmin = [vmin] * ngrid
         vmax = [vmax] * ngrid
+        vcenter = [vcenter] * ngrid
 
     if subtitle is None:
         subtitle = ''
@@ -236,11 +250,11 @@ def plot_grids(grid: np.ndarray, lat, lon, common_colorbar=False, projection=Non
         ax_subtitle = axes_subtitles[i]
 
         if vmin[i] is None or vmax[i] is None:
+            assert vcenter[i] is None
             norm = None
-            # vcenter = None
         else:
-            vcenter = (vmax[i] + vmin[i]) / 2
-            norm = matplotlib.colors.TwoSlopeNorm(vmin=vmin[i], vmax=vmax[i], vcenter=vcenter)
+            this_vcenter = ((vmax[i] + vmin[i]) / 2) if vcenter[i] is None else vcenter[i]
+            norm = matplotlib.colors.TwoSlopeNorm(vmin=vmin[i], vmax=vmax[i], vcenter=this_vcenter)
 
         if filling_type == "gridded":
             p = ax_grid.pcolormesh(
@@ -254,8 +268,6 @@ def plot_grids(grid: np.ndarray, lat, lon, common_colorbar=False, projection=Non
         else:
             p = ax_grid.pcolormesh(
                 lon2d[:1, :1], lat2d[:1, :1], grid[i][:1, :1],
-                # lon2d, lat2d, grid[i],
-                # cmap=cmaps.matlab_jet,
                 cmap=cmap if cmap is not None else cmaps.matlab_jet,
                 transform=ccrs.PlateCarree(),
                 norm=norm
@@ -264,7 +276,6 @@ def plot_grids(grid: np.ndarray, lat, lon, common_colorbar=False, projection=Non
             if filling_type == "contour":
                 ax_grid.contour(
                     lon2d, lat2d, grid[i], contour_num,
-                    # cmap=cmaps.matlab_jet,
                     cmap=cmap if cmap is not None else cmaps.matlab_jet,
                     transform=ccrs.PlateCarree(),
                     norm=norm
@@ -273,12 +284,10 @@ def plot_grids(grid: np.ndarray, lat, lon, common_colorbar=False, projection=Non
             elif filling_type == "contour_filled":
                 ax_grid.contourf(
                     lon2d, lat2d, grid[i], contour_num,
-                    # cmap=cmaps.matlab_jet,
                     cmap=cmap if cmap is not None else cmaps.matlab_jet,
                     transform=ccrs.PlateCarree(),
                     norm=norm
                 )
-
 
             else:
                 assert False
@@ -288,9 +297,22 @@ def plot_grids(grid: np.ndarray, lat, lon, common_colorbar=False, projection=Non
 
         if extent is not None:
             ax_grid.set_extent(extent)
-            ax_grid.gridlines()
             ax_grid.set_xticks(np.linspace(extent[0], extent[1], 3), crs=ccrs.PlateCarree(), minor=True)
             ax_grid.set_yticks(np.linspace(extent[2], extent[3], 3), crs=ccrs.PlateCarree(), minor=True)
+
+        if not frame_line:
+            ax_grid.axis("off")
+
+        '''experiment'''
+        if add_line_lats is not None:
+            for la in range(len(add_line_lats)):
+                ax_grid.plot([-180, 180], [add_line_lats[la]] * 2, c=add_line_lats_color[la], lw=1.5,
+                             transform=ccrs.PlateCarree())
+
+        if add_line_lons is not None:
+            for lo in range(len(add_line_lons)):
+                ax_grid.plot([add_line_lons[lo]] * 2, [-90, 90], c=add_line_lons_color[lo], lw=1.5,
+                             transform=ccrs.PlateCarree())
 
         ax_grid.add_feature(cfeature.COASTLINE)
 
@@ -312,10 +334,10 @@ def plot_grids(grid: np.ndarray, lat, lon, common_colorbar=False, projection=Non
         cb = fig.colorbar(p,
                           orientation='horizontal',
                           fraction=1, ax=ax_cb,
-                          #  ticks=np.linspace(vmin[i], vmax[i], 3)
                           aspect=30,
                           extend=cb_extend if cb_extend is not None else 'both',
                           )
+        # cb.mappable.set_clim(-0.2, 1.0)
         cb.ax.tick_params(direction='in')
 
     ax_title.axis('off')
@@ -324,7 +346,7 @@ def plot_grids(grid: np.ndarray, lat, lon, common_colorbar=False, projection=Non
     if title is not None:
         ax_title.set_title(title)
     if save is not None:
-        plt.savefig(save)
+        plt.savefig(save, transparent=save_transparent, dpi=200)
 
     plt.show()
     plt.close()
