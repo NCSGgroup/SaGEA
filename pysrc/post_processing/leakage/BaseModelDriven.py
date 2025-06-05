@@ -115,7 +115,7 @@ class ModelDriven(Leakage):
 
         z = MathTool.curve_fit(self._scale_function, time_series_model_filtered, time_series_model)
 
-        return z[0][0, 0]
+        return z[0][0, 1]
 
     def _get_scaling_scale_grid(self, scale_type="trend"):
         assert scale_type in ("trend", "annual_amplitude")
