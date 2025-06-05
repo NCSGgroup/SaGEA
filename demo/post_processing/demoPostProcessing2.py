@@ -120,9 +120,9 @@ def demo():
         .lon (in 1-d numpy.array, unit [deg]).
     Simple scripts `plot_grids()` can help you quickly check the results
      '''
-    # plot_grids(
-    #     grid.value[:3], grid.lat, grid.lon
-    # )
+    plot_grids(
+        grid.value[:3], grid.lat, grid.lon
+    )
 
     '''Next, we will further extract basin signals'''
 
@@ -164,9 +164,9 @@ def demo():
     `ewh` if in 2-d numpy.array, with index 0 indicating the basin ID, and index 1 indicating the values.
     Simple scripts of pyplot can help you quickly check the results.
      '''
-    # year_frac = TimeTool.convert_date_format(dates_ave, output_type=TimeTool.DateFormat.YearFraction)
-    # plt.plot(year_frac, ewh[0])
-    # plt.show()
+    year_frac = TimeTool.convert_date_format(dates_ave, output_type=TimeTool.DateFormat.YearFraction)
+    plt.plot(year_frac, ewh[0])
+    plt.show()
 
 
 if __name__ == '__main__':
