@@ -351,6 +351,23 @@ class SHC:
 
         return grid
 
+    def synthesis(self, lat, lon, discrete: bool = False, special_type: Enums.PhysicalDimensions = None):
+        """
+        :param lat: numpy.ndarray, latitudes in unit degree
+        :param lon: numpy.ndarray, longitudes in unit degree
+        :param discrete: bool, if True, the params lat and lon represent each point, and should be of the same length;
+            else params lat and lon represent the profiles. Default is False.
+        :param special_type: enums.PhysicalDimensions, optional.
+        """
+
+        lmax = self.get_lmax()
+        har = Harmonic(lat, lon, lmax, option=1, discrete=discrete)
+
+        cqlm, sqlm = self.get_cs2d()
+        grid_data = har.synthesis(cqlm, sqlm, special_type=special_type)
+
+        return grid_data
+
     def geometric(self, assumption: Enums.GeometricCorrectionAssumption, log=False):
         gc = GeometricalCorrection()
         cqlm, sqlm = self.get_cs2d()

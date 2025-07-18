@@ -9,20 +9,27 @@ class Harmonic:
     Harmonic analysis and synthesis: Ordinary 2D integration for computing Spherical Harmonic coefficients
     """
 
-    def __init__(self, lat, lon, lmax: int, option=0):
+    def __init__(self, lat, lon, lmax: int, option=0, discrete=False):
         """
 
         :param lat: Co-latitude if option=0, unit[rad]; geophysical latitude if option = others, unit[degree]
         :param lon: If option=0, unit[rad]; else unit[degree]
         :param lmax: int, max degree/order
         :param option:
+        :param discrete: bool, if True, the given lat and lon represent each point, and should be of the same length.
+
         """
+
+        if discrete:
+            assert len(lat) == len(lon)
+
         if option != 0:
             self.lat, self.lon = MathTool.get_colat_lon_rad(lat, lon)
         else:
             self.lat, self.lon = lat, lon
 
         self.lmax = lmax
+        self.__discrete = discrete
 
         self._prepare()
 
@@ -60,76 +67,82 @@ class Harmonic:
 
     def analysis(self, gqij: np.ndarray, special_type: PhysicalDimensions = None):
         assert len(gqij.shape) in (2, 3)
+        assert not self.__discrete, "not support discrete analysis yet"
 
-        single = (len(gqij.shape) == 2)
-        if single:
-            gqij = np.array([gqij])
+        if not self.__discrete:
+            single = (len(gqij.shape) == 2)
+            if single:
+                gqij = np.array([gqij])
 
-        assert special_type in (
-            PhysicalDimensions.HorizontalDisplacementEast, PhysicalDimensions.HorizontalDisplacementNorth, None)
+            assert special_type in (
+                PhysicalDimensions.HorizontalDisplacementEast, PhysicalDimensions.HorizontalDisplacementNorth, None)
 
-        if special_type in (
-                PhysicalDimensions.HorizontalDisplacementEast, PhysicalDimensions.HorizontalDisplacementNorth):
-            assert False, "Horizontal Displacement is not supported yet."
+            if special_type in (
+                    PhysicalDimensions.HorizontalDisplacementEast, PhysicalDimensions.HorizontalDisplacementNorth):
+                assert False, "Horizontal Displacement is not supported yet."
 
-        g = self.g
-        co = np.cos(g)  # cos(m phi)
-        so = np.sin(g)  # sin(m phi)
+            g = self.g
+            co = np.cos(g)  # cos(m phi)
+            so = np.sin(g)  # sin(m phi)
 
-        am = np.einsum('pij,mj->pim', gqij, co, optimize='greedy') * self.factor1
-        bm = np.einsum('pij,mj->pim', gqij, so, optimize='greedy') * self.factor1
+            am = np.einsum('pij,mj->pim', gqij, co, optimize='greedy') * self.factor1
+            bm = np.einsum('pij,mj->pim', gqij, so, optimize='greedy') * self.factor1
 
-        if special_type is None:
-            cqlm = np.einsum('pim,ilm,i->plm', am, self.pilm, np.sin(self.lat), optimize='greedy') * self.factor2
-            sqlm = np.einsum('pim,ilm,i->plm', bm, self.pilm, np.sin(self.lat), optimize='greedy') * self.factor2
+            if special_type is None:
+                cqlm = np.einsum('pim,ilm,i->plm', am, self.pilm, np.sin(self.lat), optimize='greedy') * self.factor2
+                sqlm = np.einsum('pim,ilm,i->plm', bm, self.pilm, np.sin(self.lat), optimize='greedy') * self.factor2
 
-            # cqlm = np.einsum('pim,ilm,i->plm', am, self.pilm, self.wi, optimize='greedy') * self.factor3
-            # sqlm = np.einsum('pim,ilm,i->plm', bm, self.pilm, self.wi, optimize='greedy') * self.factor3
+                # cqlm = np.einsum('pim,ilm,i->plm', am, self.pilm, self.wi, optimize='greedy') * self.factor3
+                # sqlm = np.einsum('pim,ilm,i->plm', bm, self.pilm, self.wi, optimize='greedy') * self.factor3
 
-            # cqlm[:, :, 0] = (np.einsum('pim,ilm->plm', am * self.wi[:, None], self.pilm,
-            #                               optimize='greedy') * self.factor3)[:, :, 0]
-            # sqlm[:, :, 0] = (np.einsum('pim,ilm->plm', bm * self.wi[:, None], self.pilm,
-            #                            optimize='greedy') * self.factor3)[:, :, 0]
+                # cqlm[:, :, 0] = (np.einsum('pim,ilm->plm', am * self.wi[:, None], self.pilm,
+                #                               optimize='greedy') * self.factor3)[:, :, 0]
+                # sqlm[:, :, 0] = (np.einsum('pim,ilm->plm', bm * self.wi[:, None], self.pilm,
+                #                            optimize='greedy') * self.factor3)[:, :, 0]
 
-            # cqlm = np.einsum('pim,ilm->plm', am * self.wi[:, None], self.pilm,
-            #                  optimize='greedy') * self.factor3
-            # sqlm = np.einsum('pim,ilm->plm', bm * self.wi[:, None], self.pilm,
-            #                  optimize='greedy') * self.factor3
+                # cqlm = np.einsum('pim,ilm->plm', am * self.wi[:, None], self.pilm,
+                #                  optimize='greedy') * self.factor3
+                # sqlm = np.einsum('pim,ilm->plm', bm * self.wi[:, None], self.pilm,
+                #                  optimize='greedy') * self.factor3
 
-        elif special_type == PhysicalDimensions.HorizontalDisplacementNorth:
-            """do NOT use this code!"""
+            elif special_type == PhysicalDimensions.HorizontalDisplacementNorth:
+                """do NOT use this code!"""
 
-            pilm_derivative = MathTool.get_Legendre_derivative(self.lat, self.lmax)
+                pilm_derivative = MathTool.get_Legendre_derivative(self.lat, self.lmax)
 
-            cqlm = np.einsum('pim,ilm,i->plm', -am, pilm_derivative, np.sin(self.lat)) * self.factor2
-            sqlm = np.einsum('pim,ilm,i->plm', -bm, pilm_derivative, np.sin(self.lat)) * self.factor2
+                cqlm = np.einsum('pim,ilm,i->plm', -am, pilm_derivative, np.sin(self.lat)) * self.factor2
+                sqlm = np.einsum('pim,ilm,i->plm', -bm, pilm_derivative, np.sin(self.lat)) * self.factor2
 
-        elif special_type == PhysicalDimensions.HorizontalDisplacementEast:
-            """do NOT use this code!"""
+            elif special_type == PhysicalDimensions.HorizontalDisplacementEast:
+                """do NOT use this code!"""
 
-            mrange = np.arange(self.lmax + 1)
-            pilm_divide_sin_theta = self.pilm / np.sin(self.lat)[:, None, None]
-            m_pilm_divide_sin_theta = np.einsum("m,ilm->ilm", mrange, pilm_divide_sin_theta)
+                mrange = np.arange(self.lmax + 1)
+                pilm_divide_sin_theta = self.pilm / np.sin(self.lat)[:, None, None]
+                m_pilm_divide_sin_theta = np.einsum("m,ilm->ilm", mrange, pilm_divide_sin_theta)
 
-            am_east = np.einsum('pij,mj->pim', gqij, -so, optimize='greedy') * self.factor1
-            bm_east = np.einsum('pij,mj->pim', gqij, co, optimize='greedy') * self.factor1
+                am_east = np.einsum('pij,mj->pim', gqij, -so, optimize='greedy') * self.factor1
+                bm_east = np.einsum('pij,mj->pim', gqij, co, optimize='greedy') * self.factor1
 
-            cqlm = np.einsum('pim,ilm,i->plm', am_east, m_pilm_divide_sin_theta, np.sin(self.lat)) * self.factor2
-            sqlm = np.einsum('pim,ilm,i->plm', bm_east, m_pilm_divide_sin_theta, np.sin(self.lat)) * self.factor2
+                cqlm = np.einsum('pim,ilm,i->plm', am_east, m_pilm_divide_sin_theta, np.sin(self.lat)) * self.factor2
+                sqlm = np.einsum('pim,ilm,i->plm', bm_east, m_pilm_divide_sin_theta, np.sin(self.lat)) * self.factor2
+
+            else:
+                assert False
+
+            if single:
+                assert cqlm.shape[0] == 1 and sqlm.shape[0] == 1
+                return cqlm[0], sqlm[0]
+
+            else:
+                return cqlm, sqlm
 
         else:
             assert False
 
-        if single:
-            assert cqlm.shape[0] == 1 and sqlm.shape[0] == 1
-            return cqlm[0], sqlm[0]
-
-        else:
-            return cqlm, sqlm
-
     def synthesis(self, cqlm: np.ndarray, sqlm: np.ndarray, special_type: PhysicalDimensions = None):
         assert cqlm.shape == sqlm.shape
         assert len(cqlm.shape) in (2, 3)
+
         single = (len(cqlm.shape) == 2)
         if single:
             cqlm = np.array([cqlm])
@@ -164,7 +177,10 @@ class Harmonic:
         co = np.cos(self.g)
         so = np.sin(self.g)
 
-        gqij = am @ co + bm @ so
+        if not self.__discrete:
+            gqij = am @ co + bm @ so
+        else:
+            gqij = np.einsum("qil,li->qi", am, co) + np.einsum("qil,li->qi", bm, so)
 
         if single:
             assert gqij.shape[0] == 1
