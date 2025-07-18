@@ -76,14 +76,13 @@ class MonteCarlo:
 
         if at_index is None:
             at_index = "diag"
-        assert at_index in ("full", "diag") or isinstance(at_index, tuple)
+        # assert at_index in ("full", "diag") or isinstance(at_index, tuple)
+        assert at_index in ("full", "diag")
 
         value_length = data.shape[0]
         value_shape = data.shape[1:]
 
         if at_index == "full":
-            warnings.warn("experimental for now, may cause leakage and overflow")
-
             data = data.astype(compress)
 
             if block_size is None:
