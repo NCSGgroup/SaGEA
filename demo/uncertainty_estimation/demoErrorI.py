@@ -50,7 +50,7 @@ def demo_errorI_global_var():
 
     print("get statistic")
     at_index = "diag"
-    covar_processed = MonteCarlo.get_covariance(data=grid_noise.value, at_index="at_index")
+    covar_processed = MonteCarlo.get_covariance(data=grid_noise.value, at_index=at_index)
 
     plot_grids(
         np.sqrt(covar_processed),
@@ -65,10 +65,10 @@ def demo_errorI_cov_of_points():
     this demo shows how to get var-covariance of post-processed GRACE between given points.
     Based on the provided n one-to-one correspondences lat_each and lon_each, return a covariance matrix with the shape
      of (n, n), whose index order is consistent with the order of the n lat_each and lon_each.
-    Note that the lengths of lat_each and lon_each should be consistent
+    Note that the lengths of lat_each and lon_each should be consistent.
     """
 
-    lmax = 60
+    lmax = 10
     lat_each = np.array([3.5, 4.5, 3.5, 4.5, 4.5, 5.5, 6.5, 7.5, 5.5, 6.5, 7.5])
     lon_each = np.array([9.5, 9.5, 8.5, 8.5, 7.5, 7.5, 7.5, 7.5, 6.5, 6.5, 6.5])
     assert lat_each.shape == lon_each.shape
@@ -115,7 +115,7 @@ def demo_errorI_cov_of_points():
                 s=30, marker="s",
                 transform=cartopy.crs.PlateCarree()
                 )
-    ax2.set_title("COV")
+    ax2.set_title("COV between the first basin")
 
     for ax in [ax1, ax2]:
         ax.add_feature(cartopy.feature.COASTLINE)
@@ -132,7 +132,7 @@ def demo_errorI_cov_of_basins():
     this demo shows how to get var-covariance of post-processed GRACE between basins.
 
     Based on n provided base masks, return a covariance matrix with the shape of (n, n),
-     whose index order is consistent with the order of n base masks.
+     whose index order is consistent with the order of the n masks.
     """
 
     lmax = 60
@@ -247,5 +247,6 @@ def demo_GMOM():
 
 
 if __name__ == '__main__':
-    # demo_errorI_cov_of_points()
+    # demo_errorI_global_var()
+    demo_errorI_cov_of_points()
     demo_errorI_cov_of_basins()
