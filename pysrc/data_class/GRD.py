@@ -139,7 +139,7 @@ class GRD:
     def __len__(self):
         return self.get_length()
 
-    def to_SHC(self, lmax=None, special_type: Enums.PhysicalDimensions = None):
+    def to_SHC(self, lmax=None, special_type: Enums.PhysicalDimensions = None, lat_weight="DH"):
         from pysrc.data_class.SHC import SHC
 
         grid_space = self.get_grid_space()
@@ -163,17 +163,17 @@ class GRD:
         har = Harmonic(lat, lon, lmax, option=1)
 
         grid_data = self.value
-        cqlm, sqlm = har.analysis(grid_data, special_type=special_type)
+        cqlm, sqlm = har.analysis(grid_data, special_type=special_type, lat_weight=lat_weight)
         shc = SHC(cqlm, sqlm)
 
         return shc
 
     def analysis(self, lmax=None, from_type: Enums.PhysicalDimensions = None,
-                 to_type: Enums.PhysicalDimensions = None):
+                 to_type: Enums.PhysicalDimensions = None, lat_weight="DH"):
 
         grid_copy = copy.deepcopy(self)
 
-        shc = grid_copy.to_SHC(lmax=lmax)
+        shc = grid_copy.to_SHC(lmax=lmax, lat_weight=lat_weight)
         shc.convert_type(from_type=from_type, to_type=to_type)
 
         return shc
