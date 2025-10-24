@@ -89,7 +89,7 @@ class Harmonic:
             am = np.einsum('pij,mj->pim', gqij, co, optimize='greedy') * self.factor1
             bm = np.einsum('pij,mj->pim', gqij, so, optimize='greedy') * self.factor1
 
-            lat_to_int = self.lat
+            sin_lat_to_int = np.sin(self.lat)
             if lat_weight == "DH":
                 # get latitude weights, J. Driscoll and D. Healy, 1994
                 wi_DH = np.ones((self.nlat,))
@@ -100,11 +100,11 @@ class Harmonic:
                     ))
                     wi_DH[j] = this_wi
                 wi_DH *= 4 / np.pi
-                lat_to_int *= wi_DH
+                sin_lat_to_int *= wi_DH
 
             if special_type is None:
-                cqlm = np.einsum('pim,ilm,i->plm', am, self.pilm, np.sin(lat_to_int), optimize='greedy') * self.factor2
-                sqlm = np.einsum('pim,ilm,i->plm', bm, self.pilm, np.sin(lat_to_int), optimize='greedy') * self.factor2
+                cqlm = np.einsum('pim,ilm,i->plm', am, self.pilm, sin_lat_to_int, optimize='greedy') * self.factor2
+                sqlm = np.einsum('pim,ilm,i->plm', bm, self.pilm, sin_lat_to_int, optimize='greedy') * self.factor2
 
 
             elif special_type == PhysicalDimensions.HorizontalDisplacementNorth:
@@ -112,21 +112,21 @@ class Harmonic:
 
                 pilm_derivative = MathTool.get_Legendre_derivative(self.lat, self.lmax)
 
-                cqlm = np.einsum('pim,ilm,i->plm', -am, pilm_derivative, np.sin(lat_to_int)) * self.factor2
-                sqlm = np.einsum('pim,ilm,i->plm', -bm, pilm_derivative, np.sin(lat_to_int)) * self.factor2
+                cqlm = np.einsum('pim,ilm,i->plm', -am, pilm_derivative, sin_lat_to_int) * self.factor2
+                sqlm = np.einsum('pim,ilm,i->plm', -bm, pilm_derivative, sin_lat_to_int) * self.factor2
 
             elif special_type == PhysicalDimensions.HorizontalDisplacementEast:
                 """do NOT use this code!"""
 
                 mrange = np.arange(self.lmax + 1)
-                pilm_divide_sin_theta = self.pilm / np.sin(lat_to_int)[:, None, None]
+                pilm_divide_sin_theta = self.pilm / sin_lat_to_int[:, None, None]
                 m_pilm_divide_sin_theta = np.einsum("m,ilm->ilm", mrange, pilm_divide_sin_theta)
 
                 am_east = np.einsum('pij,mj->pim', gqij, -so, optimize='greedy') * self.factor1
                 bm_east = np.einsum('pij,mj->pim', gqij, co, optimize='greedy') * self.factor1
 
-                cqlm = np.einsum('pim,ilm,i->plm', am_east, m_pilm_divide_sin_theta, np.sin(lat_to_int)) * self.factor2
-                sqlm = np.einsum('pim,ilm,i->plm', bm_east, m_pilm_divide_sin_theta, np.sin(lat_to_int)) * self.factor2
+                cqlm = np.einsum('pim,ilm,i->plm', am_east, m_pilm_divide_sin_theta, sin_lat_to_int) * self.factor2
+                sqlm = np.einsum('pim,ilm,i->plm', bm_east, m_pilm_divide_sin_theta, sin_lat_to_int) * self.factor2
 
             else:
                 assert False
