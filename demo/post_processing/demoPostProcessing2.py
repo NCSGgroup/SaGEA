@@ -50,7 +50,7 @@ def demo():
     replace_deg1, replace_c20, replace_c30 = True, True, False
     # choose whether it is needed replacing deg1, c20 or c30 coefficients.
 
-    decorrelation_method, decorrelation_param = Enums.SHCDecorrelationType.SlideWindowStable, (3, 10, 5)
+    # decorrelation_method, decorrelation_param = Enums.SHCDecorrelationType.SlideWindowStable, (3, 10, 5)
     # Experimental Decorrelation Filter (EDF) methods and parameters
     # methods contain (with params required, see details in Swenson and Wahr, 2006; Chen et al., 2007, etc.):
     # Enums.SHCDecorrelationType.SlideWindowStable, (p, m, window_length);
@@ -98,7 +98,7 @@ def demo():
     shc.convert_type(from_type=Enums.PhysicalDimensions.Dimensionless,
                      to_type=Enums.PhysicalDimensions.EWH)  # convert physical dimension
 
-    shc.geometric(assumption=Enums.GeometricCorrectionAssumption.ActualEarth, log=True)
+    # shc.geometric(assumption=Enums.GeometricCorrectionAssumption.ActualEarth, log=True)
     # geometric correction, see Yang et al., 2022.
     # log=True to print the progress because it may cost times...
 
@@ -138,7 +138,7 @@ def demo():
     # Different methods may focus on different types of leakage (leak-in or leak-out),
     # please choose according to the actual situation.
 
-    grid_gldas, dates_gldas = load_GLDAS_TWS(begin_date, end_date)
+    # grid_gldas, dates_gldas = load_GLDAS_TWS(begin_date, end_date)
 
     # basin_path_shp = FileTool.get_project_dir("data/basin_mask/Shp/bas200k_shp")
     #
@@ -162,7 +162,8 @@ def demo():
 
     grid.leakage(
         method=leakage_method, basin=basin_mask, filter_type=filter_method, filter_params=filter_params, lmax=lmax,
-        shc_unfiltered=shc_unf, reference=dict(time=dates_gldas, model=grid_gldas), times=dates_ave,
+        shc_unfiltered=shc_unf,
+        # reference=dict(time=dates_gldas, model=grid_gldas), times=dates_ave,
         basin_conservation=grid_basin_conservation.value[0] # required for forward modeling
     )  # leakage correction
 
