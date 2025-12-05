@@ -104,7 +104,7 @@ def demo():
 
     shc_unf = copy.deepcopy(shc)  # prepare for later use in leakage correction
 
-    shc.filter(method=decorrelation_method, param=decorrelation_param)  # de-correlation filtering
+    # shc.filter(method=decorrelation_method, param=decorrelation_param)  # de-correlation filtering
     shc.filter(method=filter_method, param=filter_params)  # average filtering
 
     grid = shc.to_GRD(grid_space)
