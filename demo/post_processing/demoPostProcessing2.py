@@ -33,13 +33,13 @@ def demo():
     begin_date_ave, end_date_ave = datetime.date(2004, 1, 1), datetime.date(2010, 12, 31)
     # The time period of the averaging background field
 
-    gsm_path = FileTool.get_project_dir(sub="data/L2_SH_products/GSM/ITSG/Grace2018/n60/")
+    gsm_path = FileTool.get_project_dir(sub="data/L2_SH_products/GSM/CSR/RL06/BA01/2005")
     # The path (folder) of the gravity field L2 file.
     # Later, the program will load all files in the folder and sub-folder that meet the requirements.
     # Note that function FileTool.get_project_dir(sub=None) can obtain the project path and return a pathlib.Path type,
     # param. sub is optional, indicating the next level path pointed to.
 
-    gsm_key = "gfc"  # The identifier of L2 files, some files may use "GRCOF2" as the identifier.
+    gsm_key = "GRCOF2"  # The identifier of L2 files, some files may use "GRCOF2" as the identifier.
 
     low_deg_dir = FileTool.get_project_dir(sub="data/L2_low_degrees/")
     # Path to L2 low degree files (TN-11, TN-13, TN-14, etc.)
@@ -57,7 +57,7 @@ def demo():
     # Enums.SHCDecorrelationType.SlideWindowSwenson2006, (p, m, window_length, A, K);
     # Enums.SHCDecorrelationType.PnMm, (p, m).
 
-    filter_method, filter_params = Enums.SHCFilterType.Gaussian, (300,)
+    filter_method, filter_params = Enums.SHCFilterType.DDK, (3,)
     # Filtering methods and parameters
     # methods contain (with params required,
     # see details in Wahr et al., 1998; Han et al., 2005; Zhang et al., 2009; Kusche et al. 2007, etc.):
@@ -126,7 +126,7 @@ def demo():
 
     '''Next, we will further extract basin signals'''
 
-    leakage_method = Enums.LeakageMethod.Iterative
+    leakage_method = Enums.LeakageMethod.ForwardModeling
     # leakage methods for your study contain:
     # Enums.LeakageMethod.Multiplicative (Longuevergne et al., 2007).
     # Enums.LeakageMethod.Additive (Klees et al., 2007).
@@ -147,13 +147,23 @@ def demo():
     basin_mask = grid_basin.value[0]
     # for shp (polygon) mask file
 
+    shc_basin_conservation = load_SHC(FileTool.get_project_dir("data/auxiliary/ocean360_grndline.sh"), key="", lmax=180)
+    grid_basin_conservation = shc_basin_conservation.to_GRD(grid_space=grid_space)
+    grid_basin_conservation.limiter(0.5, 1, 0)
+
+    shc_basin = load_SHC(FileTool.get_project_dir("data/basin_mask/SH/Amazon_maskSH.dat"), key="", lmax=180)
+    grid_basin = shc_basin.to_GRD(grid_space=grid_space)
+    grid_basin.limiter(0.5, 1, 0)
+    basin_mask = grid_basin.value[0]
+
     # basin_mask = np.load(FileTool.get_project_dir("data/basin_mask/grids/Eyre_maskGrid.dat(180,360).npy"))
     # grid_basin = GRD(basin_mask, lat=grid.lat, lon=grid.lon)
     # for gridded mask file
 
     grid.leakage(
         method=leakage_method, basin=basin_mask, filter_type=filter_method, filter_params=filter_params, lmax=lmax,
-        shc_unfiltered=shc_unf, reference=dict(time=dates_gldas, model=grid_gldas), times=dates_ave
+        shc_unfiltered=shc_unf, reference=dict(time=dates_gldas, model=grid_gldas), times=dates_ave,
+        basin_conservation=grid_basin_conservation.value[0]
     )  # leakage correction
 
     ewh = grid.regional_extraction(grid_basin, average=True)
