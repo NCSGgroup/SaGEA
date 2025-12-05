@@ -13,7 +13,7 @@ from pysrc.post_processing.Love_number.LoveNumber import LoveNumber
 from pysrc.post_processing.convert_field_physical_quantity.ConvertSHC import ConvertSHC
 from pysrc.post_processing.filter.GetSHCFilter import get_filter
 from pysrc.post_processing.geometric_correction.GeometricalCorrection import GeometricalCorrection
-from pysrc.post_processing.harmonic.Harmonic import Harmonic
+from pysrc.post_processing.harmonic.Harmonic import Harmonic, HarmonicOld, GRDType
 from pysrc.post_processing.replace_low_deg.ReplaceLowDegree import ReplaceLowDegree
 
 
@@ -325,7 +325,7 @@ class SHC:
 
         return self
 
-    def to_GRD(self, grid_space=None, special_type: Enums.PhysicalDimensions = None):
+    def to_GRD_old(self, grid_space=None, special_type: Enums.PhysicalDimensions = None):
         from pysrc.data_class.GRD import GRD
 
         """pure synthesis"""
@@ -341,11 +341,41 @@ class SHC:
         lat, lon = MathTool.get_global_lat_lon_range(grid_space)
 
         lmax = self.get_lmax()
-        har = Harmonic(lat, lon, lmax, option=1)
+        har = HarmonicOld(lat, lon, lmax, option=1)
 
         cqlm, sqlm = self.get_cs2d()
         grid_data = har.synthesis(cqlm, sqlm, special_type=special_type)
         grid = GRD(grid_data, lat, lon, option=1)
+
+        grid.dates_series = self.dates
+
+        return grid
+
+    def to_GRD(self, grid_space=None, grid_type: GRDType or None = None):
+        """pure synthesis"""
+
+        from pysrc.data_class.GRD import GRD
+
+        if grid_type is None and grid_space is None:
+            grid_type = GRDType.GLQ
+
+        if (grid_type is not None) and (grid_space is not None):
+            warnings.warn(
+                "Both 'grid_space' and 'grid_type' were provided. "
+                "'grid_space' takes precedence, and 'grid_type' will be set to None.",
+                category=UserWarning,
+                stacklevel=2
+            )
+            grid_type = None
+
+        lmax = self.get_lmax()
+        har = Harmonic(lmax=lmax, grid_type=grid_type, grid_space=grid_space)
+
+        cqlm, sqlm = self.get_cs2d()
+        grid_data = har.synthesis(cqlm, sqlm)
+
+        grid = GRD(grid_data, har.colat, har.lon, option=0)
+        grid.grid_type = grid_type
 
         grid.dates_series = self.dates
 
@@ -361,7 +391,7 @@ class SHC:
         """
 
         lmax = self.get_lmax()
-        har = Harmonic(lat, lon, lmax, option=1, discrete=discrete)
+        har = HarmonicOld(lat, lon, lmax, option=1, discrete=discrete)
 
         cqlm, sqlm = self.get_cs2d()
         grid_data = har.synthesis(cqlm, sqlm, special_type=special_type)

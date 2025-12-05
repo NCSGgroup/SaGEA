@@ -14,7 +14,7 @@ import pysrc.auxiliary.preference.EnumClasses as Enums
 
 from pysrc.post_processing.de_aliasing.DeAliasing import DeAliasing
 from pysrc.post_processing.filter.GetSHCFilter import get_filter
-from pysrc.post_processing.harmonic.Harmonic import Harmonic
+from pysrc.post_processing.harmonic.Harmonic import Harmonic, HarmonicOld, GRDType
 from pysrc.post_processing.leakage.Addictive import Addictive
 from pysrc.post_processing.leakage.BufferZone import BufferZone
 from pysrc.post_processing.leakage.DataDriven import DataDriven
@@ -42,6 +42,8 @@ class GRD:
 
         self.value = np.array(grid)
 
+        self.__grid_type = None
+
         if option == 0:
             self.lat = 90 - np.degrees(lat)
             self.lon = np.degrees(lon)
@@ -51,7 +53,14 @@ class GRD:
             self.lon = lon
 
         self.dates_series = None
-        pass
+
+    @property
+    def grid_type(self):
+        return self.__grid_type
+
+    @grid_type.setter
+    def grid_type(self, grid_type: GRDType):
+        self.__grid_type = grid_type
 
     def __add__(self, other):
         assert isinstance(other, GRD)
@@ -61,7 +70,9 @@ class GRD:
 
     def __sub__(self, other):
         assert isinstance(other, GRD)
-        assert other.lat == self.lat and other.lon == self.lon
+
+        assert other.lat.shape == self.lat.shape and other.lon.shape == self.lon.shape
+        assert np.allclose(other.lat, self.lat, rtol=1e-5) and np.allclose(other.lon, self.lon, rtol=1e-5)
 
         return GRD(self.value - other.value, lat=self.lat, lon=self.lon)
 
@@ -131,7 +142,10 @@ class GRD:
         """
         return: grid_space in unit [degree]
         """
-        return round(self.lat[1] - self.lat[0], 2)
+
+        assert all(self.is_uniformity())
+
+        return np.abs(round(self.lat[1] - self.lat[0], 2))
 
     def get_length(self):
         return self.value.shape[0]
@@ -139,7 +153,7 @@ class GRD:
     def __len__(self):
         return self.get_length()
 
-    def to_SHC(self, lmax=None, special_type: Enums.PhysicalDimensions = None, lat_weight="DH"):
+    def to_SHC_old(self, lmax=None, special_type: Enums.PhysicalDimensions = None, lat_weight="DH"):
         from pysrc.data_class.SHC import SHC
 
         grid_space = self.get_grid_space()
@@ -160,10 +174,82 @@ class GRD:
 
         lat, lon = MathTool.get_global_lat_lon_range(grid_space)
 
-        har = Harmonic(lat, lon, lmax, option=1)
+        har = HarmonicOld(lat, lon, lmax, option=1)
 
         grid_data = self.value
         cqlm, sqlm = har.analysis(grid_data, special_type=special_type, lat_weight=lat_weight)
+        shc = SHC(cqlm, sqlm)
+
+        return shc
+
+    def is_uniformity(self, tol=1e-5):
+        """
+        Checks if the latitude and longitude grids are uniform.
+
+        Parameters:
+        -----------
+        lats : array-like
+            1D array of latitudes.
+        lons : array-like
+            1D array of longitudes.
+        tol : float
+            Tolerance for floating-point comparison.
+
+        Returns:
+        --------
+        is_lat_uniform : bool
+        is_lon_uniform : bool
+        """
+
+        lat_diffs = np.diff(self.lat)
+        lon_diffs = np.diff(self.lon)
+
+        if len(lat_diffs) == 0:
+            is_lat_uniform = True
+        else:
+            is_lat_uniform = np.allclose(lat_diffs, lat_diffs[0], atol=tol)
+
+        if len(lon_diffs) == 0:
+            is_lon_uniform = True
+        else:
+            is_lon_uniform = np.allclose(lon_diffs, lon_diffs[0], atol=tol)
+
+        return is_lat_uniform, is_lon_uniform
+
+    def to_SHC(self, lmax=None):
+        from pysrc.data_class.SHC import SHC
+
+        if (self.__grid_type is not None) and (lmax is not None):
+            warnings.warn(
+                f"Custom lmax ({lmax}) is provided. "
+                f"The inherent constraints of grid_type '{self.__grid_type}' will be ignored.",
+                category=UserWarning,
+                stacklevel=2
+            )
+
+        if lmax is not None:
+            assert all(self.is_uniformity()), "The grid must be uniform when 'lmax' is specified."
+            assert len(self.lat) * 2 == len(self.lon), ("The length of the longitude array must be twice the "
+                                                        "length of the latitude array. when 'lmax' is specified.")
+
+            har = Harmonic(lmax=lmax, grid_type=None, grid_space=self.get_grid_space())
+
+        else:
+            assert self.__grid_type is not None
+
+            if self.__grid_type == GRDType.GLQ:
+                lmax = len(self.lat) - 1
+            elif self.__grid_type == GRDType.DH2:
+                lmax = int(len(self.lat) / 2) - 1
+            elif self.__grid_type == GRDType.DH:
+                lmax = int(len(self.lat) / 2) - 1
+            else:
+                assert False
+
+            har = Harmonic(grid_type=self.__grid_type, lmax=lmax)
+
+        grid_data = self.value
+        cqlm, sqlm = har.analysis(grid_data)
         shc = SHC(cqlm, sqlm)
 
         return shc
@@ -173,7 +259,7 @@ class GRD:
 
         grid_copy = copy.deepcopy(self)
 
-        shc = grid_copy.to_SHC(lmax=lmax, lat_weight=lat_weight)
+        shc = grid_copy.to_SHC_old(lmax=lmax, lat_weight=lat_weight)
         shc.convert_type(from_type=from_type, to_type=to_type)
 
         return shc
@@ -209,7 +295,7 @@ class GRD:
 
         grid_space = self.get_grid_space()
         lat, lon = MathTool.get_global_lat_lon_range(grid_space)
-        har = Harmonic(lat, lon, lmax, option=1)
+        har = HarmonicOld(lat, lon, lmax, option=1)
 
         if filter_type == Enums.GridFilterType.VGC and len(filter_params) <= 4:
             filter_params = list(filter_params) + [None] * (4 - len(filter_params)) + [har]
