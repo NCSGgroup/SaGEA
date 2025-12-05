@@ -57,7 +57,7 @@ def demo():
     # Enums.SHCDecorrelationType.SlideWindowSwenson2006, (p, m, window_length, A, K);
     # Enums.SHCDecorrelationType.PnMm, (p, m).
 
-    filter_method, filter_params = Enums.SHCFilterType.DDK, (3,)
+    filter_method, filter_params = Enums.SHCFilterType.DDK, (4,)
     # Filtering methods and parameters
     # methods contain (with params required,
     # see details in Wahr et al., 1998; Han et al., 2005; Zhang et al., 2009; Kusche et al. 2007, etc.):
@@ -140,21 +140,21 @@ def demo():
 
     grid_gldas, dates_gldas = load_GLDAS_TWS(begin_date, end_date)
 
-    basin_path_shp = FileTool.get_project_dir("data/basin_mask/Shp/bas200k_shp")
-
-    load_shp = LoadShp(basin_path_shp)
-    grid_basin = load_shp.get_GRD(grid_space=grid_space)  # load basin mask (in GRID)
-    basin_mask = grid_basin.value[0]
+    # basin_path_shp = FileTool.get_project_dir("data/basin_mask/Shp/bas200k_shp")
+    #
+    # load_shp = LoadShp(basin_path_shp)
+    # grid_basin = load_shp.get_GRD(grid_space=grid_space)  # load basin mask (in GRID)
+    # basin_mask = grid_basin.value[0]
     # for shp (polygon) mask file
-
-    shc_basin_conservation = load_SHC(FileTool.get_project_dir("data/auxiliary/ocean360_grndline.sh"), key="", lmax=180)
-    grid_basin_conservation = shc_basin_conservation.to_GRD(grid_space=grid_space)
-    grid_basin_conservation.limiter(0.5, 1, 0)
 
     shc_basin = load_SHC(FileTool.get_project_dir("data/basin_mask/SH/Amazon_maskSH.dat"), key="", lmax=180)
     grid_basin = shc_basin.to_GRD(grid_space=grid_space)
     grid_basin.limiter(0.5, 1, 0)
     basin_mask = grid_basin.value[0]
+
+    shc_basin_conservation = load_SHC(FileTool.get_project_dir("data/auxiliary/ocean360_grndline.sh"), key="", lmax=180)
+    grid_basin_conservation = shc_basin_conservation.to_GRD(grid_space=grid_space)
+    grid_basin_conservation.limiter(0.5, 1, 0)
 
     # basin_mask = np.load(FileTool.get_project_dir("data/basin_mask/grids/Eyre_maskGrid.dat(180,360).npy"))
     # grid_basin = GRD(basin_mask, lat=grid.lat, lon=grid.lon)
@@ -163,7 +163,7 @@ def demo():
     grid.leakage(
         method=leakage_method, basin=basin_mask, filter_type=filter_method, filter_params=filter_params, lmax=lmax,
         shc_unfiltered=shc_unf, reference=dict(time=dates_gldas, model=grid_gldas), times=dates_ave,
-        basin_conservation=grid_basin_conservation.value[0]
+        basin_conservation=grid_basin_conservation.value[0] # required for forward modeling
     )  # leakage correction
 
     ewh = grid.regional_extraction(grid_basin, average=True)
