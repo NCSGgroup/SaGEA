@@ -164,7 +164,7 @@ def demo():
         method=leakage_method, basin=basin_mask, filter_type=filter_method, filter_params=filter_params, lmax=lmax,
         shc_unfiltered=shc_unf,
         # reference=dict(time=dates_gldas, model=grid_gldas), times=dates_ave,
-        basin_conservation=grid_basin_conservation.value[0] # required for forward modeling
+        basin_conservation=grid_basin_conservation.value[0], log=True, fm_iter_times=50  # required for forward modeling
     )  # leakage correction
 
     ewh = grid.regional_extraction(grid_basin, average=True)
