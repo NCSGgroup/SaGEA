@@ -108,7 +108,7 @@ def demo():
     shc.filter(method=filter_method, param=filter_params)  # average filtering
 
     grid = shc.to_GRD(grid_space)
-    grid.de_aliasing(dates_ave, s2=False, p1=False, s1=False, k2=False, k1=False)
+    # grid.de_aliasing(dates_ave, s2=False, p1=False, s1=False, k2=False, k1=False)
     # Correct the aliasing error by fitting the corresponding period
     # If the testing period is shorter than the correction period, errors may error
 
