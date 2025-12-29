@@ -1,0 +1,71 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sagea"
+version = "0.2.3"  # Hard-coding suggested initially; dynamic versioning (e.g., from git tags) requires different config
+description = "Gravity Satellite Data Processing and Geodesy Toolkit"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { file = "LICENSE" }
+authors = [
+    { name = "Shuhao Liu", email = "liushuhao@hust.edu.cn" },
+]
+keywords = ["geodesy", "gravity", "GRACE", "satellite", "SH"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Scientific/Engineering :: Physics",
+    "Topic :: Scientific/Engineering :: GIS",
+]
+dependencies = [
+    "numpy>=2.0.2",
+    "scipy>=1.13.1",
+    "h5py>=3.14.0",
+    "pandas>=2.3.0",
+    "tqdm>=4.67.1",
+    "netCDF4>=1.7.2",
+    "geopandas>=1.0.1",
+    "shapely>=2.0.7",
+    "pyproj>=3.6.1",
+    "rasterio>=1.4.3",
+    "wget>=3.2",
+]
+
+# Optional Dependencies
+# Usage: pip install sagea[plot]
+[project.optional-dependencies]
+plot = [
+    "matplotlib>=3.5.0",
+    "cartopy>=0.23.0",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/NCSGgroup/SaGEA"
+"Bug Tracker" = "https://github.com/NCSGgroup/SaGEA/issues"
+
+
+# Once installed, executing `sagea-proc` in the terminal runs the `main` function in `sagea.cli`
+[project.scripts]
+sagea-proc = "sagea.cli:main"
+
+# -----------------------------------------------------------------------
+# Tool Configuration Section: Integrate configs for other tools here
+# -----------------------------------------------------------------------
+
+# Setuptools specific config: Required for src-layout
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["sagea*"]  # Include "sagea" and its sub-packages
+
+# Include package data files (e.g., json and nc files under sagea/data/)
+[tool.setuptools.package-data]
+"sagea.data" = ["*.json", "*.nc", "*.gfc", "*.txt"]
+
+

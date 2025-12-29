@@ -210,20 +210,23 @@ class Harmonic:
             self.__grid_type = None
 
             lat_deg, lon_deg = MathTool.get_global_lat_lon_range(grid_space)
-            self.colat, self.lon = MathTool.get_colat_lon_rad(lat_deg, lon_deg)  # in unit radians
-            # self.analysis_weight = np.ones_like(self.colat)
+            self.colat, self.lon = MathTool.get_colat_lon_rad(lat_deg, lon_deg)
+            # in unit radians
+
+            # simplified sin weight
+            self.analysis_weight = np.sin(self.colat)
 
             # get latitude weights, J. Driscoll and D. Healy, 1994
-            nlat = len(self.colat)
-            wi_DH = np.ones_like(self.colat, )
-            for j in range(len(wi_DH)):
-                this_theta = self.colat[j]
-                this_wi = np.sum(np.array(
-                    [np.sin((2 * l + 1) * this_theta) / (2 * l + 1) for l in range(int(nlat / 2 - 1))]
-                ))
-                wi_DH[j] = this_wi
-            wi_DH *= 4 / np.pi
-            self.analysis_weight = np.sin(self.colat) * wi_DH
+            # nlat = len(self.colat)
+            # wi_DH = np.ones_like(self.colat, )
+            # for j in range(len(wi_DH)):
+            #     this_theta = self.colat[j]
+            #     this_wi = np.sum(np.array(
+            #         [np.sin((2 * l + 1) * this_theta) / (2 * l + 1) for l in range(int(nlat / 2 - 1))]
+            #     ))
+            #     wi_DH[j] = this_wi
+            # wi_DH *= 4 / np.pi
+            # self.analysis_weight = np.sin(self.colat) * wi_DH
 
         else:
             self.__grid_type = grid_type
