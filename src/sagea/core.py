@@ -3,6 +3,7 @@
 # @Author  : Shuhao Liu
 # @Time    : 2025/12/29 15:06 
 # @File    : core.py
+import datetime
 import pathlib
 
 import numpy
@@ -11,10 +12,10 @@ from pathlib import Path
 import warnings
 
 from sagea import constant
-from sagea.io_sagea.gfc_reader import read_gfc
+from sagea.sgio.gfc_reader import read_gfc
 from sagea.processing.Harmonic import Harmonic, GRDType
 from sagea.processing.filter.GetSHCFilter import get_filter
-from sagea.utils import MathTool
+from sagea.utils import MathTool, TimeTool
 
 from sagea.processing.SHCPhysicalConvert import ConvertSHC
 from sagea.processing.LoveNumber import LoveNumber
@@ -54,6 +55,48 @@ class SHC:
             assert False
 
         return SHC(cs_array, normalized=normalized)
+
+    @staticmethod
+    def from_trend(shc_trend, times: list[datetime.date], ref_time: datetime.date = None):
+        """
+        Generate a list of SHC instances by linearly propagating a trend SHC.
+
+        The coefficients are calculated as:
+            C(t) = C_rate * (t - t_ref)
+
+        Parameters
+        ----------
+        shc_trend : SHC
+            An SHC instance containing the trend rates (e.g., GIA trend in /year).
+        times : list of datetime.date
+            The list of dates for which to generate the SHCs.
+        ref_time : datetime.date, optional
+            The reference epoch where the signal is zero.
+            If None, defaults to the first date in `times`.
+
+        Returns
+        -------
+        list of SHC
+            A list of new SHC objects, one for each target date.
+        """
+        assert len(shc_trend) == 1
+
+        if ref_time is None:
+            ref_time = times[0]
+
+        year_frac = TimeTool.convert_date_format(times,
+                                                 input_type=TimeTool.DateFormat.ClassDate,
+                                                 output_type=TimeTool.DateFormat.YearFraction)
+        year_frac = np.array(year_frac)
+        year_frac -= TimeTool.convert_date_format(ref_time,
+                                                  input_type=TimeTool.DateFormat.ClassDate,
+                                                  output_type=TimeTool.DateFormat.YearFraction)
+
+        year_frac = np.array(year_frac)
+
+        trend = shc_trend.value[0]
+        value = year_frac[:, None] @ trend[None, :]
+        return SHC(value)
 
     # --- properties and statistics --- #
     # Following methods will return required information
@@ -125,6 +168,28 @@ class SHC:
         assert self.lmax == other.lmax
 
         return SHC(self.value - other.value)
+
+    def replace(self, index: str, new: np.ndarray):
+        """
+
+        :param index: str, like "c2,0" or "s1,1"
+        :param new:
+        :return:
+        """
+        assert isinstance(new, SHC) or isinstance(new, np.ndarray)
+
+        index1d = MathTool.get_cs_1d_index(index)
+
+        if isinstance(new, SHC):
+            new_array = new.value[:, index1d]
+        else:
+            new_array = new
+
+        assert len(new_array) == len(self)
+
+        index_new_array_valid = np.where(new_array == new_array)  # ignore np.nan
+
+        self.value[index_new_array_valid, index1d] = new_array[index_new_array_valid]
 
     def de_mean(self):
         self.value -= self.mean
@@ -229,6 +294,7 @@ if __name__ == '__main__':
     from matplotlib import pyplot as plt
     import cartopy.crs
     import matplotlib
+    from sagea.sgio.low_deg_reader import read_low_degs
 
     file_path_list = list(
         pathlib.Path(
@@ -236,7 +302,32 @@ if __name__ == '__main__':
         ).iterdir())
     file_path_list.sort()
 
+    dates_begin, dates_end = TimeTool.match_dates_from_name(file_path_list)
+    dates_ave = TimeTool.get_average_dates(dates_begin, dates_end)
+
+    path_tn14 = pathlib.Path(
+        "/Users/shuhao/PycharmProjects/SaGEA_update/data/L2_low_degrees/TN-14_C30_C20_SLR_GSFC.txt"
+    )
+    path_tn13 = pathlib.Path(
+        "/Users/shuhao/PycharmProjects/SaGEA_update/data/L2_low_degrees/TN-13_GEOC_JPL_RL06.txt"
+    )
+
+    low_degs = read_low_degs(path_tn14, dates_ave)
+    low_degs.update(read_low_degs(path_tn13, dates_ave))
+
     shc = SHC.from_file(file_path_list, lmax=60, key="GRCOF2")
+    keys_low_deg = ["c1,0", "c1,1", "s1,1", "c2,0", "c3,0"]
+    for key in keys_low_deg:
+        shc.replace(key, low_degs[key])
+
+    path_gia = pathlib.Path(
+        "/Users/shuhao/PycharmProjects/SaGEA_update/data/GIA/GIA.ICE-6G_D.txt"
+    )
+    shc_gia_trend = SHC.from_file(path_gia, lmax=60, key="")
+    shc_gia = SHC.from_trend(shc_gia_trend, dates_ave)
+
+    shc -= shc_gia
+
     shc.de_mean()
 
     shc.filter(constant.SHCFilterType.HAN, (200, 300, 30,))

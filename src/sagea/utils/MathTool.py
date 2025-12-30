@@ -1,3 +1,4 @@
+import re
 from enum import Enum
 
 import numpy as np
@@ -166,26 +167,26 @@ class MathTool:
 
         Pnm = np.zeros((NMmax, Nsize))
 
-        Pnm[MathTool.getIndex(0, 0)] = 1
+        Pnm[MathTool.getCSIndex(0, 0)] = 1
 
-        Pnm[MathTool.getIndex(1, 1)] = np.sqrt(3) * np.sin(lat)
+        Pnm[MathTool.getCSIndex(1, 1)] = np.sqrt(3) * np.sin(lat)
 
         '''For the diagonal element'''
         for n in range(2, Nmax + 1):
-            Pnm[MathTool.getIndex(n, n)] = np.sqrt((2 * n + 1) / (2 * n)) * np.sin(lat) * Pnm[
-                MathTool.getIndex(n - 1, n - 1)]
+            Pnm[MathTool.getCSIndex(n, n)] = np.sqrt((2 * n + 1) / (2 * n)) * np.sin(lat) * Pnm[
+                MathTool.getCSIndex(n - 1, n - 1)]
 
         for n in range(1, Nmax + 1):
-            Pnm[MathTool.getIndex(n, n - 1)] = np.sqrt(2 * n + 1) * np.cos(lat) * Pnm[
-                MathTool.getIndex(n - 1, n - 1)]
+            Pnm[MathTool.getCSIndex(n, n - 1)] = np.sqrt(2 * n + 1) * np.cos(lat) * Pnm[
+                MathTool.getCSIndex(n - 1, n - 1)]
 
         for n in range(2, Nmax + 1):
             for m in range(n - 2, -1, -1):
-                Pnm[MathTool.getIndex(n, m)] = \
+                Pnm[MathTool.getCSIndex(n, m)] = \
                     np.sqrt((2 * n + 1) / ((n - m) * (n + m)) * (2 * n - 1)) \
-                    * np.cos(lat) * Pnm[MathTool.getIndex(n - 1, m)] \
+                    * np.cos(lat) * Pnm[MathTool.getCSIndex(n - 1, m)] \
                     - np.sqrt((2 * n + 1) / ((n - m) * (n + m)) * (n - m - 1) * (n + m - 1) / (2 * n - 3)) \
-                    * Pnm[MathTool.getIndex(n - 2, m)]
+                    * Pnm[MathTool.getCSIndex(n - 2, m)]
 
         return Pnm
 
@@ -446,7 +447,7 @@ class MathTool:
         return int((lat + 90) / gs), int((lon + 180) / gs)
 
     @staticmethod
-    def getIndex(n: int, m: int):
+    def getCSIndex(n: int, m: int):
         """
         index of Cnm at degree-ordered one-dimension array
         :param n: degree
@@ -456,6 +457,36 @@ class MathTool:
         assert m <= n
 
         return int(n * (n + 1) / 2 + m)
+
+    @staticmethod
+    def get_cs_1d_index(c: str, l: int = None, m: int = None):
+        c = c.lower()
+        assert c[0] in ("c", "s")
+
+        if len(c) > 0:
+            assert l is None and m is None
+
+            re_pat = r"([cs])(\d+),(\d+)"
+            re_match = re.match(re_pat, c)
+
+            assert re_match is not None
+
+            c = re_match.groups()[0]
+            l = int(re_match.groups()[1])
+            m = int(re_match.groups()[2])
+
+        assert m <= l
+
+        index1d_l0 = l ** 2 + l
+
+        if c == "c":
+            index1d_lm = index1d_l0 + m
+        elif c == "s":
+            index1d_lm = index1d_l0 - m
+        else:
+            assert False
+
+        return index1d_lm
 
     @staticmethod
     def get_degree_rms(cqlm, sqlm):

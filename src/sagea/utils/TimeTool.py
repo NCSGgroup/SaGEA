@@ -1,5 +1,8 @@
 import datetime
+import pathlib
+import re
 from enum import Enum
+from pathlib import Path
 
 import numpy as np
 
@@ -234,3 +237,89 @@ class TimeTool:
                 ave_dates.append(ave_date)
 
             return ave_dates
+
+    @staticmethod
+    def match_dates_from_name(name):
+        """
+        match beginning and ending date(s) from (list of) string, Path.
+        if Path given, only match the filename.
+
+        Parameters
+        ----------
+        name : str, pathlib.Path, or list of above
+
+        Returns
+        ----------
+        tuple:
+            list of beginning dates,
+            list of ending dates,
+
+        """
+        assert isinstance(name, (str, pathlib.Path, list))
+
+        if isinstance(name, list):
+            beginning_dates, ending_dates = [], []
+            for i in range(len(name)):
+                bd, be = TimeTool.match_dates_from_name(name[i])
+                beginning_dates.append(bd[0])
+                ending_dates.append(be[0])
+
+            return beginning_dates, ending_dates
+
+        else:
+            if isinstance(name, pathlib.Path):
+                name = name.name
+
+            match_flag = False
+            this_date_begin, this_date_end = None, None
+
+            '''date format: yyyymmdd-yyyymmdd or yyyy-mm-dd-yyyy-mm-dd'''
+            if not match_flag:
+                date_begin_end_pattern = r"(\d{4})-?(\d{2})-?(\d{2})(-|_)(\d{4})-?(\d{2})-?(\d{2})"
+                date_begin_end_searched = re.search(date_begin_end_pattern, name)
+
+                if date_begin_end_searched is not None:
+                    date_begin_end = date_begin_end_searched.groups()
+                    this_date_begin = datetime.date(*list(map(int, date_begin_end[:3])))
+                    this_date_end = datetime.date(*list(map(int, date_begin_end[4:])))
+
+                    match_flag = True
+
+            '''date format: yyyyddd-yyyyddd'''
+            if not match_flag:
+                date_begin_end_pattern = r"(\d{4})(\d{3})-(\d{4})(\d{3})"
+                date_begin_end_searched = re.search(date_begin_end_pattern, name)
+
+                if date_begin_end_searched is not None:
+                    date_begin_end = date_begin_end_searched.groups()
+                    this_date_begin = datetime.date(int(date_begin_end[0]), 1, 1) + datetime.timedelta(
+                        days=int(date_begin_end[1]) - 1)
+                    this_date_end = datetime.date(int(date_begin_end[2]), 1, 1) + datetime.timedelta(
+                        days=int(date_begin_end[3]) - 1)
+
+                    match_flag = True
+
+                '''date format: yyyy-mm'''
+                if not match_flag:
+                    date_begin_end_pattern = r"(\d{4})(-|_|)(\d{2})"
+                    date_begin_end_searched = re.search(date_begin_end_pattern, name)
+
+                    if date_begin_end_searched is not None:
+                        year_month = date_begin_end_searched.groups()
+                        year = int(year_month[0])
+                        month = int(year_month[2])
+
+                        this_date_begin = datetime.date(int(year), month, 1)
+                        this_date_end = TimeTool.get_the_final_day_of_this_month(year=year, month=month)
+
+                        match_flag = True
+
+                assert match_flag, (f"illegal date format in filename: {name}. "
+                                    f"Filename should contain following one of parts: "
+                                    "yyyymmdd-yyyymmdd; "
+                                    "yyyy-mm-dd-yyyy-mm-dd; "
+                                    "yyyyddd-yyyyddd; "
+                                    "yyyy-mm."
+                                    )
+
+                return [this_date_begin], [this_date_end]
