@@ -56,5 +56,23 @@ class LoveNumberMethod(Enum):
     IERS = 4
 
 
+class GeometricCorrectionAssumption(Enum):
+    Sphere = 1
+    Ellipsoid = 2
+    ActualEarth = 3
+
+
+class LeakageMethod(Enum):
+    Additive = 1
+    Multiplicative = 2
+    Scaling = 3
+    ScalingGrid = 4
+    Iterative = 5
+    DataDriven = 6
+    ForwardModeling = 7
+    BufferShrink = 8
+    BufferExpand = 9
+
+
 if __name__ == "__main__":
     pass

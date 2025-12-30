@@ -10,10 +10,10 @@ from multiprocessing import Pool
 
 import numpy as np
 
-from pysrc.post_processing.geometric_correction.old.GeoMathKit import GeoMathKit
-from pysrc.post_processing.geometric_correction.old.LoveNumber import LoveNumber
-from pysrc.post_processing.geometric_correction.old.RefEllipsoid import RefEllipsoid
-from pysrc.post_processing.geometric_correction.old.Setting import SynthesisType, EllipsoidType, \
+from sagea.processing.geometric_correction.old.GeoMathKit import GeoMathKit
+from sagea.processing.geometric_correction.old.LoveNumber import LoveNumber
+from sagea.processing.geometric_correction.old.RefEllipsoid import RefEllipsoid
+from sagea.processing.geometric_correction.old.Setting import SynthesisType, EllipsoidType, \
     LoveNumberType, Constants, HarAnalysisType
 
 
@@ -340,8 +340,8 @@ class Harmonic:
         Qnm = Pnm * thetaS
 
         for m in range(n + 1):
-            Am[m] = factor1 * np.array(I_new * np.mat(np.cos(m * phi)).T).flatten()
-            Bm[m] = factor1 * np.array(I_new * np.mat(np.sin(m * phi)).T).flatten()
+            Am[m] = factor1 * np.array(I_new * np.asmatrix(np.cos(m * phi)).T).flatten()
+            Bm[m] = factor1 * np.array(I_new * np.asmatrix(np.sin(m * phi)).T).flatten()
 
         indexM = np.arange(n + 1)
         Cnm[GeoMathKit.getIndex(n, 0):GeoMathKit.getIndex(n, n) + 1] = factorSH[n] * factor2 * \
@@ -455,7 +455,6 @@ class Harmonic:
         for m in range(Nmax + 1):
             co = np.cos(m * lon)
             so = np.sin(m * lon)
-            # Fout = Fout + np.mat(Am[m]).T * co + np.mat(Bm[m]).T * so
             Fout = Fout + np.asmatrix(Am[m]).T * co + np.asmatrix(Bm[m]).T * so
 
         return np.array(Fout)

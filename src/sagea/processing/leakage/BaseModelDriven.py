@@ -1,0 +1,146 @@
+from abc import abstractmethod
+
+import numpy as np
+
+from sagea.processing.leakage.Base import Leakage, filter_grids
+from sagea.processing.filter.Base import SHCFilter
+from sagea.processing.Harmonic import Harmonic
+from sagea.utils import MathTool
+
+
+class ModelDrivenConfig:
+    def __init__(self):
+        self.basin_map = None
+        self.basin_acreage = None
+        self.filter = None
+        self.harmonic = None
+        self.model = None
+        self.GRACE_times = None
+        self.model_times = None
+        self.scale_type = None
+
+    def set_harmonic(self, har: Harmonic):
+        self.harmonic = har
+        return self
+
+    def set_basin(self, basin: np.ndarray):
+        if type(basin) is np.ndarray:
+            assert basin.ndim == 2
+            self.basin_map = basin
+
+        self.basin_acreage = MathTool.get_acreage(self.basin_map)
+
+        return self
+
+    def set_model(self, model):
+        self.model = model
+
+        return self
+
+    def set_filter(self, shc_filter: SHCFilter):
+        self.filter = shc_filter
+
+        return self
+
+    def set_GRACE_times(self, times: list):
+        self.GRACE_times = times
+
+        return self
+
+    def set_model_times(self, times: list):
+        self.model_times = times
+
+        return self
+
+    def set_scale_type(self, scale_type: str):
+        self.scale_type = scale_type
+
+        return self
+
+
+class ModelDriven(Leakage):
+    """This is a base class for model-driven methods"""
+
+    def __init__(self):
+        super().__init__()
+        self.configuration = ModelDrivenConfig()
+
+    @abstractmethod
+    def apply_to(self, grids, get_grid=False):
+        pass
+
+    def _get_leakage(self):
+        basin = self.configuration.basin_map
+        basin_outside = 1 - self.configuration.basin_map
+        model_outside_basin = self.configuration.model * basin_outside
+
+        model_outside_filtered = filter_grids(model_outside_basin, self.configuration.filter,
+                                              self.configuration.harmonic)
+
+        leakage_c_m = MathTool.global_integral(
+            model_outside_filtered * self.configuration.basin_map) / MathTool.get_acreage(basin)
+
+        return leakage_c_m
+
+    def _get_multiplicative_scale(self):
+        basin = self.configuration.basin_map
+
+        basin_mask_filtered = \
+            filter_grids(np.array([basin]), self.configuration.filter, self.configuration.harmonic)[0]
+
+        integral_basin_mask = MathTool.global_integral(basin)
+        integral_basin_mask_filtered = MathTool.global_integral(basin_mask_filtered * basin)
+
+        return integral_basin_mask / integral_basin_mask_filtered
+
+    def _get_bias(self):
+        basin = self.configuration.basin_map
+
+        basin_filtered = filter_grids(np.array([basin]), self.configuration.filter, self.configuration.harmonic)[0]
+
+        bias_c_m = MathTool.global_integral(self.configuration.model * (basin - basin_filtered)) / MathTool.get_acreage(
+            basin)
+
+        return bias_c_m
+
+    @staticmethod
+    def _scale_function(x, a, b, c, d):
+        return a + b * x + c * np.sin(2 * np.pi * x) + d * np.cos(2 * np.pi * x)
+
+    def _get_scaling_scale(self):
+        model_filtered = filter_grids(self.configuration.model, self.configuration.filter, self.configuration.harmonic)
+
+        time_series_model = MathTool.global_integral(self.configuration.model * self.configuration.basin_map)
+        time_series_model_filtered = MathTool.global_integral(model_filtered * self.configuration.basin_map)
+
+        z = MathTool.curve_fit(self._scale_function, time_series_model_filtered, time_series_model)
+
+        return z[0][0, 1]
+
+    def _get_scaling_scale_grid(self, scale_type="trend"):
+        assert scale_type in ("trend", "annual_amplitude")
+
+        model_filtered = filter_grids(self.configuration.model, self.configuration.filter, self.configuration.harmonic)
+        model_shape = np.shape(self.configuration.model)[1:]
+
+        model_1d = np.array([self.configuration.model[i].flatten() for i in range(len(self.configuration.model))])
+        model_filtered_1d = np.array([model_filtered[i].flatten() for i in range(len(model_filtered))])
+
+        t = np.arange(len(model_1d))
+        z1 = MathTool.curve_fit(self._scale_function, t, *model_1d)
+        z2 = MathTool.curve_fit(self._scale_function, t, *model_filtered_1d)
+
+        if scale_type == "trend":
+            factors_grids = (z1[0][:, 1] / z2[0][:, 1]).reshape(model_shape)
+        elif scale_type == "annual_amplitude":
+            a1 = np.sqrt(z1[0][:, 2] ** 2 + z1[0][:, 3] ** 2)
+            a2 = np.sqrt(z2[0][:, 2] ** 2 + z2[0][:, 3] ** 2)
+            factors_grids = (a1 / a2).reshape(model_shape)
+        else:
+            assert False
+
+        return factors_grids
+
+
+    def format(self):
+        return 'model driven'

@@ -12,6 +12,8 @@ from pathlib import Path
 import warnings
 
 from sagea import constant
+from sagea.processing.geometric_correction.GeometricalCorrection import GeometricalCorrection
+from sagea.processing.leakage.LeakageTool import get_leakage_corrector
 from sagea.sgio.gfc_reader import read_gfc
 from sagea.processing.Harmonic import Harmonic, GRDType
 from sagea.processing.filter.GetSHCFilter import get_filter
@@ -19,6 +21,7 @@ from sagea.utils import MathTool, TimeTool
 
 from sagea.processing.SHCPhysicalConvert import ConvertSHC
 from sagea.processing.LoveNumber import LoveNumber
+from sagea.processing.leakage import LeakageTool
 
 
 class SHC:
@@ -99,7 +102,7 @@ class SHC:
         return SHC(value)
 
     # --- properties and statistics --- #
-    # Following methods will return required information
+    # Following methods return the required information about this instance.
     @property
     def lmax(self):
         return int(np.sqrt(self.value.shape[1]) - 1)
@@ -156,7 +159,7 @@ class SHC:
         return MathTool.get_cumulative_rss(cqlm, sqlm)
 
     # --- calculation and processing --- #
-    # Following methods process and change the values in the instance
+    # Following methods process and change the values in the instance.
     def __add__(self, other):
         assert isinstance(other, SHC)
         assert self.lmax == other.lmax
@@ -216,7 +219,6 @@ class SHC:
         lmax = self.lmax
         LN = LoveNumber()
         LN.configuration.set_lmax(lmax)
-
         ln = LN.get_Love_number()
 
         convert = ConvertSHC()
@@ -225,8 +227,16 @@ class SHC:
         self.value = convert.apply_to(self.value)
         return self
 
+    def geometric(self, assumption: constant.GeometricCorrectionAssumption, log=False):
+        gc = GeometricalCorrection()
+        cqlm, sqlm = self.cs2d
+        cqlm_new, sqlm_new = gc.apply_to(cqlm, sqlm, assumption=assumption, log=log)
+        self.value = MathTool.cs_combine_to_triangle_1d(cqlm_new, sqlm_new)
+
+        return self
+
     # --- harmonic synthesis --- #
-    # Following methods generate a GRD instance or numpy arrays of spatial data
+    # Following methods generate a GRD instance or numpy arrays of spatial data.
     def to_GRD(self, grid_space=None, grid_type: GRDType or None = None):
         """pure synthesis"""
         if grid_type is None and grid_space is None:
@@ -254,6 +264,10 @@ class SHC:
 
 
 class GRD:
+    """Gridded value"""
+
+    # --- generate GRD instance --- #
+    # Following methods will generate and return GRD an instance class
     def __init__(self, grid, lat, lon, option=1):
         """
         To create a GRID object,
@@ -281,10 +295,76 @@ class GRD:
 
         self.dates_series = None
 
+    # --- properties and statistics --- #
+    # Following methods return the required information about this instance.
     @property
     def grid_type(self):
         return self.__grid_type
 
+    def regional_extraction(self, mask: np.ndarray, average=True, leakage: constant.LeakageMethod = None, **kwargs):
+        """
+        Extract signal over a specific region with optional leakage correction.
+
+        Parameters
+        ----------
+        mask : np.ndarray
+            Region mask (0/1 or boolean), matching grid dimensions.
+        average : bool, default=True
+            get average signal over the region (i.e., divided by regional size) if True else Total signal.
+        leakage : str, optional
+            Method for leakage correction. Options:
+            - None (Default): Direct integration.
+            - 'additive':
+            - 'multiplicative':
+            - 'scaling':
+            - 'scaling_grid':
+            - 'data_driven':
+            - 'forward_modeling': Iterative FM. Accepts 'max_iter'.
+            - 'buffer_shrink':
+            - 'buffer_expand':
+        **kwargs : dict
+            Parameters specific to the chosen correction method.
+
+        Returns
+        -------
+        numpy.array[float]
+            Total/average value in the region (e.g., Gt or EWH sum).
+        """
+
+        assert isinstance(mask, np.ndarray)
+
+        dispatch = {
+            None: None,
+            'none': None,
+            'additive': LeakageTool.Additive,
+            'multiplicative': LeakageTool.Multiplicative,
+            'scaling': LeakageTool.Scaling,
+            'scaling_grid': LeakageTool.ScalingGrid,
+            'data_driven': LeakageTool.DataDriven,
+            'forward_modeling': LeakageTool.ForwardModeling,
+            'buffer_shrink': LeakageTool.BufferZone,
+            'buffer_expand': LeakageTool.BufferZone,
+        }
+
+        leakage_corrector = get_leakage_corrector()
+
+        if leakage is not None:
+            assert average, "can only set average=True for leakage not None"
+
+        lat, lon = self.lat, self.lon
+
+        if leakage is not None:
+            pass
+        else:
+            integral_result = MathTool.global_integral(self.value * mask, lat, lon)
+
+        if average:
+            integral_result /= MathTool.get_acreage(mask)
+
+        return integral_result
+
+    # --- calculation and processing --- #
+    # Following methods process and change the values in the instance.
     @grid_type.setter
     def grid_type(self, grid_type: GRDType):
         self.__grid_type = grid_type
@@ -331,6 +411,8 @@ if __name__ == '__main__':
     shc.de_mean()
 
     shc.filter(constant.SHCFilterType.HAN, (200, 300, 30,))
+
+    shc.geometric(assumption=constant.GeometricCorrectionAssumption.Ellipsoid, log=False)
 
     shc.convert_physical(
         from_type=constant.PhysicalDimension.Geopotential,
