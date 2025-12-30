@@ -6,7 +6,7 @@
 import numpy as np
 from pathlib import Path
 
-from src.sagea.utils.MathTool import MathTool
+from src.sagea.utils import MathTool
 
 
 def read_gfc(filepath: Path, key="gfc", lmax=None, col_indices=None):

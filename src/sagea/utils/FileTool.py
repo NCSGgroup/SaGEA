@@ -7,9 +7,8 @@ import h5py
 
 class FileTool:
     @staticmethod
-    def get_project_dir(sub=None, *, relative=False):
+    def get_project_dir(sub=None):
         dir_of_project = Path().absolute()
-        relative_dir_str = Path('')
 
         i = 0
         while True:
@@ -17,19 +16,12 @@ class FileTool:
             if i > 100:
                 raise Exception
 
-            if Path.exists(dir_of_project / 'pysrc'):
+            if Path.exists(dir_of_project / 'sagea'):
                 break
 
             dir_of_project = dir_of_project.parent
-            relative_dir_str /= '..'
 
-        if relative:
-            result = relative_dir_str
-            # return Path(relative_dir_str)
-
-        else:
-            result = dir_of_project
-            # return dir_of_project
+        result = dir_of_project / 'sagea'
 
         if sub is not None:
             result /= sub

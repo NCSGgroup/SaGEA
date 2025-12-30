@@ -83,7 +83,7 @@ class MathTool:
             shape2d = (lmax + 1, lmax + 1)
 
             # clm, slm = np.zeros(shape2d), np.zeros(shape2d)
-            clm, slm = np.full(shape2d, fill, dtype=np.float32), np.full(shape2d, fill, dtype=np.float32)
+            clm, slm = np.full(shape2d, fill), np.full(shape2d, fill)
 
             for l in range(lmax + 1):
                 for m in range(l + 1):

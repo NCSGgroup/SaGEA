@@ -3,18 +3,28 @@
 # @Author  : Shuhao Liu
 # @Time    : 2025/12/29 15:06 
 # @File    : core.py
+import pathlib
+
 import numpy
 import numpy as np
 from pathlib import Path
-from src.sagea.io.gfc_reader import read_gfc
-from src.sagea.utils.MathTool import MathTool
+import warnings
+
+from sagea import constant
+from sagea.io_sagea.gfc_reader import read_gfc
+from sagea.processing.Harmonic import Harmonic, GRDType
+from sagea.processing.filter.GetSHCFilter import get_filter
+from sagea.utils import MathTool
+
+from sagea.processing.SHCPhysicalConvert import ConvertSHC
+from sagea.processing.LoveNumber import LoveNumber
 
 
 class SHC:
     """Spherical Harmonic coefficients"""
 
     # --- generate SHC instance --- #
-    # Following methods will generate and return SHC instance classes
+    # Following methods will generate and return SHC an instance class
     def __init__(self, cs: numpy.ndarray, normalized="4pi"):
         assert cs.ndim in (1, 2)
         assert normalized in ("4pi",)
@@ -121,27 +131,24 @@ class SHC:
 
         return self
 
-    def convert_type(self, from_type=None, to_type=None):
-        types = list(enums.PhysicalDimensions)
-        types_string = [i.name.lower() for i in types]
-        types += types_string
+    def filter(self, method: constant.SHCFilterType or constant.SHCDecorrelationType, param: tuple = None):
+        cqlm, sqlm = self.cs2d
+        filtering = get_filter(method, param, lmax=self.lmax)
+        cqlm_f, sqlm_f = filtering.apply_to(cqlm, sqlm)
+        self.value = MathTool.cs_combine_to_triangle_1d(cqlm_f, sqlm_f)
 
+        return self
+
+    def convert_physical(self, from_type=None, to_type=None):
         if from_type is None:
-            from_type = Enums.PhysicalDimensions.Dimensionless
+            from_type = constant.PhysicalDimension.Geopotential
         if to_type is None:
-            to_type = Enums.PhysicalDimensions.Dimensionless
+            to_type = constant.PhysicalDimension.Geopotential
 
-        assert (from_type.lower() if type(
-            from_type) is str else from_type) in types, f"from_type must be one of {types}"
-        assert (to_type.lower() if type(
-            to_type) is str else to_type) in types, f"to_type must be one of {types}"
+        assert from_type in constant.PhysicalDimension
+        assert to_type in constant.PhysicalDimension
 
-        if type(from_type) is str:
-            from_type = match_string(from_type, Enums.PhysicalDimensions, ignore_case=True)
-        if type(to_type) is str:
-            to_type = match_string(to_type, Enums.PhysicalDimensions, ignore_case=True)
-
-        lmax = self.get_lmax()
+        lmax = self.lmax
         LN = LoveNumber()
         LN.configuration.set_lmax(lmax)
 
@@ -153,9 +160,105 @@ class SHC:
         self.value = convert.apply_to(self.value)
         return self
 
+    # --- harmonic synthesis --- #
+    # Following methods generate a GRD instance or numpy arrays of spatial data
+    def to_GRD(self, grid_space=None, grid_type: GRDType or None = None):
+        """pure synthesis"""
+        if grid_type is None and grid_space is None:
+            grid_type = GRDType.GLQ
+
+        if (grid_type is not None) and (grid_space is not None):
+            warnings.warn(
+                "Both 'grid_space' and 'grid_type' were provided. "
+                "'grid_space' takes precedence, and 'grid_type' will be set to None.",
+                category=UserWarning,
+                stacklevel=2
+            )
+            grid_type = None
+
+        lmax = self.lmax
+        har = Harmonic(lmax=lmax, grid_type=grid_type, grid_space=grid_space)
+
+        cqlm, sqlm = self.cs2d
+        grid_data = har.synthesis(cqlm, sqlm)
+
+        grid = GRD(grid_data, har.colat, har.lon, option=0)
+        grid.grid_type = grid_type
+
+        return grid
+
+
+class GRD:
+    def __init__(self, grid, lat, lon, option=1):
+        """
+        To create a GRID object,
+        one needs to specify the data (grid) and corresponding latitude range (lat) and longitude range (lon).
+        :param grid: 2d- or 3d-array gridded signal, index ([num] ,lat, lon)
+        :param lat: co-latitude in [rad] if option=0 else latitude in [degree]
+        :param lon: longitude in [rad] if option=0 else longitude in [degree]
+        :param option: set 0 if input colat and lon are in [rad]
+        """
+        if np.ndim(grid) == 2:
+            grid = [grid]
+        assert np.shape(grid)[-2:] == (len(lat), len(lon))
+
+        self.value = np.array(grid)
+
+        self.__grid_type = None
+
+        if option == 0:
+            self.lat = 90 - np.degrees(lat)
+            self.lon = np.degrees(lon)
+
+        else:
+            self.lat = lat
+            self.lon = lon
+
+        self.dates_series = None
+
+    @property
+    def grid_type(self):
+        return self.__grid_type
+
+    @grid_type.setter
+    def grid_type(self, grid_type: GRDType):
+        self.__grid_type = grid_type
+
 
 if __name__ == '__main__':
-    cs = np.random.normal(0, 1, size=(300, 3721,))
+    from matplotlib import pyplot as plt
+    import cartopy.crs
+    import matplotlib
 
-    shc = SHC(cs)
+    file_path_list = list(
+        pathlib.Path(
+            "/Users/shuhao/PycharmProjects/SaGEA_update/data/L2_SH_products/GSM/CSR/RL06/BA01/2005"
+        ).iterdir())
+    file_path_list.sort()
+
+    shc = SHC.from_file(file_path_list, lmax=60, key="GRCOF2")
     shc.de_mean()
+
+    shc.filter(constant.SHCFilterType.HAN, (200, 300, 30,))
+
+    shc.convert_physical(
+        from_type=constant.PhysicalDimension.Geopotential,
+        to_type=constant.PhysicalDimension.EWH
+    )
+
+    grd = shc.to_GRD(1)
+
+    fig = plt.figure(figsize=(8, 8))
+    ax = fig.add_axes([0.1, 0.1, 0.8, 0.8], projection=cartopy.crs.Robinson())
+
+    lon2d, lat2d = np.meshgrid(grd.lon, grd.lat)
+    ax.pcolormesh(
+        lon2d, lat2d, grd.value[10] * 100,
+        transform=cartopy.crs.PlateCarree(),
+        norm=matplotlib.colors.TwoSlopeNorm(vmin=-20, vmax=20, vcenter=0),
+        # zorder=2
+    )
+
+    ax.add_feature(cartopy.feature.COASTLINE)
+
+    plt.show()
