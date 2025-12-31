@@ -1,20 +1,5 @@
-from abc import ABC, abstractmethod
-
 from sagea.processing.filter.Base import SHCFilter
 from sagea.processing.Harmonic import Harmonic
-
-
-class Leakage(ABC):
-    def __init__(self):
-        pass
-
-    @abstractmethod
-    def apply_to(self, gqij, get_grid=False):
-        pass
-
-    @abstractmethod
-    def format(self):
-        pass
 
 
 def filter_grids(gqij, shc_filter: SHCFilter, harmonic: Harmonic):

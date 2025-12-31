@@ -3,10 +3,11 @@ import copy
 import numpy as np
 from tqdm import trange
 
-from sagea.utils import MathTool
 from sagea.processing.filter.Base import SHCFilter
+
 from sagea.processing.Harmonic import Harmonic
-from sagea.processing.leakage.Base import Leakage
+from sagea.processing.filter.GetSHCFilter import get_filter
+from sagea.utils import MathTool
 
 
 def keep_signals_in_basin(signals, basin, basin_to_maintain_global_conservation):
@@ -94,7 +95,7 @@ class ForwardModelingConfig:
         return self.__log
 
 
-class ForwardModeling(Leakage):
+class ForwardModeling():
     def __init__(self):
         super().__init__()
 
@@ -143,3 +144,24 @@ class ForwardModeling(Leakage):
 
     def format(self):
         return 'Forward modeling'
+
+
+def forward_modeling(grid_value, lat, lon, basin_mask, basin_conservation,
+                     filter_method, filter_param, lmax_calc, max_iter=50, log=False):
+    lk = ForwardModeling()
+    lk.configuration.set_basin_conservation(basin_conservation)
+    lk.configuration.set_max_iteration(max_iter)
+    lk.configuration.set_print_log(log)
+
+    filtering = get_filter(filter_method, filter_param, lmax=lmax_calc)
+
+    har = Harmonic(lmax=lmax_calc, lat=lat, lon=lon, grid_type=None)
+
+    lk.configuration.set_basin(basin_mask)
+    lk.configuration.set_filter(filtering)
+    lk.configuration.set_harmonic(har)
+
+    basin_size = MathTool.get_acreage(basin_mask)
+    f_predicted = lk.apply_to(grid_value, get_grid=False) / basin_size
+
+    return f_predicted

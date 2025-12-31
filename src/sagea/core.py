@@ -3,6 +3,7 @@
 # @Author  : Shuhao Liu
 # @Time    : 2025/12/29 15:06 
 # @File    : core.py
+import copy
 import datetime
 import pathlib
 
@@ -13,7 +14,6 @@ import warnings
 
 from sagea import constant
 from sagea.processing.geometric_correction.GeometricalCorrection import GeometricalCorrection
-from sagea.processing.leakage.LeakageTool import get_leakage_corrector
 from sagea.sgio.gfc_reader import read_gfc
 from sagea.processing.Harmonic import Harmonic, GRDType
 from sagea.processing.filter.GetSHCFilter import get_filter
@@ -21,7 +21,6 @@ from sagea.utils import MathTool, TimeTool
 
 from sagea.processing.SHCPhysicalConvert import ConvertSHC
 from sagea.processing.LoveNumber import LoveNumber
-from sagea.processing.leakage import LeakageTool
 
 
 class SHC:
@@ -252,7 +251,8 @@ class SHC:
             grid_type = None
 
         lmax = self.lmax
-        har = Harmonic(lmax=lmax, grid_type=grid_type, grid_space=grid_space)
+        lat, lon = MathTool.get_global_lat_lon_range(grid_space)
+        har = Harmonic(lmax=lmax, grid_type=grid_type, lat=lat, lon=lon)
 
         cqlm, sqlm = self.cs2d
         grid_data = har.synthesis(cqlm, sqlm)
@@ -322,7 +322,7 @@ class GRD:
             - 'forward_modeling': Iterative FM. Accepts 'max_iter'.
             - 'buffer_shrink':
             - 'buffer_expand':
-        **kwargs : dict
+        **kwargs :
             Parameters specific to the chosen correction method.
 
         Returns
@@ -331,35 +331,41 @@ class GRD:
             Total/average value in the region (e.g., Gt or EWH sum).
         """
 
+        from sagea.processing.leakage.Additive import additive
+        from sagea.processing.leakage.Multiplicative import multiplicative
+        from sagea.processing.leakage.Scaling import scaling
+        from sagea.processing.leakage.ScalingGrid import scaling_grid
+        from sagea.processing.leakage.ForwardModeling import forward_modeling
+        from sagea.processing.leakage.DataDriven import data_driven
+        from sagea.processing.leakage.BufferZone import buffer_zone
+
         assert isinstance(mask, np.ndarray)
 
         dispatch = {
             None: None,
-            'none': None,
-            'additive': LeakageTool.Additive,
-            'multiplicative': LeakageTool.Multiplicative,
-            'scaling': LeakageTool.Scaling,
-            'scaling_grid': LeakageTool.ScalingGrid,
-            'data_driven': LeakageTool.DataDriven,
-            'forward_modeling': LeakageTool.ForwardModeling,
-            'buffer_shrink': LeakageTool.BufferZone,
-            'buffer_expand': LeakageTool.BufferZone,
+            constant.LeakageMethod.Additive: additive,
+            constant.LeakageMethod.Multiplicative: multiplicative,
+            constant.LeakageMethod.Scaling: scaling,
+            constant.LeakageMethod.ScalingGrid: scaling_grid,
+            constant.LeakageMethod.DataDriven: data_driven,
+            constant.LeakageMethod.ForwardModeling: forward_modeling,
+            constant.LeakageMethod.BufferZone: buffer_zone,
         }
 
-        leakage_corrector = get_leakage_corrector()
+        leakage_corrector = dispatch[leakage]
 
-        if leakage is not None:
+        if leakage_corrector is not None:
             assert average, "can only set average=True for leakage not None"
 
         lat, lon = self.lat, self.lon
 
-        if leakage is not None:
-            pass
+        if leakage_corrector is not None:
+            integral_result = leakage_corrector(grid_value=self.value, lat=lat, lon=lon, basin_mask=mask, **kwargs)
+
         else:
             integral_result = MathTool.global_integral(self.value * mask, lat, lon)
-
-        if average:
-            integral_result /= MathTool.get_acreage(mask)
+            if average:
+                integral_result /= MathTool.get_acreage(mask)
 
         return integral_result
 
@@ -368,6 +374,14 @@ class GRD:
     @grid_type.setter
     def grid_type(self, grid_type: GRDType):
         self.__grid_type = grid_type
+
+    def limiter(self, threshold=0.5, beyond=1, below=0):
+        index_beyond = np.where(self.value >= threshold)
+        index_below = np.where(self.value < threshold)
+
+        self.value[index_beyond] = beyond
+        self.value[index_below] = below
+        return self
 
 
 if __name__ == '__main__':
@@ -410,28 +424,93 @@ if __name__ == '__main__':
 
     shc.de_mean()
 
+    shc_unf = copy.deepcopy(shc)
     shc.filter(constant.SHCFilterType.HAN, (200, 300, 30,))
 
-    shc.geometric(assumption=constant.GeometricCorrectionAssumption.Ellipsoid, log=False)
+    # shc.geometric(assumption=constant.GeometricCorrectionAssumption.Ellipsoid, log=False)
 
     shc.convert_physical(
+        from_type=constant.PhysicalDimension.Geopotential,
+        to_type=constant.PhysicalDimension.EWH
+    )
+    shc_unf.convert_physical(
         from_type=constant.PhysicalDimension.Geopotential,
         to_type=constant.PhysicalDimension.EWH
     )
 
     grd = shc.to_GRD(1)
 
-    fig = plt.figure(figsize=(8, 8))
-    ax = fig.add_axes([0.1, 0.1, 0.8, 0.8], projection=cartopy.crs.Robinson())
+    ref = copy.deepcopy(grd.value)
 
-    lon2d, lat2d = np.meshgrid(grd.lon, grd.lat)
-    ax.pcolormesh(
-        lon2d, lat2d, grd.value[10] * 100,
-        transform=cartopy.crs.PlateCarree(),
-        norm=matplotlib.colors.TwoSlopeNorm(vmin=-20, vmax=20, vcenter=0),
-        # zorder=2
+    shc_basin_path = pathlib.Path(
+        "/Users/shuhao/PycharmProjects/SaGEA_update/data/basin_mask/SH/Brahmaputra_maskSH.dat"
     )
+    shc_basin = SHC.from_file(shc_basin_path, lmax=60, key="")
+    grd_basin = shc_basin.to_GRD(1)
+    grd_basin.limiter()
+    mask = grd_basin.value[0]
 
-    ax.add_feature(cartopy.feature.COASTLINE)
+    shc_basin_ocean_path = pathlib.Path(
+        "/Users/shuhao/PycharmProjects/SaGEA_update/data/basin_mask/SH/Ocean_maskSH.dat"
+    )
+    shc_basin_ocean = SHC.from_file(shc_basin_ocean_path, lmax=60, key="")
+    grd_basin_ocean = shc_basin_ocean.to_GRD(1)
+    grd_basin_ocean.limiter()
+    mask_conservation_for_fm = grd_basin_ocean.value[0]
 
+    y = grd.regional_extraction(mask=mask, average=True, leakage=None)
+
+    y_corrected = grd.regional_extraction(mask=mask, average=True,
+                                          leakage=constant.LeakageMethod.ScalingGrid,
+                                          reference=ref[:-1],
+                                          filter_method=constant.SHCFilterType.HAN,
+                                          filter_param=(200, 300, 30,),
+                                          lmax_calc=60
+                                          )
+
+    # y_corrected = grd.regional_extraction(mask=mask, average=True,
+    #                                       leakage=constant.LeakageMethod.ForwardModeling,
+    #                                       basin_conservation=mask_conservation_for_fm,
+    #                                       filter_method=constant.SHCFilterType.HAN,
+    #                                       filter_param=(200, 300, 30,),
+    #                                       lmax_calc=60
+    #                                       )
+
+    # y_corrected = grd.regional_extraction(mask=mask, average=True,
+    #                                       leakage=constant.LeakageMethod.DataDriven,
+    #                                       shc_unfiltered=shc_unf,
+    #                                       filter_method=constant.SHCFilterType.HAN,
+    #                                       filter_param=(200, 300, 30,),
+    #                                       lmax_calc=60,
+    #                                       )
+
+    # y_corrected = grd.regional_extraction(mask=grd_basin_ocean.value[0], average=True,
+    #                                       leakage=constant.LeakageMethod.BufferZone,
+    #                                       filter_method=constant.SHCFilterType.HAN,
+    #                                       filter_param=(200, 300, 30,),
+    #                                       lmax_calc=60,
+    #                                       buffer_type="shrink",
+    #                                       threshold=0.1
+    #                                       )
+
+    x = TimeTool.convert_date_format(dates_ave)
+
+    plt.plot(x, y, label="uncorrected")
+    plt.plot(x, y_corrected, label="corrected")
+    plt.legend()
     plt.show()
+
+    # fig = plt.figure(figsize=(8, 8))
+    # ax = fig.add_axes([0.1, 0.1, 0.8, 0.8], projection=cartopy.crs.Robinson())
+    #
+    # lon2d, lat2d = np.meshgrid(grd.lon, grd.lat)
+    # ax.pcolormesh(
+    #     lon2d, lat2d, grd.value[10] * 100,
+    #     transform=cartopy.crs.PlateCarree(),
+    #     norm=matplotlib.colors.TwoSlopeNorm(vmin=-20, vmax=20, vcenter=0),
+    #     # zorder=2
+    # )
+    #
+    # ax.add_feature(cartopy.feature.COASTLINE)
+    #
+    # plt.show()

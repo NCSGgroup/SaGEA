@@ -18,31 +18,37 @@ class Harmonic:
     Spherical Harmonic Calculation under the Definition of Fixed Frame Networks (GLQ, DH, and DH2)
     """
 
-    def __init__(self, lmax, grid_type: GRDType or None = GRDType.GLQ, grid_space=None):
-        self.lmax = lmax
-        assert (grid_type is None) ^ (grid_space is None)
+    def __init__(self, lmax, grid_type: GRDType or None = GRDType.GLQ, lat=None, lon=None):
+        """
+        lat, lon given in [degree]
+        """
 
-        if grid_space is not None:
+
+        self.lmax = lmax
+
+        assert (lat is None and lon is None) or (lat is not None and lon is not None)
+        assert (grid_type is None) ^ (lat is None)
+
+        if lat is not None:
             self.__grid_type = None
 
-            lat_deg, lon_deg = MathTool.get_global_lat_lon_range(grid_space)
-            self.colat, self.lon = MathTool.get_colat_lon_rad(lat_deg, lon_deg)
+            self.colat, self.lon = MathTool.get_colat_lon_rad(lat, lon)
             # in unit radians
 
-            # simplified sin weight
-            self.analysis_weight = np.sin(self.colat)
+            '''simplified sin weight'''
+            # self.analysis_weight = np.sin(self.colat)
 
-            # get latitude weights, J. Driscoll and D. Healy, 1994
-            # nlat = len(self.colat)
-            # wi_DH = np.ones_like(self.colat, )
-            # for j in range(len(wi_DH)):
-            #     this_theta = self.colat[j]
-            #     this_wi = np.sum(np.array(
-            #         [np.sin((2 * l + 1) * this_theta) / (2 * l + 1) for l in range(int(nlat / 2 - 1))]
-            #     ))
-            #     wi_DH[j] = this_wi
-            # wi_DH *= 4 / np.pi
-            # self.analysis_weight = np.sin(self.colat) * wi_DH
+            '''get latitude weights, J. Driscoll and D. Healy, 1994'''
+            nlat = len(self.colat)
+            wi_DH = np.ones_like(self.colat, )
+            for j in range(len(wi_DH)):
+                this_theta = self.colat[j]
+                this_wi = np.sum(np.array(
+                    [np.sin((2 * l + 1) * this_theta) / (2 * l + 1) for l in range(int(nlat / 2 - 1))]
+                ))
+                wi_DH[j] = this_wi
+            wi_DH *= 4 / np.pi
+            self.analysis_weight = np.sin(self.colat) * wi_DH
 
         else:
             self.__grid_type = grid_type

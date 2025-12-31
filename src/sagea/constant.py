@@ -63,15 +63,14 @@ class GeometricCorrectionAssumption(Enum):
 
 
 class LeakageMethod(Enum):
-    Additive = 1
-    Multiplicative = 2
-    Scaling = 3
-    ScalingGrid = 4
-    Iterative = 5
-    DataDriven = 6
-    ForwardModeling = 7
-    BufferShrink = 8
-    BufferExpand = 9
+    Additive = "Additive"
+    Multiplicative = "Multiplicative"
+    Scaling = "Scaling"
+    ScalingGrid = "ScalingGrid"
+    Iterative = "Iterative"
+    DataDriven = "DataDriven"
+    ForwardModeling = "ForwardModeling"
+    BufferZone = "BufferZone"
 
 
 if __name__ == "__main__":

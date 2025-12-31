@@ -1,6 +1,7 @@
 import numpy as np
 
-from sagea.processing.leakage.Base import Leakage, filter_grids
+from sagea.processing.filter.GetSHCFilter import get_filter
+from sagea.processing.leakage.Base import filter_grids
 from sagea.processing.filter.Base import SHCFilter
 from sagea.processing.Harmonic import Harmonic
 from sagea.utils import MathTool
@@ -44,9 +45,8 @@ class DataDrivenConfig:
         return self
 
 
-class DataDriven(Leakage):
+class DataDriven():
     def __init__(self):
-        super().__init__()
         self.configuration = DataDrivenConfig()
 
     def apply_to(self, gqij, get_grid=False):
@@ -101,5 +101,25 @@ class DataDriven(Leakage):
 
         return deviation_filtered
 
-    def format(self):
-        return 'Data-driven'
+
+def data_driven(grid_value, lat, lon, basin_mask, shc_unfiltered, filter_method, filter_param, lmax_calc):
+    """
+
+    """
+
+    '''prepare'''
+    basin_mask = np.array([basin_mask])
+    har = Harmonic(lmax=lmax_calc, lat=lat, lon=lon, grid_type=None)
+    shc_filter = get_filter(method=filter_method, params=filter_param, lmax=lmax_calc)
+
+    lk = DataDriven()
+    lk.configuration.set_cs_unfiltered(*shc_unfiltered.cs2d)
+
+    lk.configuration.set_basin(basin_mask)
+    lk.configuration.set_filter(shc_filter)
+    lk.configuration.set_harmonic(har)
+
+    '''run data-driven'''
+    f_predicted = lk.apply_to(grid_value)
+
+    return f_predicted
