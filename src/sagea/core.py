@@ -383,6 +383,26 @@ class GRD:
         self.value[index_below] = below
         return self
 
+    def de_aliasing(self, times, s2=False, p1=False, s1=False, k2=False, k1=False):
+        """
+
+        """
+
+        from sagea.processing.DeAliasing import DeAliasing
+        de_alias = DeAliasing()
+
+        de_alias.configuration.set_de_s2(s2),
+        de_alias.configuration.set_de_p1(p1),
+        de_alias.configuration.set_de_s1(s1),
+        de_alias.configuration.set_de_k2(k2),
+        de_alias.configuration.set_de_k1(k1),
+
+        year_frac = TimeTool.convert_date_format(
+            times, input_type=TimeTool.DateFormat.ClassDate, output_type=TimeTool.DateFormat.YearFraction
+        )
+
+        self.value = de_alias.apply_to(self.value, year_frac)
+
 
 if __name__ == '__main__':
     from matplotlib import pyplot as plt
@@ -460,13 +480,14 @@ if __name__ == '__main__':
 
     y = grd.regional_extraction(mask=mask, average=True, leakage=None)
 
-    y_corrected = grd.regional_extraction(mask=mask, average=True,
-                                          leakage=constant.LeakageMethod.ScalingGrid,
-                                          reference=ref[:-1],
-                                          filter_method=constant.SHCFilterType.HAN,
-                                          filter_param=(200, 300, 30,),
-                                          lmax_calc=60
-                                          )
+    '''leakage correction'''
+    # y_corrected = grd.regional_extraction(mask=mask, average=True,
+    #                                       leakage=constant.LeakageMethod.ScalingGrid,
+    #                                       reference=ref[:-1],
+    #                                       filter_method=constant.SHCFilterType.HAN,
+    #                                       filter_param=(200, 300, 30,),
+    #                                       lmax_calc=60
+    #                                       )
 
     # y_corrected = grd.regional_extraction(mask=mask, average=True,
     #                                       leakage=constant.LeakageMethod.ForwardModeling,
@@ -492,6 +513,10 @@ if __name__ == '__main__':
     #                                       buffer_type="shrink",
     #                                       threshold=0.1
     #                                       )
+
+    '''de aliasing'''
+    grd.de_aliasing(times=dates_ave, s2=True)
+    y_corrected = grd.regional_extraction(mask=mask, average=True, leakage=None)
 
     x = TimeTool.convert_date_format(dates_ave)
 
