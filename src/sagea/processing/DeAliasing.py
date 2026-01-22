@@ -72,7 +72,7 @@ def grid_tide_de_aliasing(
     grid_data_dealiasing = Y_matrix_dealiasing.reshape((len(year_frac), *one_grid_shape)) + resid.reshape(
         (len(year_frac), *one_grid_shape))
 
-    return grid_data_dealiasing, coeffs
+    return grid_data_dealiasing
 
 
 if __name__ == '__main__':
@@ -123,7 +123,7 @@ if __name__ == '__main__':
 
     grid_data += np.random.normal(size=grid_data.shape, scale=1, loc=0)
 
-    grid_data_de_s2, coeffs = grid_tide_de_aliasing(grid_data, dates, tide_periods=dict(S2=161))
+    grid_data_de_s2 = grid_tide_de_aliasing(grid_data, dates, tide_periods=dict(S2=161))
 
     grid_s2 = grid_data - grid_data_de_s2
 
