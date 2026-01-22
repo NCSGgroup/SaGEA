@@ -1,154 +1,12 @@
-from sagea.utils import MathTool, TimeTool
+import matplotlib.pyplot as plt
+
+from sagea.utils import TimeTool
 from sagea.math.least_square import PeriodicLS
 
 import numpy as np
 from typing import List, Dict, Optional
 from datetime import date
 
-
-# def grid_tide_dealiasing(
-#         grid_data: np.ndarray,
-#         dates: List[date],
-#         tide_periods: Optional[Dict[str, float]] = None
-# ) -> np.ndarray:
-#     """
-#     Remove specific tidal alias signals from 3D grid data via least squares fitting.
-#
-#     Workflow:
-#     1. Fit a model including: Trend + Annual + Semiannual + Specified Tides.
-#     2. Isolate the tidal component from the fitted parameters.
-#     3. Reconstruct the tidal signal and subtract it from the original data.
-#
-#     Parameters
-#     ----------
-#     grid_data : np.ndarray
-#         3D Array with shape (Time, Lat, Lon).
-#     dates : list of date
-#         List of datetime.date objects corresponding to the Time dimension.
-#     tide_periods : dict, optional
-#         Dictionary of tides to remove.
-#         Key: Tide name (str), Value: Period in DAYS (float).
-#         e.g., {'S2': 161.0, 'K2': 1362.0}.
-#         If None, the original data is returned without modification.
-#
-#     Returns
-#     -------
-#     np.ndarray
-#         De-aliased grid data with shape (Time, Lat, Lon).
-#         (Trend and annual/semiannual signals are PRESERVED).
-#     """
-#     # 0. Basic Validation
-#     T, Lat_dim, Lon_dim = grid_data.shape
-#
-#     if len(dates) != T:
-#         raise ValueError(f"Date length ({len(dates)}) must match Grid time dimension ({T}).")
-#
-#     if not tide_periods:
-#         warnings.warn("No tide periods provided. Returning original data.")
-#         return grid_data
-#
-#     # 1. Prepare Time Variables
-#     # Convert dates to decimal years for the fitting model
-#     # Assuming t_trans returns a list of floats
-#     t_year = np.array(TimeTool.convert_date_format(
-#         dates, TimeTool.DateFormat.ClassDate, TimeTool.DateFormat.YearFraction
-#     ))
-#
-#     # Use relative time to improve numerical stability of the least squares fit
-#     t_rel = t_year - t_year[0]
-#
-#     # 2. Construct Design Matrix (A)
-#     # The model includes: Constant, Trend, Annual, Semiannual, and Custom Tides
-#
-#     # Define fixed base periods in YEARS: Annual (1.0), Semiannual (0.5)
-#     base_periods = [1.0, 0.5]
-#
-#     # Convert input tide periods from DAYS to YEARS
-#     # Formula: T_years = T_days / 365.25
-#     tide_names = list(tide_periods.keys())
-#     tide_T_years = [p / 365.25 for p in tide_periods.values()]
-#
-#     # Combine all periodic components for simultaneous fitting
-#     all_periods = base_periods + tide_T_years
-#
-#     # 2.1 Static Terms: Constant and Linear Trend
-#     const_col = np.ones((T, 1))
-#     trend_col = t_rel.reshape(-1, 1)
-#     A = np.concatenate((const_col, trend_col), axis=1)
-#
-#     # 2.2 Periodic Terms: Cosine and Sine pairs for each period
-#     for p in all_periods:
-#         omega = 2 * np.pi / p
-#         c_col = np.cos(omega * t_rel).reshape(-1, 1)
-#         s_col = np.sin(omega * t_rel).reshape(-1, 1)
-#         A = np.concatenate((A, c_col, s_col), axis=1)
-#
-#     # 3. Flatten Spatial Dimensions for Vectorized Processing
-#     # Transform grid from (Time, Lat, Lon) -> (Time, Spatial_Points)
-#     # This allows using linalg.lstsq to solve for all pixels simultaneously
-#     L_flat = grid_data.reshape(T, -1)
-#
-#     # Masking strategy: Only solve for pixels that have NO NaNs in the time series
-#     # (Pixels with NaN are usually ocean/land masks or boundaries)
-#     valid_mask = ~np.isnan(L_flat).any(axis=0)
-#     L_compute = L_flat[:, valid_mask]
-#
-#     # If all pixels are masked/invalid, return early
-#     if L_compute.shape[1] == 0:
-#         return grid_data
-#
-#     # 4. Solve Weighted Least Squares (OLS here as weight=1)
-#     # Solve A * X = L for X
-#     # X_params shape: (N_parameters, N_valid_pixels)
-#     X_params, _, _, _ = np.linalg.lstsq(A, L_compute, rcond=None)
-#
-#     # 5. Extract ONLY the Tide Components for reconstruction
-#     # Structure of Matrix A columns:
-#     # [0: Const, 1: Trend,
-#     #  2,3: Annual(Cos,Sin), 4,5: Semiannual(Cos,Sin),
-#     #  6,7: Tide1(Cos,Sin)... ]
-#
-#     # Count parameters we want to KEEP (Const + Trend + Base Periodic)
-#     # These should NOT be subtracted
-#     n_static = 2  # const + trend
-#     n_base_cols = len(base_periods) * 2
-#
-#     # The starting column index for the Tide parameters
-#     start_idx_tide = n_static + n_base_cols
-#
-#     # Slice the Design Matrix for tides
-#     # Shape: (T, 2 * N_tides)
-#     A_tide = A[:, start_idx_tide:]
-#
-#     # Slice the Estimated Coefficients for tides
-#     # Shape: (2 * N_tides, N_valid_pixels)
-#     X_tide = X_params[start_idx_tide:, :]
-#
-#     # 6. Reconstruct the Aliasing Signal
-#     # Matrix multiplication: (T, Params) @ (Params, Pixels) -> (T, Pixels)
-#     tide_signal_valid = A_tide @ X_tide
-#
-#     # 7. Subtract Tides from Original Data
-#     # Create a full-sized correction matrix (default zeros)
-#     correction_matrix = np.zeros_like(L_flat)
-#
-#     # Fill in the computed tide signals at valid pixels
-#     correction_matrix[:, valid_mask] = tide_signal_valid
-#
-#     # Perform de-aliasing
-#     dealiased_flat = L_flat - correction_matrix
-#
-#     # 8. Reshape back to 3D Grid dimensions
-#     return dealiased_flat.reshape(T, Lat_dim, Lon_dim)
-#
-#
-# import numpy as np
-# import copy
-# from typing import List, Dict, Optional
-# from datetime import date
-
-
-# Assuming periodicLS is imported from your local module
 
 def grid_tide_de_aliasing(
         grid_data: np.ndarray,
@@ -200,4 +58,78 @@ def grid_tide_de_aliasing(
 
     coeffs, _, resid, names = model.solve()
 
-    pass
+    bias = coeffs[0]
+    linear = coeffs[1]
+    annual_c, annual_s = coeffs[2], coeffs[3]
+    semiannual_c, semiannual_s = coeffs[4], coeffs[5]
+    s2_c, s2_s = coeffs[6], coeffs[7]
+
+    yf_expand = year_frac[:, None]
+    Y_matrix_dealiasing = bias + yf_expand * linear + annual_c * np.cos(2 * np.pi * yf_expand) + annual_s * np.sin(
+        2 * np.pi * yf_expand) + semiannual_c * np.cos(4 * np.pi * yf_expand) + semiannual_s * np.sin(
+        4 * np.pi * yf_expand)
+
+    grid_data_dealiasing = Y_matrix_dealiasing.reshape((len(year_frac), *one_grid_shape)) + resid.reshape(
+        (len(year_frac), *one_grid_shape))
+
+    return grid_data_dealiasing, coeffs
+
+
+if __name__ == '__main__':
+    trend = np.array(
+        [[1.5, 1.6, 1.9],
+         [1.4, 1.55, 1.92]]
+    )
+
+    annual_amp = np.array(
+        [[5.1, 5.3, 4.4],
+         [4.1, 4.6, 4.9]]
+    )
+
+    annual_pha = np.array(
+        [[1.1, 1.2, 1.3],
+         [1.5, 1.1, 0.4]]
+    )
+
+    semiannual_amp = np.array(
+        [[2.1, 2.3, 1.4],
+         [1.1, 1.6, 1.9]]
+    )
+
+    semiannual_pha = np.array(
+        [[1.0, 1.1, 1.2],
+         [1.3, 1.5, 0.9]]
+    )
+
+    s2_amp = np.array(
+        [[0.1, 0.3, 0.4],
+         [0.1, 0.6, 0.9]]
+    )
+
+    s2_pha = np.array(
+        [[1.9, 1.3, 1.2],
+         [1.7, 1.4, 0.6]]
+    )
+
+    year_frac = np.linspace(2005, 2015, 120)
+
+    dates = TimeTool.convert_date_format(year_frac, input_type=TimeTool.DateFormat.YearFraction,
+                                         output_type=TimeTool.DateFormat.ClassDate)
+    yf_exp = year_frac[:, None, None]
+
+    grid_data = yf_exp * trend + annual_amp * np.sin(2 * np.pi * yf_exp + annual_pha) + semiannual_amp * np.sin(
+        4 * np.pi * yf_exp + semiannual_pha) + s2_amp * np.sin(2 * np.pi * yf_exp / (161 / 365.25) + s2_pha)
+    grid_data -= np.mean(grid_data, axis=0)
+
+    grid_data += np.random.normal(size=grid_data.shape, scale=1, loc=0)
+
+    grid_data_de_s2, coeffs = grid_tide_de_aliasing(grid_data, dates, tide_periods=dict(S2=161))
+
+    grid_s2 = grid_data - grid_data_de_s2
+
+    print(grid_data.shape)
+
+    plt.plot(year_frac, grid_data[:, 0, 0])
+    plt.plot(year_frac, grid_data_de_s2[:, 0, 0])
+    plt.plot(year_frac, grid_s2[:, 0, 0])
+    plt.show()

@@ -280,6 +280,13 @@ if __name__ == "__main__":
     # params shape will be (M, 2)
     coeffs, cov, resid, names = model.solve()
 
+    print(coeffs[0].shape)
+
+    bias = coeffs[0]
+    linear = coeffs[1]
+    annual_c, annual_s = coeffs[2], coeffs[3]
+    semiannual_c, semiannual_s = coeffs[4], coeffs[5]
+
     print(names)
     trend_map_pred = coeffs[1].reshape(180, 360)
     annual_amp_pred = np.sqrt(coeffs[2] ** 2 + coeffs[3] ** 2).reshape(180, 360)
