@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 
 from sagea.utils import TimeTool
-from sagea.math.least_square import PeriodicLS
+from sagea.sgmath.least_square import PeriodicLS
 
 import numpy as np
 from typing import List, Dict, Optional

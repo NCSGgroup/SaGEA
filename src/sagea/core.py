@@ -59,7 +59,7 @@ class SHC:
         return SHC(cs_array, normalized=normalized)
 
     @staticmethod
-    def from_trend(shc_trend, times: list[datetime.date], ref_time: datetime.date = None):
+    def from_trend(shc_trend, dates: list[datetime.date], ref_time: datetime.date = None):
         """
         Generate a list of SHC instances by linearly propagating a trend SHC.
 
@@ -70,7 +70,7 @@ class SHC:
         ----------
         shc_trend : SHC
             An SHC instance containing the trend rates (e.g., GIA trend in /year).
-        times : list of datetime.date
+        dates : list of datetime.date
             The list of dates for which to generate the SHCs.
         ref_time : datetime.date, optional
             The reference epoch where the signal is zero.
@@ -84,9 +84,9 @@ class SHC:
         assert len(shc_trend) == 1
 
         if ref_time is None:
-            ref_time = times[0]
+            ref_time = dates[0]
 
-        year_frac = TimeTool.convert_date_format(times,
+        year_frac = TimeTool.convert_date_format(dates,
                                                  input_type=TimeTool.DateFormat.ClassDate,
                                                  output_type=TimeTool.DateFormat.YearFraction)
         year_frac = np.array(year_frac)
@@ -383,25 +383,33 @@ class GRD:
         self.value[index_below] = below
         return self
 
-    def de_aliasing(self, times, s2=False, p1=False, s1=False, k2=False, k1=False):
+    def de_aliasing(self, dates: list[datetime.date], tide_periods: dict[str, float]):
+        """
+        Remove specific tidal alias signals from 3D grid data using the periodicLS class.
+
+        Parameters
+        ----------
+        dates : list of date
+            List of datetime.date objects corresponding to the Time dimension.
+        tide_periods : dict, optional
+            Dictionary of tides to remove.
+            Key: Tide name, Value: Period in DAYS.
+            e.g., {'S2': 161.0}.
+            If None, returns original data.
+
+        Returns
+        -------
+        np.ndarray
+            De-aliased grid data with shape (Time, Lat, Lon).
         """
 
-        """
+        from sagea.processing.DeAliasing import grid_tide_de_aliasing
 
-        from sagea.processing.DeAliasing import DeAliasing
-        de_alias = DeAliasing()
+        grid_value_de_aliasing = grid_tide_de_aliasing(self.value, dates, tide_periods)
 
-        de_alias.configuration.set_de_s2(s2),
-        de_alias.configuration.set_de_p1(p1),
-        de_alias.configuration.set_de_s1(s1),
-        de_alias.configuration.set_de_k2(k2),
-        de_alias.configuration.set_de_k1(k1),
+        self.value = grid_value_de_aliasing
 
-        year_frac = TimeTool.convert_date_format(
-            times, input_type=TimeTool.DateFormat.ClassDate, output_type=TimeTool.DateFormat.YearFraction
-        )
-
-        self.value = de_alias.apply_to(self.value, year_frac)
+        return self
 
 
 if __name__ == '__main__':
@@ -410,10 +418,16 @@ if __name__ == '__main__':
     import matplotlib
     from sagea.sgio.low_deg_reader import read_low_degs
 
-    file_path_list = list(
-        pathlib.Path(
-            "/Users/shuhao/PycharmProjects/SaGEA_update/data/L2_SH_products/GSM/CSR/RL06/BA01/2005"
-        ).iterdir())
+    # file_path_list = list(
+    #     pathlib.Path(
+    #         "/Users/shuhao/PycharmProjects/SaGEA_update/data/L2_SH_products/GSM/CSR/RL06/BA01/2005"
+    #     ).iterdir())
+    # file_path_list.sort()
+
+    l2_prod_dir = pathlib.Path("/Volumes/ShuhaoWork/SaGEA/data/L2_SH_products/GSM/CSR/RL06/BA01")
+    file_path_list = []
+    for l2_dir_upto_year in l2_prod_dir.iterdir():
+        file_path_list += list(l2_dir_upto_year.iterdir())
     file_path_list.sort()
 
     dates_begin, dates_end = TimeTool.match_dates_from_name(file_path_list)
@@ -515,7 +529,7 @@ if __name__ == '__main__':
     #                                       )
 
     '''de aliasing'''
-    grd.de_aliasing(times=dates_ave, s2=True)
+    grd.de_aliasing(dates=dates_ave, tide_periods={"S2": 161})
     y_corrected = grd.regional_extraction(mask=mask, average=True, leakage=None)
 
     x = TimeTool.convert_date_format(dates_ave)
@@ -525,17 +539,17 @@ if __name__ == '__main__':
     plt.legend()
     plt.show()
 
-    # fig = plt.figure(figsize=(8, 8))
-    # ax = fig.add_axes([0.1, 0.1, 0.8, 0.8], projection=cartopy.crs.Robinson())
-    #
-    # lon2d, lat2d = np.meshgrid(grd.lon, grd.lat)
-    # ax.pcolormesh(
-    #     lon2d, lat2d, grd.value[10] * 100,
-    #     transform=cartopy.crs.PlateCarree(),
-    #     norm=matplotlib.colors.TwoSlopeNorm(vmin=-20, vmax=20, vcenter=0),
-    #     # zorder=2
-    # )
-    #
-    # ax.add_feature(cartopy.feature.COASTLINE)
-    #
-    # plt.show()
+    fig = plt.figure(figsize=(8, 8))
+    ax = fig.add_axes([0.1, 0.1, 0.8, 0.8], projection=cartopy.crs.Robinson())
+
+    lon2d, lat2d = np.meshgrid(grd.lon, grd.lat)
+    ax.pcolormesh(
+        lon2d, lat2d, grd.value[10] * 100,
+        transform=cartopy.crs.PlateCarree(),
+        norm=matplotlib.colors.TwoSlopeNorm(vmin=-20, vmax=20, vcenter=0),
+        # zorder=2
+    )
+
+    ax.add_feature(cartopy.feature.COASTLINE)
+
+    plt.show()
