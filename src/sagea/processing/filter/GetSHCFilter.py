@@ -4,7 +4,10 @@ from sagea.processing.filter.DDK import DDK
 from sagea.processing.filter.Fan import Fan
 from sagea.processing.filter.Gaussian import Gaussian
 from sagea.processing.filter.PnMm import PnMm
+from sagea.processing.filter.Regularization import Regularization
 from sagea.processing.filter.SlideWindow import SlideWindow
+
+
 # from sagea.processing.filter.VariableScale import VariableScale
 
 
@@ -86,6 +89,14 @@ def __get_shc_averaging_filter(method: SHCFilterType, params: tuple, lmax):
         ddk_type = params[0]
         shc_filter.configuration.set_filter_type(ddk_type)
 
+    elif method == SHCFilterType.REG:
+        shc_filter = Regularization()
+        vcm_err, vcm_sig, alpha = params
+
+        shc_filter.configuration.vcm_err = vcm_err
+        shc_filter.configuration.vcm_sig = vcm_sig
+        shc_filter.configuration.alpha = alpha
+
     else:
         return -1
 
@@ -118,9 +129,9 @@ def get_filter(method: SHCFilterType or SHCDecorrelationType, params: tuple = No
         if params is None:
             if method == SHCFilterType.Gaussian:
                 params = (300,)
-            elif method == SHCFilterType.Fan:
+            elif method == SHCFilterType.FAN:
                 params = (300, 300,)
-            elif method == SHCFilterType.AnisotropicGaussianHan:
+            elif method == SHCFilterType.HAN:
                 params = (300, 300, 25)
             elif method == SHCFilterType.DDK:
                 params = (3,)
