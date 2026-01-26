@@ -260,7 +260,7 @@ def plot_grids(grid: np.ndarray, lat, lon, common_colorbar=False, projection=Non
             p = ax_grid.pcolormesh(
                 lon2d, lat2d, grid[i],
                 # cmap=cmaps.matlab_jet,
-                cmap=cmap if cmap is not None else cmaps.matlab_jet,
+                cmap=cmap if cmap is not None else "jet",
                 transform=ccrs.PlateCarree(),
                 norm=norm
             )
@@ -268,7 +268,7 @@ def plot_grids(grid: np.ndarray, lat, lon, common_colorbar=False, projection=Non
         else:
             p = ax_grid.pcolormesh(
                 lon2d[:1, :1], lat2d[:1, :1], grid[i][:1, :1],
-                cmap=cmap if cmap is not None else cmaps.matlab_jet,
+                cmap=cmap if cmap is not None else "jet",
                 transform=ccrs.PlateCarree(),
                 norm=norm
             )
@@ -276,7 +276,7 @@ def plot_grids(grid: np.ndarray, lat, lon, common_colorbar=False, projection=Non
             if filling_type == "contour":
                 ax_grid.contour(
                     lon2d, lat2d, grid[i], contour_num,
-                    cmap=cmap if cmap is not None else cmaps.matlab_jet,
+                    cmap=cmap if cmap is not None else "jet",
                     transform=ccrs.PlateCarree(),
                     norm=norm
                 )

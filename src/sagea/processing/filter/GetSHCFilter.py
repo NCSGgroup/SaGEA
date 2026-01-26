@@ -55,9 +55,10 @@ def __get_shc_averaging_filter(method: SHCFilterType, params: tuple, lmax):
     """
     :param method: SHCDecorrelationType
     :param params: (radius[km], ) for Gaussian,
-                    (radius_1[km], radius_2[km]) for Fan,
-                    (radius_1[km], radius_2[km], m_0) for AnisotropicGaussianHan,
-                    (DDKFilterType, ) for DDK
+                    (radius_1[km], radius_2[km]) for FAN,
+                    (radius_1[km], radius_2[km], m_0) for HAN,
+                    (DDKFilterType, ) for DDK,
+                    (VCM_err, VCM_sig, alpha) for Regularization,
     :param lmax: lmax
     """
     assert method in SHCFilterType
@@ -89,7 +90,7 @@ def __get_shc_averaging_filter(method: SHCFilterType, params: tuple, lmax):
         ddk_type = params[0]
         shc_filter.configuration.set_filter_type(ddk_type)
 
-    elif method == SHCFilterType.REG:
+    elif method == SHCFilterType.Regularization:
         shc_filter = Regularization()
         vcm_err, vcm_sig, alpha = params
 

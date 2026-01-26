@@ -60,7 +60,7 @@ def read_gfc(filepath: Path, key="gfc", lmax=None, col_indices=None):
     mat_shape = (lmax + 1, lmax + 1)
     clm, slm = np.zeros(mat_shape), np.zeros(mat_shape)
 
-    with open(filepath) as f:
+    with open(filepath, 'r', encoding='latin-1') as f:
         txt_list = f.readlines()
 
         for i in range(len(txt_list)):

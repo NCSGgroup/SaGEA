@@ -14,7 +14,6 @@ import warnings
 
 from sagea import constant
 from sagea.processing.geometric_correction.GeometricalCorrection import GeometricalCorrection
-from sagea.sgio.gfc_reader import read_gfc
 from sagea.processing.Harmonic import Harmonic, GRDType
 from sagea.processing.filter.GetSHCFilter import get_filter
 from sagea.utils import MathTool, TimeTool
@@ -40,6 +39,8 @@ class SHC:
 
     @staticmethod
     def from_file(filepath: Path or list[Path], lmax, key="gfc", cols=None, normalized="4pi"):
+        from sagea.sgio.gfc_reader import read_gfc
+
         """
         load SHC from filepath or list[filepath]
         """
