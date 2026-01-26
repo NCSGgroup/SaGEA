@@ -30,6 +30,7 @@ class SHCFilterType(Enum):
     DDK = "DDK"  # DDK Filter. Kusche, et al., 2007
     FAN = "Fan"  # Fan filter. Zhang et al., 2009
     HAN = "Han"  # Non-isotropic Gaussian filter by Han. Han et al., 2005.
+    REG = "Reg"  # regularization filter
 
 
 class SHCDecorrelationType(Enum):

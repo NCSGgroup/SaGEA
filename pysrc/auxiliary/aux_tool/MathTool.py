@@ -126,7 +126,7 @@ class MathTool:
     def cs_combine_to_triangle_1d(c: np.ndarray, s: np.ndarray):
         """
         combine the SHC C or S in 2-dimensional matrix to 1-dimension vector,
-        or SHC C or S in 3-dimensional matrix to 2-dimension vector.
+        or multiple SHCs C or S in 3-dimensional matrix to 2-dimension vector.
         Example:
 
         input
@@ -137,6 +137,8 @@ class MathTool:
 
         return cs 1d-array which is formed as
         [c[0,0]; s[1,1], c[1,0], c[1,1]; s[2,2], s[2,1], c[2,0], c[2,1], c[2,2]; s[3,3], s[3,2], s[3,1], c[3,0], ...].
+        or cs 2d-array (for multiple SHCs) which is formed as
+        [ [...cs1...] , [...cs2...] , [...] ]
         """
         assert np.shape(c) == np.shape(s)
         lmax = np.shape(c)[-1] - 1
