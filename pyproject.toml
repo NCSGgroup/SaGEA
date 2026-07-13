@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "sagea"
-version = "0.2.3"  # Hard-coding suggested initially; dynamic versioning (e.g., from git tags) requires different config
-description = "Gravity Satellite Data Processing and Geodesy Toolkit"
+version = "0.2.6"  # Hard-coding suggested initially; dynamic versioning (e.g., from git tags) requires different config
+description = "satellite gravity post-processing and error assessment"
 readme = "README.md"
 requires-python = ">=3.9"
 license = { file = "LICENSE" }

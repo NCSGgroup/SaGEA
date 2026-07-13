@@ -3,7 +3,7 @@ from enum import Enum
 
 import numpy as np
 
-from pysrc.auxiliary.preference.Constants import GeoConstants
+from constants.constant import GeoConstant
 
 
 class MathTool:
@@ -466,10 +466,10 @@ class MathTool:
         if len(c) > 0:
             assert l is None and m is None
 
-            re_pat = r"([cs])(\d+),(\d+)"
+            re_pat = r"([cs])(\d+),(\d+)$"
             re_match = re.match(re_pat, c)
 
-            assert re_match is not None
+            assert re_match is not None, f"Invalid indexing pattern: '{c}'"
 
             c = re_match.groups()[0]
             l = int(re_match.groups()[1])

@@ -25,6 +25,12 @@ When referencing this work, please cite:
 
 This program homepage is: https://github.com/NCSGgroup/SaGEA.
 
+```bash
+pip install sagea
+```
+
+----- for old usages -----
+
 Use this code to download this project.
 
 `git clone https://github.com/NCSGgroup/SaGEA`

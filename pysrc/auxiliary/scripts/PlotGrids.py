@@ -12,7 +12,7 @@ from matplotlib import pyplot as plt
 def plot_grids(grid: np.ndarray, lat, lon, common_colorbar=False, projection=None, vmin=None, vmax=None, vcenter=None,
                extent=None, subtitle=None, title=None, save=None, cmap=None, cb_extend=None, filling_type=None,
                contour_num=20, gridlines=None, frame_line=None, add_line_lats=None, add_line_lats_color=None,
-               add_line_lons=None, add_line_lons_color=None, save_transparent=False):
+               add_line_lons=None, add_line_lons_color=None, save_transparent=False, ocean_mask=False):
     """
 
     :param grid: 2-d array grid or 3-d array grids
@@ -315,6 +315,8 @@ def plot_grids(grid: np.ndarray, lat, lon, common_colorbar=False, projection=Non
                              transform=ccrs.PlateCarree())
 
         ax_grid.add_feature(cfeature.COASTLINE)
+        if ocean_mask:
+            ax_grid.add_feature(cfeature.OCEAN, color="grey", zorder=1)
 
         ax_subtitle.axis('off')
         ax_subtitle.set_xlim(-1, 1)

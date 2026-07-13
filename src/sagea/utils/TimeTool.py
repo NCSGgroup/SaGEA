@@ -263,7 +263,6 @@ class TimeTool:
                 bd, be = TimeTool.match_dates_from_name(name[i])
                 beginning_dates.append(bd[0])
                 ending_dates.append(be[0])
-
             return beginning_dates, ending_dates
 
         else:
@@ -299,27 +298,27 @@ class TimeTool:
 
                     match_flag = True
 
-                '''date format: yyyy-mm'''
-                if not match_flag:
-                    date_begin_end_pattern = r"(\d{4})(-|_|)(\d{2})"
-                    date_begin_end_searched = re.search(date_begin_end_pattern, name)
+            '''date format: yyyy-mm'''
+            if not match_flag:
+                date_begin_end_pattern = r"(\d{4})(-|_|)(\d{2})"
+                date_begin_end_searched = re.search(date_begin_end_pattern, name)
 
-                    if date_begin_end_searched is not None:
-                        year_month = date_begin_end_searched.groups()
-                        year = int(year_month[0])
-                        month = int(year_month[2])
+                if date_begin_end_searched is not None:
+                    year_month = date_begin_end_searched.groups()
+                    year = int(year_month[0])
+                    month = int(year_month[2])
 
-                        this_date_begin = datetime.date(int(year), month, 1)
-                        this_date_end = TimeTool.get_the_final_day_of_this_month(year=year, month=month)
+                    this_date_begin = datetime.date(int(year), month, 1)
+                    this_date_end = TimeTool.get_the_final_day_of_this_month(year=year, month=month)
 
-                        match_flag = True
+                    match_flag = True
 
-                assert match_flag, (f"illegal date format in filename: {name}. "
-                                    f"Filename should contain following one of parts: "
-                                    "yyyymmdd-yyyymmdd; "
-                                    "yyyy-mm-dd-yyyy-mm-dd; "
-                                    "yyyyddd-yyyyddd; "
-                                    "yyyy-mm."
-                                    )
+            assert match_flag, (f"illegal date format in filename: {name}. "
+                                f"Filename should contain following one of parts: "
+                                "yyyymmdd-yyyymmdd; "
+                                "yyyy-mm-dd-yyyy-mm-dd; "
+                                "yyyyddd-yyyyddd; "
+                                "yyyy-mm."
+                                )
 
-                return [this_date_begin], [this_date_end]
+            return [this_date_begin], [this_date_end]

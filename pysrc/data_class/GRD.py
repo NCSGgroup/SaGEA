@@ -454,9 +454,10 @@ class GRD:
                 return np.array(result_list)
 
     def regional_extraction(self, grid_region, average=True):
-        assert isinstance(grid_region, GRD)
+        # assert isinstance(grid_region, GRD)
 
-        return self.integral(grid_region.value, average=average)
+        # return self.integral(grid_region.value, average=average)
+        return self.integral(grid_region, average=average)
 
     def limiter(self, threshold=0, beyond=1, below=0):
         index_beyond = np.where(self.value >= threshold)

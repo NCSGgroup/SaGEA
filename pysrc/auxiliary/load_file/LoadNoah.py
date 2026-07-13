@@ -1,4 +1,5 @@
 import datetime
+import calendar
 
 import numpy as np
 import h5py
@@ -48,11 +49,11 @@ def load_GLDAS_TWS_one_month(filepath, full_lat=True):
     """
     nc = LoadNOAH21().setFile(filepath)
     sm0_10, lat, lon = nc.get2dData('SoilMoi0_10cm_inst', full_lat=full_lat)
-    sm10_40, _, _ = nc.get2dData('SoilMoi10_40cm_inst')
-    sm40_100, _, _ = nc.get2dData('SoilMoi40_100cm_inst')
-    sm100_200, _, _ = nc.get2dData('SoilMoi100_200cm_inst')
-    cano, _, _ = nc.get2dData('CanopInt_inst')
-    swe, _, _ = nc.get2dData('SWE_inst')
+    sm10_40, _, _ = nc.get2dData('SoilMoi10_40cm_inst', full_lat=full_lat)
+    sm40_100, _, _ = nc.get2dData('SoilMoi40_100cm_inst', full_lat=full_lat)
+    sm100_200, _, _ = nc.get2dData('SoilMoi100_200cm_inst', full_lat=full_lat)
+    cano, _, _ = nc.get2dData('CanopInt_inst', full_lat=full_lat)
+    swe, _, _ = nc.get2dData('SWE_inst', full_lat=full_lat)
     return (sm0_10 + sm10_40 + sm40_100 + sm100_200 + cano + swe) / 1000, lat, lon
 
 
@@ -95,6 +96,67 @@ def load_GLDAS_TWS(begin_date: datetime.date = None, end_date: datetime.date = N
                 lon = this_lon
 
             grids.append(this_tws)
+            times.append(this_date)
+
+    if de_average:
+        grids -= np.mean(grids, axis=0)
+
+    return GRD(grids, lat=lat, lon=lon), times
+
+
+def load_GLDAS_Runoff_one_month(filepath, full_lat=True):
+    """
+    """
+    year_month = filepath.name[16:22]
+    year, month = int(year_month[:4]), int(year_month[4:6])
+    _, num_days = calendar.monthrange(year, month)
+    nc = LoadNOAH21().setFile(filepath)
+    qs_acc, lat, lon = nc.get2dData('Qs_acc', full_lat=full_lat)
+    qsb_acc, _, _ = nc.get2dData('Qsb_acc', full_lat=full_lat)
+    qs_acc[np.where(qs_acc <= -9999)] = 0
+    qsb_acc[np.where(qsb_acc <= -9999)] = 0
+    return (qs_acc + qsb_acc) * 8 * num_days / 1000, lat, lon
+
+
+def load_GLDAS_Runoff(begin_date: datetime.date = None, end_date: datetime.date = None, from_exist_results=None,
+                      de_average=False, log=False, full_lat=True):
+    """
+    :param begin_date: datetime.date
+    :param end_date: datetime.date
+    :param from_exist_results: hdf5 file
+    :param de_average: bool,
+    :param log: bool,
+    :param full_lat: bool,
+    :return: GRID, times
+    """
+    assert not from_exist_results
+
+    filedir = FileTool.get_project_dir(relative=True) / 'data/Noah2.1'
+    filepaths_list = list(filedir.iterdir())
+    filepaths_list.sort()
+
+    grids = []
+    times = []
+    lat, lon = None, None
+    for i in range(len(filepaths_list)):
+        filename = filepaths_list[i].name
+        yyyymm = filename.split('_')[2][3:9]
+        year = int(yyyymm[:4])
+        month = int(yyyymm[4:])
+
+        this_date = datetime.date(year, month, 15)
+
+        if begin_date <= this_date <= end_date:
+            if log:
+                print(f'calculating: {filename}...')
+            this_runoff, this_lat, this_lon = load_GLDAS_Runoff_one_month(filedir / filename, full_lat=full_lat)
+
+            if lat is None:
+                lat = this_lat
+            if lon is None:
+                lon = this_lon
+
+            grids.append(this_runoff)
             times.append(this_date)
 
     if de_average:
