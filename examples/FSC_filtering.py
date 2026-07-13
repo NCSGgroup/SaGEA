@@ -2,7 +2,7 @@
 # coding=utf-8
 # @Author  : Shuhao Liu
 # @Time    : 2026/6/17 13:25 
-# @File    : demo_filtering.py
+# @File    : FSC_filtering.py
 import pathlib
 
 import cartopy
@@ -50,13 +50,6 @@ def demo():
             f"/Volumes/WorkDrive/data/GRACE/L2_SH_products/GSM/CSR/RL06/BA01/{year}/"
         ).glob("GSM-2*_0600"))
     gfc_path_list.sort()
-
-    tn13_path = pathlib.Path(
-        "/Volumes/WorkDrive/data/GRACE/L2_low_degrees/TN-13_GEOC_CSR_RL06.1.txt"
-    )
-    tn14_path = pathlib.Path(
-        "/Volumes/WorkDrive/data/GRACE/L2_low_degrees/TN-14_C30_C20_SLR_GSFC.txt"
-    )
 
     shc = sagea.SHC.from_gfc(gfc_path_list, lmax=lmax, key='GRCOF2')
 
