@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "sagea"
-version = "0.2.7"
+version = "0.2.8"
 description = "satellite gravity post-processing and error assessment"
 readme = "README.md"
 requires-python = ">=3.9"

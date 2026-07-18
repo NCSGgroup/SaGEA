@@ -26,7 +26,7 @@ When referencing this work, please cite:
 This program homepage is: https://github.com/NCSGgroup/SaGEA.
 
 ```bash
-pip install sagea
+pip install sagea==0.2.8
 ```
 
 ----- for old usages -----
