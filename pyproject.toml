@@ -4,13 +4,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "sagea"
-version = "0.2.6"  # Hard-coding suggested initially; dynamic versioning (e.g., from git tags) requires different config
+version = "0.2.7"
 description = "satellite gravity post-processing and error assessment"
 readme = "README.md"
 requires-python = ">=3.9"
 license = { file = "LICENSE" }
 authors = [
-    { name = "Shuhao Liu", email = "liushuhao@hust.edu.cn" },
+    { name = "Shuhao Liu", email = "liushuhao@apm.ac.cn" },
 ]
 keywords = ["geodesy", "gravity", "GRACE", "satellite", "SH"]
 classifiers = [
@@ -36,6 +36,7 @@ dependencies = [
     "pyproj>=3.6.1",
     "rasterio>=1.4.3",
     "wget>=3.2",
+    "cartopy>=0.25.0",
 ]
 
 # Optional Dependencies
@@ -66,6 +67,7 @@ include = ["sagea*"]  # Include "sagea" and its sub-packages
 
 # Include package data files (e.g., json and nc files under sagea/data/)
 [tool.setuptools.package-data]
-"sagea.data" = ["*.json", "*.nc", "*.gfc", "*.txt"]
-
+"sagea" = ["data/auxiliary/*"]
+[tool.setuptools.exclude-package-data]
+"sagea" = ["data/ddk_data/*"]
 

@@ -3,7 +3,7 @@ from enum import Enum
 
 import numpy as np
 
-from constants.constant import GeoConstant
+from sagea.constants.constant import GeoConstant
 
 
 class MathTool:

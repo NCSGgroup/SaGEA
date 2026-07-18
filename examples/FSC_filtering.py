@@ -10,8 +10,7 @@ import h5py
 import numpy as np
 
 import sagea
-from sagea.constants import constant
-from utils.TimeTool import TimeTool
+from sagea.utils.TimeTool import TimeTool
 
 
 def generate_kaula_matrix(l_max=60, power=2.):
