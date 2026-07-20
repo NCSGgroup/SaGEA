@@ -104,6 +104,10 @@ def fsc_filter_cs(
         init_alphas=None,
         from_degree=2,
         scale: float = 1.0,
+        tol=1e-4,
+        max_iter=100,
+        verbose=True,
+
 ) -> np.ndarray:
     """
     Regularization filter for 1D triangular CS coefficients.
@@ -121,7 +125,10 @@ def fsc_filter_cs(
     init_alphas : list of float
         initial parameter of FSC filter for each vcm_sig.
     from_degree : filtering from degree, default 2
-    scale : float, default 1.0
+    scale : float, default 1.0,
+    tol : float, default 1e-4
+    max_iter : int, default 100
+    verbose : bool, default True
     """
     cs = np.asarray(cs, dtype=float)
 
@@ -143,7 +150,7 @@ def fsc_filter_cs(
         for i in range(len(vcm_sig_list))
     ]
     cs_filtered = np.zeros_like(cs2)
-    cs_filtered[:, from_degree ** 2] = cs2[:, from_degree ** 2]
+    cs_filtered[:, :from_degree ** 2] = cs2[:, :from_degree ** 2]
 
     cs_filtered[0, from_degree ** 2:] = bayesian_filter_vce(
         cs[0, from_degree ** 2:],
@@ -151,6 +158,9 @@ def fsc_filter_cs(
         *d_mat,
         init_alphas=init_alphas,
         scale=scale,
+        tol=tol,
+        max_iter=max_iter,
+        verbose=verbose,
     )
 
     return cs_filtered

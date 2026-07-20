@@ -8,8 +8,8 @@ from sagea.utils import MathTool
 
 
 def ensure_cs_3d(
-    cqlm: np.ndarray,
-    sqlm: np.ndarray,
+        cqlm: np.ndarray,
+        sqlm: np.ndarray,
 ) -> tuple[np.ndarray, np.ndarray, bool]:
     """
     Ensure C/S coefficient arrays are 3D.
@@ -45,9 +45,9 @@ def ensure_cs_3d(
 
 
 def restore_cs_dimension(
-    cqlm: np.ndarray,
-    sqlm: np.ndarray,
-    single: bool,
+        cqlm: np.ndarray,
+        sqlm: np.ndarray,
+        single: bool,
 ) -> tuple[np.ndarray, np.ndarray]:
     if single:
         if cqlm.shape[0] != 1 or sqlm.shape[0] != 1:
@@ -116,9 +116,9 @@ def cs1d_to_cs2d(cs: np.ndarray) -> tuple[np.ndarray, np.ndarray, bool]:
 
 
 def cs2d_to_cs1d(
-    cqlm: np.ndarray,
-    sqlm: np.ndarray,
-    single: bool = False,
+        cqlm: np.ndarray,
+        sqlm: np.ndarray,
+        single: bool = False,
 ) -> np.ndarray:
     """
     Convert C/S matrices to 1D triangular CS array.
@@ -146,9 +146,9 @@ def cs2d_to_cs1d(
 
 
 def gaussian_weight_1d(
-    lmax: int,
-    radius_smooth: float,
-    radius_earth: float,
+        lmax: int,
+        radius_smooth: float,
+        radius_earth: float,
 ) -> np.ndarray:
     """
     Gaussian smoothing weight.

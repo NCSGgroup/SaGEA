@@ -13,21 +13,44 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Sequence
 import datetime as dt
+from functools import cached_property
 
 import numpy as np
+
+from core._shc_generator_wrapper import _SHCGeneratorAccessor
+from core._shc_filter_wrapper import _SHCFilterAccessor
 
 from sagea.constants.constant import PhysicalDimension
 from sagea.utils import MathTool
 
 
+class SHCDeprecationWarning(FutureWarning):
+    pass
+
+
+class _SHCMeta(type):
+    @property
+    def generate(cls) -> "_SHCGeneratorAccessor":
+        accessor = cls.__dict__.get("_generate_accessor", None)
+        if accessor is None:
+            accessor = _SHCGeneratorAccessor(cls)
+            setattr(cls, "_generate_accessor", accessor)
+        return accessor
+
+    def __dir__(cls) -> list[str]:
+        names = set(super().__dir__())
+        names.add("generate")
+        return sorted(names)
+
+
 @dataclass
-class SHC:
+class SHC(metaclass=_SHCMeta):
     """
     Spherical harmonic coefficients.
 
     Parameters
     ----------
-    values : np.ndarray
+    _values : np.ndarray
         1D or 2D SH coefficient array.
         Shape:
             - (ncoef,)
@@ -41,13 +64,13 @@ class SHC:
         Extra metadata.
     """
 
-    values: np.ndarray
+    _values: np.ndarray
     normalization: str = "4pi"
     dates: Sequence[dt.date] | None = None
     attrs: dict = field(default_factory=dict)
 
     def __post_init__(self):
-        values = np.asarray(self.values, dtype=float)
+        values = np.asarray(self._values, dtype=float)
 
         if values.ndim == 1:
             values = values[None, :]
@@ -75,7 +98,7 @@ class SHC:
                 f"SHC time dimension {values.shape[0]}."
             )
 
-        self.values = values
+        self._values = values
 
     # ------------------------------------------------------------------
     # Constructors
@@ -95,6 +118,16 @@ class SHC:
         Read SHC from one or multiple GFC files.
         """
         from sagea.sgio.gfc_reader import read_gfc
+
+        warnings.warn(
+            (
+                "`SHC.from_gfc(...)` is deprecated and will be removed in a "
+                "future version. Use `SHC.generate.from_gfc(...)` instead. "
+                "See README or documentation for migration details."
+            ),
+            category=SHCDeprecationWarning,
+            stacklevel=2,
+        )
 
         if isinstance(filepath, (str, Path)):
             cs = read_gfc(
@@ -117,7 +150,7 @@ class SHC:
             )
 
         return cls(
-            values=cs,
+            _values=cs,
             normalization=normalization,
             dates=dates,
             attrs={} if attrs is None else attrs,
@@ -136,6 +169,16 @@ class SHC:
         C(t) = C_rate * (t - t_ref)
         """
         from sagea.utils import TimeTool
+
+        warnings.warn(
+            (
+                "`SHC.from_trend(...)` is deprecated and will be removed in a "
+                "future version. Use `SHC.generate.from_trend(...)` instead. "
+                "See README or documentation for migration details."
+            ),
+            category=SHCDeprecationWarning,
+            stacklevel=2,
+        )
 
         if len(shc_trend) != 1:
             raise ValueError("shc_trend should contain only one epoch.")
@@ -157,16 +200,26 @@ class SHC:
         )
 
         dt_year = year_frac - ref_year_frac
-        trend = shc_trend.values[0]
+        trend = shc_trend._values[0]
 
         values = dt_year[:, None] @ trend[None, :]
 
         return cls(
-            values=values,
+            _values=values,
             normalization=shc_trend.normalization,
             dates=dates,
             attrs=shc_trend.attrs.copy(),
         )
+
+    generate: _SHCGeneratorAccessor
+
+    def __getattribute__(self, name):
+        if name == "generate":
+            raise AttributeError(
+                "`generate` can only be accessed from the SHC class. "
+                "Use `SHC.generate.<method_name>(...)` instead."
+            )
+        return super().__getattribute__(name)
 
     # ------------------------------------------------------------------
     # Basic properties
@@ -176,26 +229,26 @@ class SHC:
         """
         Backward-compatible alias.
         """
-        return self.values
+        return self._values
 
     @value.setter
     def value(self, arr: np.ndarray):
-        self.values = np.asarray(arr, dtype=float)
+        self._values = np.asarray(arr, dtype=float)
 
     @property
     def lmax(self) -> int:
-        return int(round(np.sqrt(self.values.shape[1]) - 1))
+        return int(round(np.sqrt(self._values.shape[1]) - 1))
 
     @property
     def ntime(self) -> int:
-        return self.values.shape[0]
+        return self._values.shape[0]
 
     def __len__(self) -> int:
         return self.ntime
 
     def copy(self) -> "SHC":
         return SHC(
-            values=self.values.copy(),
+            _values=self._values.copy(),
             normalization=self.normalization,
             dates=None if self.dates is None else list(self.dates),
             attrs=self.attrs.copy(),
@@ -217,7 +270,7 @@ class SHC:
         c_list = []
         s_list = []
 
-        for cs in self.values:
+        for cs in self._values:
             c, s = MathTool.cs_decompose_triangle1d_to_cs2d(cs)
             c_list.append(c)
             s_list.append(s)
@@ -229,15 +282,15 @@ class SHC:
     # ------------------------------------------------------------------
     @property
     def mean(self) -> np.ndarray:
-        return np.mean(self.values, axis=0)
+        return np.mean(self._values, axis=0)
 
     @property
     def std(self) -> np.ndarray:
-        return np.std(self.values, axis=0)
+        return np.std(self._values, axis=0)
 
     @property
     def covariance(self) -> np.ndarray:
-        return np.cov(self.values.T)
+        return np.cov(self._values.T)
 
     @property
     def degree_rms(self) -> np.ndarray:
@@ -265,7 +318,7 @@ class SHC:
             raise ValueError("lmax does not match.")
 
         return SHC(
-            values=self.values + other.values,
+            _values=self._values + other._values,
             normalization=self.normalization,
             dates=self.dates,
             attrs=self.attrs.copy(),
@@ -279,7 +332,7 @@ class SHC:
             raise ValueError("lmax does not match.")
 
         return SHC(
-            values=self.values - other.values,
+            _values=self._values - other._values,
             normalization=self.normalization,
             dates=self.dates,
             attrs=self.attrs.copy(),
@@ -287,7 +340,7 @@ class SHC:
 
     def de_mean(self, inplace: bool = False) -> "SHC":
         obj = self if inplace else self.copy()
-        obj.values = obj.values - obj.mean
+        obj._values = obj._values - obj.mean
         return obj
 
     def replace(
@@ -387,18 +440,18 @@ class SHC:
                 warnings.warn(str(e))
                 continue
 
-            if index1d >= obj.values.shape[1]:
+            if index1d >= obj._values.shape[1]:
                 raise IndexError(
                     f"Coefficient index {index} exceeds SHC coefficient size."
                 )
 
             # new is another SHC
             if isinstance(new, SHC):
-                if index1d >= new.values.shape[1]:
+                if index1d >= new._values.shape[1]:
                     raise IndexError(
                         f"Coefficient index {index} exceeds replacement SHC size."
                     )
-                new_array = np.asarray(new.values[:, index1d], dtype=float)
+                new_array = np.asarray(new._values[:, index1d], dtype=float)
 
             # new is ndarray/list/scalar
             else:
@@ -426,14 +479,14 @@ class SHC:
 
             # only replace finite values
             valid = np.isfinite(new_array)
-            obj.values[valid, index1d] = new_array[valid]
+            obj._values[valid, index1d] = new_array[valid]
 
         return obj
 
     # ------------------------------------------------------------------
     # Filtering wrapper
     # ------------------------------------------------------------------
-    def filter(
+    def _old_filter(
             self,
             *args,
             params: tuple | None = None,
@@ -586,8 +639,8 @@ class SHC:
             current_kwargs = dict(kwargs)
             current_kwargs.update(local_kwargs)
 
-            obj.values = apply_filter_to_cs(
-                cs=obj.values,
+            obj._values = apply_filter_to_cs(
+                cs=obj._values,
                 method=method,
                 params=filter_params,
                 lmax=obj.lmax,
@@ -595,6 +648,19 @@ class SHC:
             )
 
         return obj
+
+    @cached_property
+    def filter(self) -> _SHCFilterAccessor:
+        """
+        Filter accessor.
+        Recommended usage
+        -----------------
+        shc.filter.some_method(...)
+        Deprecated usage
+        ----------------
+        shc.filter("some_method", ...)
+        """
+        return _SHCFilterAccessor(self)
 
     # ------------------------------------------------------------------
     # Converting wrapper
@@ -720,14 +786,14 @@ class SHC:
 
         converter = ConvertSHC().config(config)
 
-        converted_values = converter.apply_to(self.values)
+        converted_values = converter.apply_to(self._values)
 
         if inplace:
-            self.values = converted_values
+            self._values = converted_values
             return self
 
         out = copy.deepcopy(self)
-        out.values = converted_values
+        out._values = converted_values
 
         return out
 
@@ -794,7 +860,7 @@ class SHC:
             log=log,
         )
 
-        obj.values = MathTool.cs_combine_to_triangle_1d(cqlm_corr, sqlm_corr)
+        obj._values = MathTool.cs_combine_to_triangle_1d(cqlm_corr, sqlm_corr)
 
         return obj
 

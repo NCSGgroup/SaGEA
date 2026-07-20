@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import copy
 from enum import Enum
 
 import numpy as np
@@ -16,12 +17,13 @@ from sagea.filtering.base import (
 class SlideWindowMode(Enum):
     Stable = "stable"
     Wahr2006 = "wahr2006"
+    Duan2009 = "duan2009"
 
 
 def _pnmm_apply_to_cqlm(
-    cqlm: np.ndarray,
-    poly_n: int = 3,
-    start_m: int = 10,
+        cqlm: np.ndarray,
+        poly_n: int = 3,
+        start_m: int = 10,
 ) -> np.ndarray:
     """
     PnMm decorrelation for one C/S-like array.
@@ -62,10 +64,10 @@ def _pnmm_apply_to_cqlm(
 
 
 def pnmm_filter_cqlm(
-    cqlm: np.ndarray,
-    sqlm: np.ndarray,
-    poly_n: int = 3,
-    start_m: int = 10,
+        cqlm: np.ndarray,
+        sqlm: np.ndarray,
+        poly_n: int = 3,
+        start_m: int = 10,
 ) -> tuple[np.ndarray, np.ndarray]:
     """
     PnMm decorrelation filtering.
@@ -90,10 +92,10 @@ def pnmm_filter_cqlm(
 
 
 def _slide_window_decorrelation_for_array(
-    array: np.ndarray,
-    window_length: int,
-    poly_n: int,
-    q: int,
+        array: np.ndarray,
+        window_length: int,
+        poly_n: int,
+        q: int,
 ) -> np.ndarray:
     """
     Parameters
@@ -142,13 +144,15 @@ def _slide_window_decorrelation_for_array(
 
 
 def _slide_window_apply_to_cqlm(
-    cqlm: np.ndarray,
-    poly_n: int = 3,
-    start_m: int = 10,
-    window_length: int = 5,
-    mode: SlideWindowMode = SlideWindowMode.Stable,
-    a: float = 10.0,
-    k: float = 30.0,
+        cqlm: np.ndarray,
+        poly_n: int = 3,
+        start_m: int = 10,
+        window_length: int = 5,
+        mode: SlideWindowMode = SlideWindowMode.Stable,
+        a: float = 10.0,
+        k: float = 30.0,
+        gamma: float = 0.1,
+        p: int = 3
 ) -> np.ndarray:
     """
     Sliding-window decorrelation for one C/S-like array.
@@ -172,48 +176,90 @@ def _slide_window_apply_to_cqlm(
         wl += wl % 2 - 1
     elif mode is SlideWindowMode.Stable:
         wl = np.ones(lmax + 1) * window_length
+    elif mode is SlideWindowMode.Duan2009:
+        wl = np.array([np.trunc(a * np.exp(
+            -((1 - gamma) * (np.arange(lmax + 1) ** p) + gamma * l ** p) ** (1 / p) / k
+        ) + 1) for l in range(lmax + 1)])
+        wl[wl < window_length] = window_length
+        wl += wl % 2 - 1
     else:
         raise ValueError(f"Unsupported slide window mode: {mode}")
 
     for m in range(start_m, lmax + 1):
-        this_window_length = int(wl[m])
+        if mode in (SlideWindowMode.Wahr2006, SlideWindowMode.Stable):
+            this_window_length = int(wl[m])
 
-        if this_window_length < poly_n + 1:
-            raise ValueError(
-                "window_length should be larger than polynomial degree."
-            )
+            if this_window_length < poly_n + 1:
+                raise ValueError(
+                    "window_length should be larger than polynomial degree."
+                )
 
-        array_even = cqlm[:, m + 1::2, m]
-        array_odd = cqlm[:, m::2, m]
+            array_even = cqlm[:, m + 1::2, m]
+            array_odd = cqlm[:, m::2, m]
 
-        if array_even.shape[1] >= this_window_length:
-            cqlm[:, m + 1::2, m] = _slide_window_decorrelation_for_array(
-                array_even,
-                window_length=this_window_length,
-                poly_n=poly_n,
-                q=q,
-            )
+            if array_even.shape[1] >= this_window_length:
+                cqlm[:, m + 1::2, m] = _slide_window_decorrelation_for_array(
+                    array_even,
+                    window_length=this_window_length,
+                    poly_n=poly_n,
+                    q=q,
+                )
 
-        if array_odd.shape[1] >= this_window_length:
-            cqlm[:, m::2, m] = _slide_window_decorrelation_for_array(
-                array_odd,
-                window_length=this_window_length,
-                poly_n=poly_n,
-                q=q,
-            )
+            if array_odd.shape[1] >= this_window_length:
+                cqlm[:, m::2, m] = _slide_window_decorrelation_for_array(
+                    array_odd,
+                    window_length=this_window_length,
+                    poly_n=poly_n,
+                    q=q,
+                )
+
+        elif mode in (SlideWindowMode.Duan2009,):
+            cqlm_unfiltered, sqlm_unfiltered = copy.deepcopy(cqlm), copy.deepcopy(cqlm)
+
+            for l in np.arange(lmax + 1):
+                this_window_length = int(wl[l, m])
+
+                if this_window_length < poly_n + 1:
+                    raise ValueError(
+                        "window_length should be larger than polynomial degree."
+                    )
+
+                array_even = cqlm_unfiltered[:, m + 1::2, m]
+                array_odd = sqlm_unfiltered[:, m::2, m]
+
+                if array_even.shape[1] >= this_window_length:
+                    cqlm[:, m + 1::2, m] = _slide_window_decorrelation_for_array(
+                        array_even,
+                        window_length=this_window_length,
+                        poly_n=poly_n,
+                        q=q,
+                    )
+
+                if array_odd.shape[1] >= this_window_length:
+                    cqlm[:, m::2, m] = _slide_window_decorrelation_for_array(
+                        array_odd,
+                        window_length=this_window_length,
+                        poly_n=poly_n,
+                        q=q,
+                    )
+
+        else:
+            raise ValueError(f"Unsupported slide window mode: {mode}")
 
     return cqlm
 
 
 def slide_window_filter_cqlm(
-    cqlm: np.ndarray,
-    sqlm: np.ndarray,
-    poly_n: int = 3,
-    start_m: int = 10,
-    window_length: int = 5,
-    mode: SlideWindowMode | str = SlideWindowMode.Stable,
-    a: float = 10.0,
-    k: float = 30.0,
+        cqlm: np.ndarray,
+        sqlm: np.ndarray,
+        poly_n: int = 3,
+        start_m: int = 10,
+        window_length: int = 5,
+        mode: SlideWindowMode = SlideWindowMode.Stable,
+        a: float = 10.0,
+        k: float = 30.0,
+        gamma=0.1,
+        p=3,
 ) -> tuple[np.ndarray, np.ndarray]:
     """
     Sliding-window decorrelation filtering.
@@ -232,6 +278,8 @@ def slide_window_filter_cqlm(
         mode=mode,
         a=a,
         k=k,
+        gamma=gamma,
+        p=p
     )
 
     cqlm_f = csqlm_f[:ntime]
