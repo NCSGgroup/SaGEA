@@ -2,10 +2,11 @@
 # coding=utf-8
 # @Author  : Shuhao Liu
 # @Time    : 2025/12/29 15:26 
-# @File    : gfc_reader.py
+# @File    : _gfc_reader.py
 import numpy as np
 from pathlib import Path
 
+import sagea
 from sagea.utils import MathTool
 
 
@@ -82,4 +83,5 @@ def read_gfc(filepath: Path, key="gfc", lmax=None, col_indices=None):
                     continue
 
     cs = MathTool.cs_combine_to_triangle_1d(clm, slm)
+
     return cs

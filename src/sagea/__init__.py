@@ -7,7 +7,7 @@
 from .core.shc import SHC
 from .core.grid import GRD, GRDType
 
-__version__ = "0.1.0"
+from . import sgio as io
 
 if __name__ == "__main__":
     pass

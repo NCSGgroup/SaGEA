@@ -2,7 +2,7 @@
 # coding=utf-8
 # @Author  : Shuhao Liu
 # @Time    : 2026/7/18 10:58 
-# @File    : snx_reader.py
+# @File    : _snx_reader.py
 
 import pathlib
 

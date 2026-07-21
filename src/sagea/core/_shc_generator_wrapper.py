@@ -7,6 +7,8 @@
 from __future__ import annotations
 from typing import Any, Callable, Iterator, Sequence, TYPE_CHECKING
 
+from statsmodels.genmod.families.links import sqrt
+
 if TYPE_CHECKING:
     from .shc import SHC
 
@@ -237,57 +239,16 @@ class _SHCGeneratorAccessor:
     # ============================================================
     # Constructors / generators
     # ============================================================
-
     @generator_method(
-        summary="Read SHC from one or multiple GFC files.",
+        summary="Generate SHC instance with a given 1d- or 2d-array. Equivalent to SHC(...)",
         order=10,
     )
-    def from_gfc(
-            self,
-            filepath: str | Path | Sequence[str | Path],
-            lmax: int,
-            key: str = "gfc",
-            cols=None,
-            normalization: str = "4pi",
-            dates: Sequence[dt.date] | None = None,
-            attrs: dict | None = None,
-    ) -> "SHC":
-        """
-        Read SHC from one or multiple GFC files.
-        """
-        from sagea.sgio.gfc_reader import read_gfc
-
+    def from_array(self, cs):
         cls = self._shc_cls
-
-        if isinstance(filepath, (str, Path)):
-            cs = read_gfc(
-                Path(filepath),
-                key=key,
-                lmax=lmax,
-                col_indices=cols,
-            )
-        else:
-            cs = np.asarray(
-                [
-                    read_gfc(
-                        Path(path),
-                        key=key,
-                        lmax=lmax,
-                        col_indices=cols,
-                    )
-                    for path in filepath
-                ]
-            )
-
-        return cls(
-            _values=cs,
-            normalization=normalization,
-            dates=dates,
-            attrs={} if attrs is None else attrs,
-        )
+        return cls(cs)
 
     @generator_method(
-        summary="Generate SHC time series from a trend SHC.",
+        summary="Generate SHC time series from a trend SHC (a GIA model, for example).",
         order=20,
     )
     def from_trend(
@@ -335,3 +296,34 @@ class _SHCGeneratorAccessor:
             dates=dates,
             attrs=shc_trend.attrs.copy(),
         )
+
+    @generator_method(
+        summary="Generate SHC sample(s) from VCM assuming Gaussian distribution.",
+        order=30,
+    )
+    def normal_from_vcm(
+            self,
+            vcm: np.ndarray,
+            nsample: int = 1,
+            mean: "SHC" = None
+    ) -> "SHC":
+
+        cls = self._shc_cls
+
+        shape_vcm = vcm.shape
+        assert len(shape_vcm) == 2
+        square_root = np.sqrt(shape_vcm[0])
+        assert square_root % 1 < 1e-8, f"invalid shape of input vcm {shape_vcm}."
+
+        lmax = square_root - 1
+        if mean is None:
+            mean = np.zeros(shape_vcm[:1])
+        else:
+            assert isinstance(mean, cls)
+            assert len(mean) == 1, "mean SHC should have only one element."
+            assert mean.lmax == lmax, f"mean SHC should have a same lmax as vcm {lmax}, got {mean.lmax} instead."
+
+            mean = mean.value[0]
+
+        cs = np.random.multivariate_normal(mean=mean, cov=vcm, size=nsample)
+        return cls(cs)

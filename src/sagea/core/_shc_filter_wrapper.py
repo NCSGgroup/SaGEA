@@ -75,9 +75,6 @@ class _SHCFilterAccessor:
     """
 
     _METHOD_MAP: dict[str, str] = {
-        # TODO:
-        # Fill this mapping with your real old-name -> new-method-name pairs.
-        #
         # Example format:
         # "old_name": "new_method_name",
         #
@@ -289,7 +286,7 @@ class _SHCFilterAccessor:
         return new_shc
 
     # ============================================================
-    # TODO: Add your real filter methods below.
+    # filter method
     # ============================================================
     #
     # Each real method should:

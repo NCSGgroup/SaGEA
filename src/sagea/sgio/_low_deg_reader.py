@@ -2,7 +2,7 @@
 # coding=utf-8
 # @Author  : Shuhao Liu
 # @Time    : 2025/12/30 16:58 
-# @File    : low_deg_reader.py
+# @File    : _low_deg_reader.py
 
 import datetime
 import pathlib
@@ -217,7 +217,7 @@ def __load_TN14(filepath, times):
     return result
 
 
-def read_low_degs(filepath: pathlib.Path, times: list[datetime.date]):
+def read_low_degs(filepath: pathlib.Path, dates: list[datetime.date]):
     check_ids = ("TN-11", "TN-13", "TN-14")
     check_pattern = "(" + ")|(".join(check_ids) + ")"  # r"(TN-11)|(TN-13)|(TN-14)"
     checked = re.search(check_pattern, filepath.name) is not None
@@ -225,11 +225,11 @@ def read_low_degs(filepath: pathlib.Path, times: list[datetime.date]):
         assert False, f"file name should include one of ids: {check_pattern}"
 
     if "TN-11" in filepath.name:
-        return __load_TN11(filepath, times)
+        return __load_TN11(filepath, dates)
     elif "TN-13" in filepath.name:
-        return __load_TN13(filepath, times)
+        return __load_TN13(filepath, dates)
     elif "TN-14" in filepath.name:
-        return __load_TN14(filepath, times)
+        return __load_TN14(filepath, dates)
     else:
         assert False
 
