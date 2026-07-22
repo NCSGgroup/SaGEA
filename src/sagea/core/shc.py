@@ -13,13 +13,21 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Sequence, ClassVar, TYPE_CHECKING
 import datetime as dt
-from functools import cached_property
 
 import numpy as np
 
-from core._shc_generator_wrapper import _SHCGeneratorAccessor
-from core._shc_filter_wrapper import _SHCFilterAccessor
-from core._shc_io_wrapper import _SHCClassIOAccessor, _SHCIODispatcher, _SHCInstanceIOAccessor
+from sagea.core._shc_generator_wrapper import (
+    _SHCGeneratorAccessor,
+    SHCGenerateAccessorDescriptor,
+)
+from sagea.core._shc_filter_wrapper import (
+    _SHCFilterAccessor,
+    SHCFilterAccessorDescriptor,
+)
+from sagea.core._shc_io_wrapper import (
+    _SHCIOAccessor,
+    SHCIOAccessorDescriptor,
+)
 
 from sagea.constants.constant import PhysicalDimension
 from sagea.utils import MathTool
@@ -30,21 +38,9 @@ class SHCDeprecationWarning(FutureWarning):
 
 
 class _SHCMeta(type):
-    @property
-    def generate(cls) -> "_SHCGeneratorAccessor":
-        accessor = cls.__dict__.get("_generate_accessor", None)
-        if accessor is None:
-            accessor = _SHCGeneratorAccessor(cls)
-            setattr(cls, "_generate_accessor", accessor)
-        return accessor
-
-    @property
-    def io(cls) -> _SHCClassIOAccessor:
-        return _SHCClassIOAccessor(cls)
-
     def __dir__(cls) -> list[str]:
         names = set(super().__dir__())
-        names.add("generate")
+        names.update({"generate", "io", "filter"})
         return sorted(names)
 
 
@@ -70,20 +66,20 @@ class SHC(metaclass=_SHCMeta):
     """
 
     _values: np.ndarray
+
+    if TYPE_CHECKING:
+        generate: ClassVar[_SHCGeneratorAccessor]
+        io: ClassVar[_SHCIOAccessor]
+        filter: _SHCFilterAccessor
+
+    else:
+        generate = SHCGenerateAccessorDescriptor()
+        io = SHCIOAccessorDescriptor()
+        filter = SHCFilterAccessorDescriptor()
+
     normalization: str = "4pi"
     dates: Sequence[dt.date] | None = None
     attrs: dict = field(default_factory=dict)
-    if TYPE_CHECKING:
-        generate: ClassVar[_SHCGeneratorAccessor]
-    io = _SHCIODispatcher()
-
-    def __getattribute__(self, name):
-        if name == "generate":
-            raise AttributeError(
-                "`generate` can only be accessed from the SHC class. "
-                "Use `SHC.generate.<method_name>(...)` instead."
-            )
-        return super().__getattribute__(name)
 
     def __post_init__(self):
         values = np.asarray(self._values, dtype=float)
@@ -655,18 +651,18 @@ class SHC(metaclass=_SHCMeta):
 
         return obj
 
-    @cached_property
-    def filter(self) -> _SHCFilterAccessor:
-        """
-        Filter accessor.
-        Recommended usage
-        -----------------
-        shc.filter.some_method(...)
-        Deprecated usage
-        ----------------
-        shc.filter("some_method", ...)
-        """
-        return _SHCFilterAccessor(self)
+    # @cached_property
+    # def filter(self) -> _SHCFilterAccessor:
+    #     """
+    #     Filter accessor.
+    #     Recommended usage
+    #     -----------------
+    #     shc.filter.some_method(...)
+    #     Deprecated usage
+    #     ----------------
+    #     shc.filter("some_method", ...)
+    #     """
+    #     return _SHCFilterAccessor(self)
 
     # ------------------------------------------------------------------
     # Converting wrapper
@@ -890,12 +886,3 @@ class SHC(metaclass=_SHCMeta):
         )
 
         return GRD(grid_value, lat, lon)
-
-
-def _filter_class_help() -> str:
-    accessor = _SHCFilterAccessor.__new__(_SHCFilterAccessor)
-    accessor._shc = None
-    return accessor.__help__()
-
-
-SHC.__dict__["filter"].help = _filter_class_help

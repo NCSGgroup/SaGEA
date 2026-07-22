@@ -4,26 +4,33 @@
 # @Time    : 2026/7/20 15:31 
 # @File    : _shc_generator_wrapper.py
 
-from __future__ import annotations
-from typing import Any, Callable, Iterator, Sequence, TYPE_CHECKING
+#!/usr/bin/env python
+# coding=utf-8
 
-from statsmodels.genmod.families.links import sqrt
+from __future__ import annotations
+
+import datetime as dt
+from typing import Callable, Sequence, TYPE_CHECKING
+
+import numpy as np
+
+from sagea.core._namespace_accessor import (
+    BaseNamespaceAccessor,
+    NamespaceAccessorDescriptor,
+    namespace_method,
+    NamespaceMethodKind,
+)
 
 if TYPE_CHECKING:
     from .shc import SHC
 
-import datetime as dt
-import inspect
-import weakref
-from pathlib import Path
-
-import numpy as np
-
 
 def generator_method(
-        *,
-        summary: str | None = None,
-        order: int = 0,
+    *,
+    summary: str | None = None,
+    order: int = 0,
+    kind: NamespaceMethodKind = "class",
+    show: bool = True,
 ) -> Callable:
     """
     Mark a method as a public SHC generator method.
@@ -31,231 +38,96 @@ def generator_method(
     Parameters
     ----------
     summary:
-        Short description shown in SHC.generate.help().
-        If None, the first line of the method docstring will be used.
+        Short description shown in SHC.generate.help() / shc.generate.help().
+        If None, the first line of method docstring will be used.
     order:
         Display order in help text.
+    kind:
+        Usually "class" for generator methods.
+    show:
+        Whether shown in help().
     """
+    return namespace_method(
+        namespace="generate",
+        summary=summary,
+        order=order,
+        kind=kind,
+        show=show,
+    )
 
-    def decorator(func: Callable) -> Callable:
-        func._is_shc_generator_method = True
-        func._shc_generator_summary = summary
-        func._shc_generator_order = order
-        return func
 
-    return decorator
-
-
-class _SHCGeneratorAccessor:
+class _SHCGeneratorAccessor(BaseNamespaceAccessor):
     """
-    Class-level accessor namespace for SHC generator methods.
+    Accessor namespace for SHC generator methods.
 
     Recommended usage
     -----------------
-    SHC.generate.from_gfc(...)
+    SHC.generate.from_array(...)
     SHC.generate.from_trend(...)
+    SHC.generate.normal_from_vcm(...)
 
-    Invalid usage
-    -------------
-    shc.generate.from_gfc(...)
+    Help
+    ----
+    print(SHC.generate.help())
+    print(shc.generate.help())
+
+    Notes
+    -----
+    Most generator methods are class methods.
+    Calling them from an instance is intentionally disallowed.
     """
 
-    def __dir__(self) -> list[str]:
-        names = set(super().__dir__())
-        names.update(name for name, _ in self._iter_generator_methods())
-        return sorted(names)
+    _namespace_name = "generate"
 
-    def __init__(self, shc_cls: type["SHC"]) -> None:
-        self._shc_cls = shc_cls
+    @property
+    def _shc_cls(self) -> type["SHC"]:
+        return self._owner
 
-    def __call__(self, *args: Any, **kwargs: Any) -> "SHC":
-        """
-        Do not allow SHC.generate(...) directly.
-
-        Users should call:
-
-            SHC.generate.<method_name>(...)
-        """
+    def __call__(self, *args, **kwargs):
         raise TypeError(
-            "`SHC.generate` is a generator-method namespace, not a standalone "
-            "constructor. Use `SHC.generate.<method_name>(...)` instead."
+            f"`{self._class_usage_name}` is a generator-method namespace, "
+            "not a standalone constructor. "
+            f"Use `{self._class_usage_name}.<method_name>(...)` instead."
         )
 
     # ============================================================
-    # Display / help API
+    # Class generator methods
     # ============================================================
 
-    def __str__(self) -> str:
-        """
-        Return a concise string showing available generator methods.
-
-        Example
-        -------
-        print(SHC.generate)
-        """
-        return self._format_methods(verbose=False)
-
-    def __repr__(self) -> str:
-        method_names = [name for name, _ in self._iter_generator_methods()]
-        return (
-            f"<{type(self).__name__} "
-            f"owner={self._shc_cls.__name__!r} "
-            f"available_methods={method_names}>"
-        )
-
-    def __help__(self) -> str:
-        """
-        Non-standard helper.
-
-        Note
-        ----
-        Python built-in help(obj) does not automatically call __help__().
-        Prefer using:
-
-            print(SHC.generate.help())
-        """
-        return self._format_methods(verbose=True)
-
-    def help(self) -> str:
-        """
-        Return detailed help text for available generator methods.
-
-        Usage
-        -----
-        print(SHC.generate.help())
-        """
-        return self.__help__()
-
-    def __dir__(self) -> list[str]:
-        """
-        Improve interactive auto-completion.
-
-        This makes dir(SHC.generate) include registered generator method names.
-        """
-        default_attrs = set(super().__dir__())
-        method_names = {name for name, _ in self._iter_generator_methods()}
-        return sorted(default_attrs | method_names)
-
-    # ============================================================
-    # Internal method discovery
-    # ============================================================
-
-    @classmethod
-    def _iter_generator_methods(cls) -> Iterator[tuple[str, Callable]]:
-        """
-        Iterate over methods decorated by @generator_method.
-        """
-        methods: list[tuple[str, Callable]] = []
-
-        for name, obj in inspect.getmembers(cls, predicate=callable):
-            if getattr(obj, "_is_shc_generator_method", False):
-                methods.append((name, obj))
-
-        methods.sort(
-            key=lambda item: (
-                getattr(item[1], "_shc_generator_order", 0),
-                item[0],
-            )
-        )
-
-        yield from methods
-
-    @staticmethod
-    def _method_signature(func: Callable) -> str:
-        """
-        Return a readable method signature without `self`.
-        """
-        sig = inspect.signature(func)
-        params = list(sig.parameters.values())
-
-        if params and params[0].name == "self":
-            params = params[1:]
-
-        new_sig = sig.replace(parameters=params)
-        return str(new_sig)
-
-    @staticmethod
-    def _method_summary(func: Callable) -> str:
-        """
-        Get method summary from decorator or docstring.
-        """
-        summary = getattr(func, "_shc_generator_summary", None)
-
-        if summary:
-            return summary
-
-        doc = inspect.getdoc(func)
-
-        if not doc:
-            return ""
-
-        return doc.strip().splitlines()[0]
-
-    def _format_methods(self, *, verbose: bool) -> str:
-        """
-        Format available generator methods.
-        """
-        methods = list(self._iter_generator_methods())
-
-        if not methods:
-            return (
-                "No public SHC generator methods are currently registered.\n"
-                "Please decorate generator methods with @generator_method(...)."
-            )
-
-        lines: list[str] = []
-
-        lines.append("Available SHC generator methods:")
-        lines.append("")
-
-        for name, func in methods:
-            signature = self._method_signature(func)
-            summary = self._method_summary(func)
-
-            if verbose:
-                lines.append(f"  {self._shc_cls.__name__}.generate.{name}{signature}")
-                if summary:
-                    lines.append(f"      {summary}")
-                lines.append("")
-            else:
-                if summary:
-                    lines.append(f"  - {name}{signature}: {summary}")
-                else:
-                    lines.append(f"  - {name}{signature}")
-
-        lines.append("")
-        lines.append("Recommended usage:")
-        lines.append(f"  {self._shc_cls.__name__}.generate.<method_name>(...)")
-
-        lines.append("")
-        lines.append("Note:")
-        lines.append(
-            f"  `{self._shc_cls.__name__}.generate` is only available from the class, "
-            "not from an instance."
-        )
-
-        return "\n".join(lines)
-
-    # ============================================================
-    # Constructors / generators
-    # ============================================================
     @generator_method(
-        summary="Generate SHC instance with a given 1d- or 2d-array. Equivalent to SHC(...)",
+        kind="class",
+        summary="Generate SHC instance with a given 1D or 2D array. Equivalent to SHC(...).",
         order=10,
     )
-    def from_array(self, cs):
+    def from_array(
+        self,
+        cs,
+        normalization: str = "4pi",
+        dates: Sequence[dt.date] | None = None,
+        attrs: dict | None = None,
+    ) -> "SHC":
+        """
+        Generate SHC instance from array.
+        """
         cls = self._shc_cls
-        return cls(cs)
+
+        return cls(
+            _values=cs,
+            normalization=normalization,
+            dates=dates,
+            attrs={} if attrs is None else attrs,
+        )
 
     @generator_method(
-        summary="Generate SHC time series from a trend SHC (a GIA model, for example).",
+        kind="class",
+        summary="Generate SHC time series from a trend SHC, for example a GIA model.",
         order=20,
     )
     def from_trend(
-            self,
-            shc_trend: "SHC",
-            dates: Sequence[dt.date],
-            ref_time: dt.date | None = None,
+        self,
+        shc_trend: "SHC",
+        dates: Sequence[dt.date],
+        ref_time: dt.date | None = None,
     ) -> "SHC":
         """
         Generate SHC time series from a trend SHC.
@@ -298,32 +170,82 @@ class _SHCGeneratorAccessor:
         )
 
     @generator_method(
+        kind="class",
         summary="Generate SHC sample(s) from VCM assuming Gaussian distribution.",
         order=30,
     )
     def normal_from_vcm(
-            self,
-            vcm: np.ndarray,
-            nsample: int = 1,
-            mean: "SHC" = None
+        self,
+        vcm: np.ndarray,
+        nsample: int = 1,
+        mean: "SHC | None" = None,
     ) -> "SHC":
-
+        """
+        Generate random SHC samples from variance-covariance matrix.
+        """
         cls = self._shc_cls
 
         shape_vcm = vcm.shape
-        assert len(shape_vcm) == 2
-        square_root = np.sqrt(shape_vcm[0])
-        assert square_root % 1 < 1e-8, f"invalid shape of input vcm {shape_vcm}."
 
-        lmax = square_root - 1
+        if len(shape_vcm) != 2 or shape_vcm[0] != shape_vcm[1]:
+            raise ValueError(
+                f"vcm should be a square 2D matrix, got shape {shape_vcm}."
+            )
+
+        ncoef = shape_vcm[0]
+        lmax_float = np.sqrt(ncoef) - 1
+        lmax = int(round(lmax_float))
+
+        if not np.isclose(lmax_float, lmax, atol=1e-8):
+            raise ValueError(
+                f"Invalid VCM shape {shape_vcm}. "
+                "Expected ncoef = (lmax + 1)^2."
+            )
+
         if mean is None:
-            mean = np.zeros(shape_vcm[:1])
+            mean_array = np.zeros(ncoef)
         else:
-            assert isinstance(mean, cls)
-            assert len(mean) == 1, "mean SHC should have only one element."
-            assert mean.lmax == lmax, f"mean SHC should have a same lmax as vcm {lmax}, got {mean.lmax} instead."
+            if not isinstance(mean, cls):
+                raise TypeError(f"mean should be {cls.__name__}, got {type(mean)}.")
 
-            mean = mean.value[0]
+            if len(mean) != 1:
+                raise ValueError("mean SHC should contain only one epoch.")
 
-        cs = np.random.multivariate_normal(mean=mean, cov=vcm, size=nsample)
-        return cls(cs)
+            if mean.lmax != lmax:
+                raise ValueError(
+                    f"mean SHC should have lmax={lmax}, got {mean.lmax}."
+                )
+
+            mean_array = mean.value[0]
+
+        cs = np.random.multivariate_normal(
+            mean=mean_array,
+            cov=vcm,
+            size=nsample,
+        )
+
+        return cls(_values=cs)
+
+    # ============================================================
+    # Optional instance generator-like methods
+    # ============================================================
+    #
+    # 如果你未来确实需要实例级 generate 方法，可以这样加：
+    #
+    # @generator_method(
+    #     kind="instance",
+    #     summary="Generate something based on current SHC instance.",
+    #     order=100,
+    # )
+    # def perturb(self, sigma: float) -> "SHC":
+    #     shc = self._obj
+    #     ...
+
+
+class SHCGenerateAccessorDescriptor(NamespaceAccessorDescriptor[_SHCGeneratorAccessor]):
+    """
+    Descriptor for SHC.generate and shc.generate.
+    """
+
+    def __init__(self) -> None:
+        super().__init__(_SHCGeneratorAccessor)

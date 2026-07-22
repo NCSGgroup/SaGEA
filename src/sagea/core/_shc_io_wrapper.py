@@ -4,15 +4,25 @@
 # @Time    : 2026/7/20 13:35
 # @File    : _shc_io_wrapper.py
 
+# !/usr/bin/env python
+# coding=utf-8
+
 from __future__ import annotations
 
 import datetime
-import inspect
+import warnings
 from pathlib import Path
-from typing import Any, Callable, Iterator, TYPE_CHECKING, Sequence
+from typing import Callable, Sequence, TYPE_CHECKING
 
 import numpy as np
+
 from sagea.utils import MathTool
+from sagea.core._namespace_accessor import (
+    BaseNamespaceAccessor,
+    NamespaceAccessorDescriptor,
+    namespace_method,
+    NamespaceMethodKind,
+)
 
 if TYPE_CHECKING:
     from .shc import SHC
@@ -22,133 +32,71 @@ def io_method(
         *,
         summary: str | None = None,
         order: int = 0,
+        kind: NamespaceMethodKind = "instance",
+        show: bool = True,
 ) -> Callable:
     """
-    Mark a method as a public SHC io method.
+    Mark a method as a public SHC IO method.
+
     Parameters
     ----------
     summary:
-        Short description shown in shc.io.help().
+        Short description shown in SHC.io.help() / shc.io.help().
         If None, the first line of the method docstring will be used.
     order:
         Display order in help text.
+    kind:
+        "class":
+            Callable as SHC.io.<method>(...).
+        "instance":
+            Callable as shc.io.<method>(...).
+    show:
+        Whether shown in help().
     """
+    return namespace_method(
+        namespace="io",
+        summary=summary,
+        order=order,
+        kind=kind,
+        show=show,
+    )
 
-    def decorator(func: Callable) -> Callable:
-        func._is_shc_io_method = True
-        func._shc_io_summary = summary
-        func._shc_io_order = order
-        return func
 
-    return decorator
-
-
-class _SHCClassIOAccessor:
+class _SHCIOAccessor(BaseNamespaceAccessor):
     """
-    Accessor namespace for SHC IO methods.
+    Unified IO accessor for SHC.
 
     Usage
-    -----------
-    SHC.io.from_xxx(...)
+    -----
+    Class methods:
+        SHC.io.from_gfc(...)
+
+    Instance methods:
+        shc.io.save_file(...)
+
+    Help:
+        print(SHC.io.help())
+        print(shc.io.help())
     """
 
-    def __init__(self, shc_cls: type["SHC"]) -> None:
-        self._shc_cls = shc_cls
+    _namespace_name = "io"
+
+    @property
+    def _shc_cls(self) -> type["SHC"]:
+        return self._owner
+
+    @property
+    def _shc(self) -> "SHC":
+        if self._obj is None:
+            raise RuntimeError("This IO method requires an SHC instance.")
+        return self._obj
 
     # ============================================================
-    # Public display / help API
-    # ============================================================
-
-    def __str__(self) -> str:
-        return self._format_methods(verbose=False)
-
-    def __repr__(self) -> str:
-        method_names = [name for name, _ in self._iter_io_methods()]
-        return (
-            f"<{type(self).__name__} "
-            f"available_methods={method_names}>"
-        )
-
-    def __help__(self) -> str:
-        return self._format_methods(verbose=True)
-
-    def help(self) -> str:
-        return self.__help__()
-
-    def __dir__(self) -> list[str]:
-        default_attrs = set(super().__dir__())
-        method_names = {name for name, _ in self._iter_io_methods()}
-        return sorted(default_attrs | method_names)
-
-    # ============================================================
-    # Internal method discovery
-    # ============================================================
-    @classmethod
-    def _iter_io_methods(cls) -> Iterator[tuple[str, Callable]]:
-        methods: list[tuple[str, Callable]] = []
-        for name, obj in inspect.getmembers(cls, predicate=callable):
-            if getattr(obj, "_is_shc_io_method", False):
-                methods.append((name, obj))
-        methods.sort(
-            key=lambda item: (
-                getattr(item[1], "_shc_io_order", 0),
-                item[0],
-            )
-        )
-        yield from methods
-
-    @staticmethod
-    def _method_signature(func: Callable) -> str:
-        sig = inspect.signature(func)
-        params = list(sig.parameters.values())
-        if params and params[0].name in {"self", "cls"}:
-            params = params[1:]
-        new_sig = sig.replace(parameters=params)
-        return str(new_sig)
-
-    @staticmethod
-    def _method_summary(func: Callable) -> str:
-        summary = getattr(func, "_shc_io_summary", None)
-        if summary:
-            return summary
-        doc = inspect.getdoc(func)
-        if not doc:
-            return ""
-        return doc.strip().splitlines()[0]
-
-    def _format_methods(self, *, verbose: bool) -> str:
-        methods = list(self._iter_io_methods())
-        if not methods:
-            return (
-                "No public IO methods are currently registered.\n"
-                "Please decorate IO methods with @io_method(...)."
-            )
-        lines: list[str] = []
-        lines.append("Available SHC IO methods:")
-        lines.append("")
-        for name, func in methods:
-            signature = self._method_signature(func)
-            summary = self._method_summary(func)
-            if verbose:
-                lines.append(f"  SHC.io.{name}{signature}")
-                if summary:
-                    lines.append(f"      {summary}")
-                lines.append("")
-            else:
-                if summary:
-                    lines.append(f"  - {name}{signature}: {summary}")
-                else:
-                    lines.append(f"  - {name}{signature}")
-        lines.append("")
-        lines.append("Usage:")
-        lines.append("  SHC.io.<method_name>(...)")
-        return "\n".join(lines)
-
-    # ============================================================
-    # IO methods (examples)
+    # Class IO methods
     # ============================================================
 
     @io_method(
+        kind="class",
         summary="Read SHC from one or multiple .gfc files.",
         order=100,
     )
@@ -198,81 +146,97 @@ class _SHCClassIOAccessor:
             attrs={} if attrs is None else attrs,
         )
 
-
-class _SHCInstanceIOAccessor:
-    """
-    IO accessor for SHC instance.
-
-    Used as:
-        shc.io.save_gfc(...)
-        shc.io.to_file(...)
-    """
-
-    def __init__(self, shc: "SHC") -> None:
-        self._shc = shc
+    # ============================================================
+    # Instance IO methods
+    # ============================================================
 
     @io_method(
+        kind="instance",
         summary="Save a .gfc file for a given-index set of coefficients.",
         order=200,
     )
-    def save_file(self, filepath: str | Path, index: int, header: str | None = None, key: str | None = None) -> None:
+    def save_file(
+            self,
+            filepath: str | Path,
+            index: int,
+            header: str | None = None,
+            key: str | None = None,
+            overwrite: bool = False,
+            make_parent: bool = True,
+    ) -> None:
+        """
+        Save one epoch of SHC coefficients to a text .gfc-like file.
+        """
+
+        shc = self._shc
 
         assert isinstance(filepath, (str, Path))
+
         if isinstance(filepath, str):
             filepath = Path(filepath)
 
         save_dir = filepath.parent
+
         if not save_dir.exists():
-            save_dir.mkdir()
+            if make_parent:
+                save_dir.mkdir(parents=True, exist_ok=True)
+            else:
+                raise ValueError(
+                    f"Directory {save_dir} does not exist. "
+                    "Use make_parent=True to create it."
+                )
 
         if filepath.exists():
-            raise ValueError(f"{filepath} already exists.")
+            if overwrite:
+                warnings.warn(f"Overwriting {filepath}")
+            else:
+                raise ValueError(
+                    f"Path {filepath} already exists. "
+                    "Use overwrite=True to overwrite it."
+                )
 
         if header is None:
             header = ""
+
         if key is None:
             key = "gfc"
 
-        with open(filepath, 'w') as f:
+        if index < 0 or index >= shc.ntime:
+            raise IndexError(
+                f"index {index} is out of range for SHC with ntime={shc.ntime}."
+            )
+
+        with open(filepath, "w") as f:
             f.write(header)
 
-            for l in range(self._shc.lmax + 1):
+            for l in range(shc.lmax + 1):
                 for m in range(l + 1):
                     index1d_clm = MathTool.get_cs_1d_index(f"c{l},{m}")
                     index1d_slm = MathTool.get_cs_1d_index(f"s{l},{m}")
 
-                    cvalue = self._shc.value[index, index1d_clm]
+                    cvalue = shc.value[index, index1d_clm]
                     cvalue_str = (" " if cvalue >= 0 else "") + f"{cvalue:.12e}"
 
-                    svalue = self._shc.value[index, index1d_slm]
+                    svalue = shc.value[index, index1d_slm]
                     svalue_str = (" " if svalue >= 0 else "") + f"{svalue:.12e}"
 
-                    f.write(f"{key}\t{l}\t{m}\t{cvalue_str}\t{svalue_str}\n")
+                    f.write(
+                        f"{key}\t{l}\t{m}\t{cvalue_str}\t{svalue_str}\n"
+                    )
 
 
-class _SHCIODispatcher:
+class SHCIOAccessorDescriptor(NamespaceAccessorDescriptor[_SHCIOAccessor]):
     """
-    Descriptor dispatching SHC.io and shc.io.
-
-    SHC.io  -> _SHCClassIOAccessor
-    shc.io  -> _SHCInstanceIOAccessor
+    Descriptor for SHC.io and shc.io.
     """
 
-    def __set_name__(self, owner, name):
-        self.name = name
-        self.cache_name = f"_{name}_class_accessor"
+    def __init__(self) -> None:
+        super().__init__(_SHCIOAccessor)
 
-    def __get__(self, obj, owner=None):
-        if owner is None:
-            owner = type(obj)
 
-        # SHC.io
-        if obj is None:
-            accessor = owner.__dict__.get(self.cache_name)
-            if accessor is None:
-                accessor = _SHCClassIOAccessor(owner)
-                setattr(owner, self.cache_name, accessor)
-            return accessor
-
-        # shc.io
-        return _SHCInstanceIOAccessor(obj)
+# ----------------------------------------------------------------------
+# Backward-compatible aliases
+# ----------------------------------------------------------------------
+_SHCClassIOAccessor = _SHCIOAccessor
+_SHCInstanceIOAccessor = _SHCIOAccessor
+_SHCIODispatcher = SHCIOAccessorDescriptor
