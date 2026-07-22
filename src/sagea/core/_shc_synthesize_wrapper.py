@@ -11,7 +11,7 @@ from typing import Callable, TYPE_CHECKING
 import numpy as np
 from fontTools.varLib.mutator import prev
 
-from harmonics.harmonic import HarmonicDiscrete
+from sagea.harmonics.harmonic import HarmonicDiscrete
 from sagea.harmonics.harmonic import Harmonic
 
 from sagea.utils import MathTool
