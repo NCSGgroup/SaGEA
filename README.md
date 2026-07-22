@@ -12,7 +12,8 @@ non-expert user can easily obtain advanced experience of GRACE(-FO) processing. 
 (liushuhao@hust.edu.cn) and Fan Yang (fany@plan.aau.dk) for more information.
 
 When referencing this work, please cite:
-> Liu, S., Yang, F., & Forootan, E. (2025). SAGEA: A toolbox for comprehensive error assessment of GRACE and GRACE-FO based mass changes. Computers & Geosciences, 196, 105825. https://doi.org/10.1016/j.cageo.2024.105825
+> Liu, S., Yang, F., & Forootan, E. (2025). SAGEA: A toolbox for comprehensive error assessment of GRACE and GRACE-FO
+> based mass changes. Computers & Geosciences, 196, 105825. https://doi.org/10.1016/j.cageo.2024.105825
 
 # 2. Features
 
@@ -23,71 +24,47 @@ When referencing this work, please cite:
 
 # 3. Installation
 
-This program homepage is: https://github.com/NCSGgroup/SaGEA.
+This program homepage is: https://github.com/NCSGgroup/SaGEA
+
+The latest version of `sagea` is `0.2.9`
+
+`sagea` is developed based on Python 3.9. Use this code to download this project.
 
 ```bash
 pip install sagea==0.2.9
 ```
 
------ for old usages -----
-
-Use this code to download this project.
-
-`git clone https://github.com/NCSGgroup/SaGEA`
-
-This project is developed based on Python 3.9 and the dependencies are listed in `requirements.txt`.
-
-Use these coded to download the dependencies:
-
-`python -m pip install -r requirements.txt`
-
-To ensure the successful running and validation of programs,
-please collect the corresponding auxiliary files and verification files at
-https://zenodo.org/records/14087017
-and place folders `data` and `validation` in the project folder by running this code:
-
-`python ./demo/data_collecting/demoCollectAuxiliary.py`
-
 # 4. Quick Start
 
-Several demo programs are under the direction `./demo/` for users to quickly use and verify.
-Users can config the relevant parameters in the corresponding location or an independent JSON file.
+Several demo programs are under the direction `./examples/v0.2.9` for users to quickly start of a post-processing and
+variance-covariance propagation.
 Detailed module usage and related scientific explanations will be provided in later chapters.
 
-1. `./demo/data_collecting/demoCollectL2Data.py` provides an example of collecting GRACE Level 2 products,
-   including auxiliary files such as GAX and low-degrees products.
-   Users can config the collecting parameters from the jason file in `./setting/data_collection/CollectL2Data.json`.
-2. `./demo/post_processing/demoPostProcessing.py` provides an example for the post-processing of GRACE data.
-3. `./demo/uncertainty_estimation/demoErrorI.py` provides an example for the propagation of GRACE error (
-   variance-covariance matrix) during the post-processing.
-4. `./demo/uncertainty_estimation/demoErrorII.py` provides an example for the estimation of between-group errors through
-   TCH (Three Corner Hat) technology on GRACE signals.
-5. `./demo/uncertainty_estimation/demoErrorIII.py` provides an example to gain the post-processing statistical
-   uncertainty of GRACE signals.
+1. `./examples/v0.2.9/01_inbuild_document.ipynb` provides some examples to show the detailed usages of methods in
+   `SHC` (data class for storage and processing of spherical harmonic coefficients).
+2. `./examples/v0.2.9/02_postprocessing_to_ewh.ipynb` gives an example for the post-processing of level-2 products.
+3. `./examples/v0.2.9/03_cov_prop.ipynb` gives an example for the variance-covariance (of the level-2 products)
+   propagation.
 
 # 5. Overview of Functional Modules and Usages
 
 ![DataStructure.png](image/DataStructure.png)
 Fig. 1:
 Data structure of SaGEA Toolbox.
-Arrows represent dependency relationships.
 
-SaGEA Toolbox is used for post-processing and error assessment of GRACE level-2 data,
+`sagea` is used for post-processing and error assessment of GRACE level-2 data,
 with the latter relying on the former, see Fig. 1.
-Thus post-processing is the core function of SaGEA toolbox.
+Thus post-processing is the core function of `sagea`.
 
-SaGEA provides comprehensive post-processing methods.
+`sagea` provides comprehensive post-processing methods.
 For ease to use,
 we have packaged each method as a function of two data classes:
 
-1. `SHC`, representing spherical harmonic coefficients (SHCs);
-2. `GRID`, representing gridded data.
+1. `sagea.SHC`, representing spherical harmonic coefficients (SHCs);
+2. `sagea.GRD`, representing gridded data.
 
-Supporting that users may not be very familiar with the methods and principles
-we recommend calling the post-processing function through SHC or GRID instead of using them directly,
-as indicated by the circle in Fig. 1.
-
-Here are listed the attributes and some commonly used methods in `SHC()` and `GRID()`:
+We recommend calling the post-processing function through SHC or GRID instead of using them directly.
+Here are listed the attributes and some commonly used methods in `SHC()` and `GRD()`:
 
 **Attributes in `SHC()`**
 
@@ -96,66 +73,52 @@ represents the number of sets, `lmax` represents the maximum degree of SHCs.
 The arrangement of SHCs in the second dimension
 is like `[C(0,0), S(1,1), C(1,0), C(1,1), S(2,2), S(2,1), C(2,0), C(2,1), C(2,2), S(3,3), ... ]`
 
+**Construction of `SHC()`**
+
+> `shc = SHC.io.from_gfc(path, lmax: int, key: str ="gfc")`:
+>
+> `path` refers to a standard .gfc file or a list of paths;
+> `lmax` is the maximum degree/order to load
+> `key` is the identifier for file reading, usually to be 'gfc'
+
 **Methods in `SHC()`**
 
-`.is_series()`: to determine whether the stored SHCs are multiple sets.
+- `.ntime`: to show the number of SHCs sets that this `SHC` instance stores.
 
-`.get_lmax()`: to get the maximum degree/order of the SHCs.
+- `.lmax`: to get the maximum degree/order of the SHCs.
 
-`.get_degree_rms()`: to get degree-RMS.
+- `.degree_rms`, `degree_rss` and `cumulative_degree_rss`: to get degree-RMS, -RSS and the cumulative degree-RSS.
 
-`.replace_low_degs(*params)`: to replace low-degree SHCs with others.
+- `.replace(*params) -> SHC`: to replace low-degree SHCs with others.
+> for example,
+>
+> `shc.replace("c2,0", c20, inplace=True) -> SHC`,
+>
+> where c20 is a 1d-array with the length of .ntime, with `np.nan` to occupy invalid indices.
+> For most of the processing methods an instance `SHC()`, a parameter `inplace` (default to be False) controls whether to change the values within the instance.
 
-`.filter(*params)`: to apply a spectral filtering on the SHCs.
 
-`.convert_type(*params)`: to convert SHCs from one physical dimension to another.
+- `.filter.<method>(*params, inplace)`: to apply a spectral filtering on the SHCs.
+> see `.filter.help()` for the details and usages
 
-`.geometric(*params)`: to apply a geometric correction on the SHCs.
+- `.convert(from_type, to_type, inplace)`: to convert SHCs from one physical dimension to another.
+> for example,
+>
+> `shc_ewh = shc.convert(from_type="Geopotential", to_type="EWH", inplace=False)`
 
-`.de_background(*params)`: to deduct a background field.
+- `.correction.<method>(*params, inplace)`: to apply other corrections (e.g., a geometric correction) on the SHCs.
+> see `.correction.help()` for the details and usages.
 
-`.add(*params)`: to add another `SHC()`, e.g., that of GAD.
 
-`.subtract(*params)`: to subtract another `SHC()`, e.g., that of GIA.
-
-`.expand(*params)`: to expand the stored SHCs as a linear trend to signals at time epochs (e.g., from GIA trend to
-signals).
-
-`.synthesis(*params)`: to harmonic synthesis the stored SHCs into spatial distribution in optional physical
-dimensions.
-
-`.to_grid(*params)`: pure harmonic synthesis.
-
-**Attributes in `GRID()`**
-
-`.value`: 3-dimension `numpy.ndarray` that describes multiple sets of SHCs in shape of `(n, nlat, nlon)`, where `n`
-represents the number of sets, `nlat` and `nlon` represents the latitudes and the longitudes of grids.
-
-`.lat`: 1-dimension `numpy.ndarray` that describes the geometry latitudes in unit degree.
-
-`.lon`: 1-dimension `numpy.ndarray` that describes the geometry longitude in unit degree.
-
-**Methods in `GRID()`**
-
-`.filter(*params)`: to apply a spatial filtering on the SHCs (under construction).
-
-`.leakage(*params)`: to apply a leakage reduction.
-
-`.seismic(*params)`: to apply a seismic correction.
-
-`.de_aliasing(*params)`: to fit and deduct long-term aliasing signals.
-
-`.integral(*params)`: to integral in globe or basin and get the results.
-
-`.limiter(*params)`: to set all signals to 1 or 0 according to the threshold.
-
-`.to_file(*params)` to store as a file (`.nc`, `.hdf5`, etc.) locally.
+`.synthesize.<method>(*params)`: to harmonic synthesis the SHCs into spatial data.
+> see `.synthesize.help()` for the details and usages.
 
 # 6. Contributing
 
 Fan Yang (fany@plan.aau.dk) led the scientific research and conducted rigorous data validation.
 
-Shuhao Liu (liushuhao@hust.edu.cn) contributed to the software architecture design and core functionality implementation.
+Shuhao Liu (liushuhao@apm.ac.cn) contributed to the software architecture design and core functionality
+implementation.
 
 # 7. License
 
