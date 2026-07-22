@@ -124,7 +124,7 @@ class Harmonic:
             special_type: PhysicalDimension | None = None,
     ) -> np.ndarray:
         """
-        SHC -> grid.
+        SHC -> evaluation at discrete points.
 
         Parameters
         ----------
@@ -313,3 +313,88 @@ class Harmonic:
             return clm[0], slm[0]
 
         return clm, slm
+
+
+class HarmonicDiscrete:
+    """
+    Spherical harmonic synthesis on discrete points.
+    Notes
+    -----
+    lat/lon input should be in degrees and in same length.
+    Internal colat/lon are stored in radians.
+    """
+
+    def __init__(
+            self,
+            lmax: int,
+            lat: np.ndarray,
+            lon: np.ndarray,
+    ):
+        self.lmax = int(lmax)
+
+        if self.lmax < 0:
+            raise ValueError("lmax must be non-negative.")
+
+        else:
+            self.colat, self.lon = MathTool.get_colat_lon_rad(lat, lon)
+
+        self.__prepare()
+
+    def __prepare(self):
+        self.nlat = len(self.colat)
+        self.nlon = len(self.lon)
+
+        self.pilm = MathTool.get_Legendre(self.colat, self.lmax)
+        # shape: (nlat, lmax + 1, lmax + 1)
+
+        m = np.arange(self.lmax + 1)
+        self.g = m[:, None] @ self.lon[None, :]
+        # shape: (lmax + 1, nlon)
+
+    def synthesis(
+            self,
+            cqlm: np.ndarray,
+            sqlm: np.ndarray,
+    ) -> np.ndarray:
+        """
+        SHC -> evaluation at discrete points.
+
+        Parameters
+        ----------
+        cqlm, sqlm : ndarray
+            Shape can be:
+            - (lmax + 1, lmax + 1)
+            - (time, lmax + 1, lmax + 1)
+
+        Returns
+        -------
+        ndarray
+            Shape:
+            - (npoints,) for single input
+            - (time, npoints,) for series input
+        """
+
+        if cqlm.shape != sqlm.shape:
+            raise ValueError("cqlm and sqlm should have the same shape.")
+
+        if cqlm.ndim not in (2, 3):
+            raise ValueError("cqlm/sqlm should be 2D or 3D arrays.")
+
+        single = cqlm.ndim == 2
+
+        if single:
+            cqlm = cqlm[None, :, :]
+            sqlm = sqlm[None, :, :]
+
+        cqlm = np.asarray(cqlm, dtype=float)
+        sqlm = np.asarray(sqlm, dtype=float)
+
+        am = np.einsum("tlm,ilm->tim", cqlm, self.pilm)
+        bm = np.einsum("tlm,ilm->tim", sqlm, self.pilm)
+
+        co = np.cos(self.g)
+        so = np.sin(self.g)
+
+        value_at_points = np.einsum("qil,li->qi", am, co) + np.einsum("qil,li->qi", bm, so)
+
+        return value_at_points[0] if single else value_at_points

@@ -16,6 +16,10 @@ import datetime as dt
 
 import numpy as np
 
+from sagea.core._shc_synthesize_wrapper import (
+    _SHCSynthesizeAccessor,
+    SHCSynthesizeAccessorDescriptor,
+)
 from sagea.core._shc_generator_wrapper import (
     _SHCGeneratorAccessor,
     SHCGenerateAccessorDescriptor,
@@ -27,6 +31,10 @@ from sagea.core._shc_filter_wrapper import (
 from sagea.core._shc_io_wrapper import (
     _SHCIOAccessor,
     SHCIOAccessorDescriptor,
+)
+from sagea.core._shc_correction_wrapper import (
+    _SHCCorrectionAccessor,
+    SHCCorrectionAccessorDescriptor,
 )
 
 from sagea.constants.constant import PhysicalDimension
@@ -70,12 +78,16 @@ class SHC(metaclass=_SHCMeta):
     if TYPE_CHECKING:
         generate: ClassVar[_SHCGeneratorAccessor]
         io: ClassVar[_SHCIOAccessor]
-        filter: _SHCFilterAccessor
+        filter: ClassVar[_SHCFilterAccessor]
+        correction: ClassVar[_SHCCorrectionAccessor]
+        synthesize: ClassVar[_SHCSynthesizeAccessor]
 
     else:
         generate = SHCGenerateAccessorDescriptor()
         io = SHCIOAccessorDescriptor()
         filter = SHCFilterAccessorDescriptor()
+        correction = SHCCorrectionAccessorDescriptor()
+        synthesize = SHCSynthesizeAccessorDescriptor()
 
     normalization: str = "4pi"
     dates: Sequence[dt.date] | None = None
@@ -692,8 +704,8 @@ class SHC(metaclass=_SHCMeta):
 
         raise ValueError(f"Invalid PhysicalDimension: {field_type}")
 
+    @staticmethod
     def _load_love_number(
-            self,
             lmax: int,
             love_number_method=None,
     ):
@@ -813,7 +825,6 @@ class SHC(metaclass=_SHCMeta):
             orography=None,
             undulation=None,
 
-            # 新增
             phisfc_file: str | None = None,
             gif48_file: str | None = None,
             geoid_lmax: int = 160,
@@ -823,8 +834,21 @@ class SHC(metaclass=_SHCMeta):
             vmax: float = 2.5,
             vmin: float = 0.0,
             inplace: bool = False,
-            log: bool = False,
+            verbose: bool = False,
     ):
+
+        message = (
+            "`shc.geometric_correct(method, ...)` is deprecated and will be "
+            "removed in a future version. "
+            "Use `shc.correction.geometric(...)` instead."
+        )
+
+        warnings.warn(
+            message,
+            category=SHCDeprecationWarning,
+            stacklevel=2,
+        )
+
         from sagea.corrections.geometric_correction.geometric import (
             apply_geometric_correction,
         )
@@ -859,7 +883,7 @@ class SHC(metaclass=_SHCMeta):
             iter_max=iter_max,
             vmax=vmax,
             vmin=vmin,
-            log=log,
+            verbose=verbose,
         )
 
         obj._values = MathTool.cs_combine_to_triangle_1d(cqlm_corr, sqlm_corr)
@@ -873,6 +897,19 @@ class SHC(metaclass=_SHCMeta):
         """
         SHC -> Grid.
         """
+
+        message = (
+            "`shc.to_grid(...)` is deprecated and will be "
+            "removed in a future version. "
+            "Use `shc.synthesize.to_grid(...)` instead."
+        )
+
+        warnings.warn(
+            message,
+            category=SHCDeprecationWarning,
+            stacklevel=2,
+        )
+
         from sagea.harmonics.transform import shc_to_grid
         from sagea.core.grid import GRD
 

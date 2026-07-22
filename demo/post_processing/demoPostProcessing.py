@@ -65,7 +65,7 @@ def demo1():
 
     shc.de_background()  # de-average if non-input
 
-    shc.geometric(assumption=geometry_assumption, log=True)  # geometric correction, may cost minutes
+    shc.geometric(assumption=geometry_assumption, verbose=True)  # geometric correction, may cost minutes
 
     shc.convert_type(from_type=Enums.PhysicalDimensions.Dimensionless,
                      to_type=Enums.PhysicalDimensions.EWH)  # convert physical dimension

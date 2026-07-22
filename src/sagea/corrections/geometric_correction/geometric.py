@@ -544,7 +544,7 @@ def apply_geometric_correction(
         vmax: float = 2.5,
         vmin: float = 0.0,
         eps: float = 0.0,
-        log: bool = False,
+        verbose: bool = False,
 ) -> tuple[np.ndarray, np.ndarray]:
     """
     Vectorized geometrical correction.
@@ -714,7 +714,7 @@ def apply_geometric_correction(
     )
 
     for it in range(iter_max):
-        if log:
+        if verbose:
             print(f"geometric correction iteration {it + 1}/{iter_max}")
 
         cqlm_r, sqlm_r = forward_model.field_to_shc(grid)
