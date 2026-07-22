@@ -9,7 +9,7 @@ common post-processing steps and the assessment of complicated error (uncertaint
 open-source, cross-platform and Python-based toolbox called SAGEA (SAtellite Gravity Error Assessment). With diverse
 options, SAGEA provides flexibility to generate signal along with the full error from level-2 products, so that any
 non-expert user can easily obtain advanced experience of GRACE(-FO) processing. Please contact Shuhao Liu
-(liushuhao@hust.edu.cn) and Fan Yang (fany@plan.aau.dk) for more information.
+(liushuhao@apm.ac.cn) and Fan Yang (fany@plan.aau.dk) for more information.
 
 When referencing this work, please cite:
 > Liu, S., Yang, F., & Forootan, E. (2025). SAGEA: A toolbox for comprehensive error assessment of GRACE and GRACE-FO
