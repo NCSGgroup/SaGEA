@@ -29,7 +29,7 @@ class TCAMode(Enum):
     """
     CLASSIC = "CLASSIC"
     ALL_TRIPLETS = "ALL_TRIPLETS"
-    MTC = "MTC"
+    NLS = "NLS"
 
 
 class TCANegativeVariancePolicy(Enum):
@@ -394,7 +394,7 @@ class TCA:
             var_array = self.__run_classic()
         elif mode == TCAMode.ALL_TRIPLETS:
             var_array = self.__run_all_triplets()
-        elif mode == TCAMode.MTC:
+        elif mode == TCAMode.NLS:
             var_array = self.__run_mtc()
         else:
             raise ValueError(f"Unsupported TCA mode: {mode}")
