@@ -18,33 +18,41 @@ When referencing this work, please cite:
 # 2. Features
 
 - Auto-collecting GRACE(-FO) level-2 products and related auxiliary files.
-- Commony used methodologies and technologies of GRACE(-FO)'s post-processing.
-- Types of Error assessment/quantification of GRACE(-FO) based mass change.
+- Commonly used methodologies and technologies of GRACE(-FO)'s post-processing.
+- Three categories of error assessment/quantification of GRACE(-FO) based mass change:
+  - **Error-I**: Formal error propagation via full variance-covariance matrix (Monte Carlo, ITSG SINEX)
+  - **Error-II**: Between-product discrepancy via TCH (Three-Cornered Hat) and TCA (Triple Collocation Analysis)
+  - **Error-III**: Post-processing chain uncertainty via ensemble methods
 - User interface (under construction).
 
 # 3. Installation
 
 This program homepage is: https://github.com/NCSGgroup/SaGEA
 
-The latest version of `sagea` is `0.2.9`
+The latest version of `sagea` is `0.3.0`
 
-`sagea` is developed based on Python 3.9. Use this code to download this project.
+`sagea` requires Python 3.9 or later. Install from PyPI:
 
 ```bash
-pip install sagea==0.2.9
+pip install sagea
 ```
 
 # 4. Quick Start
 
-Several demo programs are under the direction `./examples/v0.2.9` for users to quickly start of a post-processing and
-variance-covariance propagation.
-Detailed module usage and related scientific explanations will be provided in later chapters.
+For full documentation including worked examples, see [DOCUMENTATION.md](DOCUMENTATION.md).
 
-1. `./examples/v0.2.9/01_inbuild_document.ipynb` provides some examples to show the detailed usages of methods in
-   `SHC` (data class for storage and processing of spherical harmonic coefficients).
-2. `./examples/v0.2.9/02_postprocessing_to_ewh.ipynb` gives an example for the post-processing of level-2 products.
-3. `./examples/v0.2.9/03_cov_prop.ipynb` gives an example for the variance-covariance (of the level-2 products)
-   propagation.
+Example notebooks are provided under `./examples/`:
+
+**v0.3.0**
+1. `./examples/v0.3.0/02_postprocessing_to_ewh.ipynb` — complete post-processing pipeline from ITSG `.gfc` files
+   to gridded EWH anomalies and Greenland basin-average time series.
+2. `./examples/v0.3.0/04_error_assess_TCH_and_TCA.ipynb` — Error-II assessment using TCH and TCA on CSR/GFZ/JPL
+   RL06 solutions.
+
+**v0.2.9**
+1. `./examples/v0.2.9/01_inbuild_document.ipynb` — built-in help and API overview for the `SHC` class.
+2. `./examples/v0.2.9/02_postprocessing_to_ewh.ipynb` — post-processing of level-2 products.
+3. `./examples/v0.2.9/03_cov_prop.ipynb` — variance-covariance (VCM) propagation via Monte Carlo sampling.
 
 # 5. Overview of Functional Modules and Usages
 
@@ -63,7 +71,9 @@ we have packaged each method as a function of two data classes:
 1. `sagea.SHC`, representing spherical harmonic coefficients (SHCs);
 2. `sagea.GRD`, representing gridded data.
 
-We recommend calling the post-processing function through SHC or GRID instead of using them directly.
+We recommend calling the post-processing function through SHC or GRD instead of using them directly.
+For a complete description with worked examples, see [DOCUMENTATION.md](DOCUMENTATION.md).
+
 Here are listed the attributes and some commonly used methods in `SHC()` and `GRD()`:
 
 **Attributes in `SHC()`**
@@ -94,12 +104,21 @@ is like `[C(0,0), S(1,1), C(1,0), C(1,1), S(2,2), S(2,1), C(2,0), C(2,1), C(2,2)
 >
 > `shc.replace("c2,0", c20, inplace=True) -> SHC`,
 >
-> where c20 is a 1d-array with the length of .ntime, with `np.nan` to occupy invalid indices.
-> For most of the processing methods an instance `SHC()`, a parameter `inplace` (default to be False) controls whether to change the values within the instance.
+> where c20 is a 1d-array with the length of `.ntime`, with `np.nan` to occupy invalid indices.
+> For most of the processing methods on a `SHC()` instance, a parameter `inplace` (default to be `False`) controls
+> whether to change the values within the instance.
 
+- `.generate.<method>(*params)`: class-level generators for constructing SHC instances.
+> for example,
+>
+> `shc_samples = SHC.generate.normal_from_vcm(vcm, nsample=100, mean=shc_truth)` — draw Monte Carlo samples from a VCM;
+>
+> `shc_gia = SHC.generate.from_trend(shc_gia_rate, dates=dates)` — build a linear-trend time series.
+>
+> see `SHC.generate.help()` for details.
 
 - `.filter.<method>(*params, inplace)`: to apply a spectral filtering on the SHCs.
-> see `.filter.help()` for the details and usages
+> see `shc.filter.help()` for the details and usages
 
 - `.convert(from_type, to_type, inplace)`: to convert SHCs from one physical dimension to another.
 > for example,
@@ -107,11 +126,31 @@ is like `[C(0,0), S(1,1), C(1,0), C(1,1), S(2,2), S(2,1), C(2,0), C(2,1), C(2,2)
 > `shc_ewh = shc.convert(from_type="Geopotential", to_type="EWH", inplace=False)`
 
 - `.correction.<method>(*params, inplace)`: to apply other corrections (e.g., a geometric correction) on the SHCs.
-> see `.correction.help()` for the details and usages.
+> see `shc.correction.help()` for the details and usages.
 
+- `.synthesize.<method>(*params)`: to harmonic-synthesize the SHCs into spatial data.
+> see `shc.synthesize.help()` for the details and usages.
 
-`.synthesize.<method>(*params)`: to harmonic synthesis the SHCs into spatial data.
-> see `.synthesize.help()` for the details and usages.
+**Error assessment (`sagea.error_assessment`)**
+
+SaGEA provides TCH and TCA for between-product (Error-II) uncertainty estimation:
+
+```python
+from sagea.error_assessment import tch, tca, TCHMode, TCAMode
+
+# Three-Cornered Hat (works on GRD, SHC, or ndarray)
+errs = tch(grid_csr, grid_gfz, grid_jpl, mode=TCHMode.OLS)
+
+# Triple Collocation Analysis
+errs = tca(grid_csr, grid_gfz, grid_jpl, mode=TCAMode.CLASSIC)
+```
+
+For formal error propagation (Error-I), read the ITSG SINEX VCM and generate Monte Carlo samples:
+
+```python
+vcm, _ = sagea.io.read_sinex_cov(path_snx, lmax=60)
+shc_samples = sagea.SHC.generate.normal_from_vcm(vcm, nsample=100, mean=shc_truth)
+```
 
 # 6. Contributing
 
