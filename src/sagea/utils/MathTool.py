@@ -378,7 +378,7 @@ class MathTool:
 
             is_single = True
 
-        radius_e = GeoConstants.radius_earth
+        radius_e = GeoConstant.radius_earth
 
         grid_shape = np.shape(grids[0])
 

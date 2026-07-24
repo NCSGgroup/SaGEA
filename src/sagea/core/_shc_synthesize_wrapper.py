@@ -9,12 +9,8 @@ from __future__ import annotations
 from typing import Callable, TYPE_CHECKING
 
 import numpy as np
-from fontTools.varLib.mutator import prev
 
 from sagea.harmonics.harmonic import HarmonicDiscrete
-from sagea.harmonics.harmonic import Harmonic
-
-from sagea.utils import MathTool
 
 from sagea.harmonics.transform import shc_to_grid
 from sagea.core.grid import GRD

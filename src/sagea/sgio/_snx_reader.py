@@ -124,8 +124,8 @@ def target_order(lmax):
     return order
 
 
-def read_sinex_cov(sinex_path, lmax):
-    with open(sinex_path, 'r', encoding='utf-8', errors='ignore') as f:
+def read_sinex_cov(filepath, lmax):
+    with open(filepath, 'r', encoding='utf-8', errors='ignore') as f:
         lines = f.readlines()
 
     params = parse_estimate_block(lines)

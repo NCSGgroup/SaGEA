@@ -230,8 +230,6 @@ class _SHCGeneratorAccessor(BaseNamespaceAccessor):
     # Optional instance generator-like methods
     # ============================================================
     #
-    # 如果你未来确实需要实例级 generate 方法，可以这样加：
-    #
     # @generator_method(
     #     kind="instance",
     #     summary="Generate something based on current SHC instance.",

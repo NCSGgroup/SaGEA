@@ -6,11 +6,11 @@
 import numpy as np
 from pathlib import Path
 
-import sagea
+from sagea import SHC
 from sagea.utils import MathTool
 
 
-def read_gfc(filepath: Path, key="gfc", lmax=None, col_indices=None):
+def read_gfc(filepath: Path, key="gfc", lmax=None, col_indices=None, get_SHC=True):
     """
     Read a gravity field coefficient file (GFC format and its variants).
 
@@ -30,10 +30,14 @@ def read_gfc(filepath: Path, key="gfc", lmax=None, col_indices=None):
         Column indices (0-based) representing [l, m, C, S].
         - If key is present (e.g., "gfc"), default is [2, 3, 4, 5] (skipping the key column).
         - If key is None, default is [1, 2, 3, 4].
+    get_SHC : bool, optional, default: False
 
     Returns
     -------
-    cs : np.ndarray, shape ((lmax+1)**2, ), cs coefficients array, sorted as
+    if input `get_SHC` is True:
+        SHC instance
+    else:
+        cs : np.ndarray, shape ((lmax+1)**2, ), cs coefficients array, sorted as
             [c[0,0]; s[1,1], c[1,0], c[1,1]; s[2,2], s[2,1], c[2,0], c[2,1], c[2,2]; s[3,3], s[3,2], s[3,1], c[3,0], ...].
     """
 
@@ -84,4 +88,7 @@ def read_gfc(filepath: Path, key="gfc", lmax=None, col_indices=None):
 
     cs = MathTool.cs_combine_to_triangle_1d(clm, slm)
 
-    return cs
+    if get_SHC:
+        return SHC(cs)
+    else:
+        return cs

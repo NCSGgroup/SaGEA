@@ -7,11 +7,25 @@
 from __future__ import annotations
 
 import datetime
+import warnings
+from typing import Any, TYPE_CHECKING, ClassVar
 
 import numpy as np
 
+from sagea.core._grd_extract_wrapper import (
+    _GRDExtractAccessor,
+    GRDExtractAccessorDescriptor,
+)
+
 from sagea.harmonics import Harmonic, GRDType
 from sagea.utils.MathTool import MathTool
+
+
+class _GRDMeta(type):
+    def __dir__(cls) -> list[str]:
+        names = set(super().__dir__())
+        names.update({"extract", })
+        return sorted(names)
 
 
 class GRD:
@@ -38,14 +52,22 @@ class GRD:
         - 1: input lat/lon are degrees
     """
 
+    if TYPE_CHECKING:
+        extract: ClassVar[_GRDExtractAccessor]
+
+    else:
+        extract = GRDExtractAccessorDescriptor()
+
     def __init__(
             self,
-            grid: np.ndarray,
+            grid: np.ndarray | Any,
             lat: np.ndarray,
             lon: np.ndarray,
             option: int = 1,
     ):
         grid = np.asarray(grid, dtype=float)
+
+        _values: np.ndarray
 
         if grid.ndim == 2:
             grid = grid[None, :, :]
@@ -377,10 +399,11 @@ class GRD:
             raise ValueError("No grid index selected.")
 
         if len(indices) > max_plots:
-            raise ValueError(
+            warnings.warn(
                 f"Too many grids to plot: {len(indices)}. "
-                f"Please specify index or increase max_plots."
+                f"Show only the first {max_plots} indices/grids."
             )
+            indices = indices[:max_plots]
 
         for idx in indices:
             if idx < 0 or idx >= n_total:

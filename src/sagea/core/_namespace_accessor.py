@@ -78,7 +78,7 @@ def namespace_method(
             if kind == "instance" and is_class_context:
                 raise TypeError(
                     f"`{func.__name__}` is an instance {namespace} method. "
-                    f"Use `shc.{namespace}.{func.__name__}(...)`, not "
+                    f"Use `{owner_name.lower()}.{namespace}.{func.__name__}(...)`, not "
                     f"`{owner_name}.{namespace}.{func.__name__}(...)`."
                 )
 
@@ -86,7 +86,7 @@ def namespace_method(
                 raise TypeError(
                     f"`{func.__name__}` is a class {namespace} method. "
                     f"Use `{owner_name}.{namespace}.{func.__name__}(...)`, not "
-                    f"`shc.{namespace}.{func.__name__}(...)`."
+                    f"`{owner_name.lower()}.{namespace}.{func.__name__}(...)`."
                 )
 
             return func(self, *args, **kwargs)

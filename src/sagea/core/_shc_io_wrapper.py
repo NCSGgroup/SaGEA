@@ -123,6 +123,7 @@ class _SHCIOAccessor(BaseNamespaceAccessor):
                 key=key,
                 lmax=lmax,
                 col_indices=cols,
+                get_SHC=False
             )
         else:
             assert len(filepath) >= 1
@@ -134,6 +135,7 @@ class _SHCIOAccessor(BaseNamespaceAccessor):
                         key=key,
                         lmax=lmax,
                         col_indices=cols,
+                        get_SHC=False
                     )
                     for path in filepath
                 ]
