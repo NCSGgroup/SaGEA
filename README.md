@@ -45,7 +45,7 @@ Example notebooks are provided under `./examples/`:
 
 **v0.3.0**
 1. `./examples/v0.3.0/02_postprocessing_to_ewh.ipynb` — complete post-processing pipeline from ITSG `.gfc` files
-   to gridded EWH anomalies and Greenland basin-average time series.
+   to gridded EWH anomalies and regional basin-average time series.
 2. `./examples/v0.3.0/04_error_assess_TCH_and_TCA.ipynb` — Error-II assessment using TCH and TCA on CSR/GFZ/JPL
    RL06 solutions.
 
