@@ -4,21 +4,19 @@ import sys
 import cartopy.crs
 import matplotlib.pyplot as plt
 
-from pysrc.auxiliary.aux_tool.MathTool import MathTool
-from pysrc.auxiliary.load_file.LoadShp import LoadShp
-from pysrc.data_class.GRD import GRD
+from old.pysrc.auxiliary.load_file.LoadShp import LoadShp
 
-sys.path.append('./')
+sys.path.append('/')
 import numpy as np
 
-from pysrc.auxiliary.load_file.LoadL2SH import load_SHC
-from pysrc.auxiliary.load_file.LoadCov import load_CovMatrix
-import pysrc.auxiliary.preference.EnumClasses as Enums
-from pysrc.auxiliary.aux_tool.FileTool import FileTool
-from pysrc.auxiliary.scripts.PlotGrids import plot_grids
+from old.pysrc.auxiliary.load_file.LoadL2SH import load_SHC
+from old.pysrc.auxiliary.load_file.LoadCov import load_CovMatrix
+import old.pysrc.auxiliary.preference.EnumClasses as Enums
+from old.pysrc.auxiliary.aux_tool.FileTool import FileTool
+from old.pysrc.auxiliary.scripts.PlotGrids import plot_grids
 
-from pysrc.data_class.SHC import SHC
-from pysrc.uncertainty_estimating.monte_carlo.MonteCarlo import MonteCarlo
+from old.pysrc.data_class.SHC import SHC
+from old.pysrc.uncertainty_estimating.monte_carlo.MonteCarlo import MonteCarlo
 
 
 def demo_errorI_global_var():
@@ -138,7 +136,7 @@ def demo_errorI_cov_of_basins():
     lmax = 60
     grid_space = 1
 
-    shp = LoadShp(path=pathlib.Path("../../data/basin_mask/Shp/bas200k_shp"))
+    shp = LoadShp(path=pathlib.Path("../../../data/basin_mask/Shp/bas200k_shp"))
     grid_shp = shp.get_GRD(grid_space=grid_space)
     grid_shp.value = grid_shp.value[:10]
     # As an example, the first ten bases of the sample file are used as the research object here.

@@ -2,9 +2,9 @@ from enum import Enum
 
 import numpy as np
 
-from pysrc.auxiliary.preference.EnumClasses import PhysicalDimensions
-from pysrc.auxiliary.aux_tool.MathTool import MathTool
-from pysrc.post_processing.harmonic.Quadratures import GLQ, DH2, DH
+from old.pysrc.auxiliary.preference.EnumClasses import PhysicalDimensions
+from old.pysrc.auxiliary.aux_tool.MathTool import MathTool
+from old.pysrc.post_processing.harmonic.Quadratures import GLQ, DH2, DH
 
 
 class GRDType(Enum):

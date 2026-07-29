@@ -2,13 +2,13 @@
 This demo is a validation for downloading GRACE Level-2 products
 """
 import sys
-sys.path.append('./')
+sys.path.append('/')
 
-from pysrc.auxiliary.aux_tool.FileTool import FileTool
-from pysrc.data_collection.collect_GRACE_L2.CollectL2SH import CollectL2SH
-from pysrc.data_collection.collect_GRACE_L2.CollectL2LowDeg import CollectL2LowDeg
+from old.pysrc.auxiliary.aux_tool.FileTool import FileTool
+from old.pysrc.data_collection.collect_GRACE_L2.CollectL2SH import CollectL2SH
+from old.pysrc.data_collection.collect_GRACE_L2.CollectL2LowDeg import CollectL2LowDeg
 
-from pysrc.auxiliary.preference.EnumClasses import *
+from old.pysrc.auxiliary.preference.EnumClasses import *
 
 
 def demo_collect_L2_SH():

@@ -1,16 +1,16 @@
 import sys
-sys.path.append('./')
+sys.path.append('/')
 import matplotlib.pyplot as plt
 import numpy as np
 import datetime
 
-from pysrc.auxiliary.aux_tool.MathTool import MathTool
-from pysrc.auxiliary.aux_tool.FileTool import FileTool
-from pysrc.auxiliary.load_file.LoadL2SH import LoadL2SH, load_SHC
-import pysrc.auxiliary.preference.EnumClasses as Enums
-from pysrc.auxiliary.scripts.PlotGrids import plot_grids
+from old.pysrc.auxiliary.aux_tool.MathTool import MathTool
+from old.pysrc.auxiliary.aux_tool.FileTool import FileTool
+from old.pysrc.auxiliary.load_file.LoadL2SH import LoadL2SH, load_SHC
+import old.pysrc.auxiliary.preference.EnumClasses as Enums
+from old.pysrc.auxiliary.scripts.PlotGrids import plot_grids
 
-from pysrc.uncertainty_estimating.three_coener_hat.TCH import TCHMode, tch_estimate
+from old.pysrc.uncertainty_estimating.three_coener_hat.TCH import TCHMode, tch_estimate
 
 
 def demo1():

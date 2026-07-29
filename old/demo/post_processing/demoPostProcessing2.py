@@ -1,23 +1,18 @@
 import copy
 import sys
 
-sys.path.append("../../")
+sys.path.append("../../../")
 
 import matplotlib.pyplot as plt
-import numpy as np
 import datetime
 
-from pysrc.auxiliary.aux_tool.MathTool import MathTool
-from pysrc.auxiliary.aux_tool.TimeTool import TimeTool
-from pysrc.auxiliary.load_file.LoadL2LowDeg import load_low_degs
-from pysrc.auxiliary.load_file.LoadL2SH import load_SHC
-from pysrc.auxiliary.load_file.LoadNoah import load_GLDAS_TWS
-from pysrc.auxiliary.load_file.LoadShp import LoadShp
-from pysrc.auxiliary.scripts.PlotGrids import plot_grids
-from pysrc.data_class.GRD import GRD
+from old.pysrc.auxiliary.aux_tool.TimeTool import TimeTool
+from old.pysrc.auxiliary.load_file.LoadL2LowDeg import load_low_degs
+from old.pysrc.auxiliary.load_file.LoadL2SH import load_SHC
+from old.pysrc.auxiliary.scripts.PlotGrids import plot_grids
 
-from pysrc.auxiliary.aux_tool.FileTool import FileTool
-import pysrc.auxiliary.preference.EnumClasses as Enums
+from old.pysrc.auxiliary.aux_tool.FileTool import FileTool
+import old.pysrc.auxiliary.preference.EnumClasses as Enums
 
 
 def demo():

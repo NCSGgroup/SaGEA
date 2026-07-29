@@ -1,18 +1,18 @@
 import sys
-sys.path.append('./')
+sys.path.append('/')
 import copy
 from datetime import date
 
 import numpy as np
 
-import pysrc.auxiliary.preference.EnumClasses as Enums
+import old.pysrc.auxiliary.preference.EnumClasses as Enums
 
-from pysrc.auxiliary.aux_tool.FileTool import FileTool
-from pysrc.auxiliary.aux_tool.TimeTool import TimeTool
-from pysrc.auxiliary.load_file.LoadL2LowDeg import load_low_degs
-from pysrc.auxiliary.load_file.LoadL2SH import load_SHC
-from pysrc.auxiliary.load_file.LoadNoah import load_GLDAS_TWS
-from pysrc.auxiliary.load_file.LoadShp import LoadShp
+from old.pysrc.auxiliary.aux_tool.FileTool import FileTool
+from old.pysrc.auxiliary.aux_tool.TimeTool import TimeTool
+from old.pysrc.auxiliary.load_file.LoadL2LowDeg import load_low_degs
+from old.pysrc.auxiliary.load_file.LoadL2SH import load_SHC
+from old.pysrc.auxiliary.load_file.LoadNoah import load_GLDAS_TWS
+from old.pysrc.auxiliary.load_file.LoadShp import LoadShp
 
 
 def demo1():

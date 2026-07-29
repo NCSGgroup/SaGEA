@@ -1,11 +1,11 @@
 import sys
-sys.path.append('./')
+sys.path.append('/')
 import os
 import ssl
 
 import wget
 
-from pysrc.auxiliary.aux_tool.FileTool import FileTool
+from old.pysrc.auxiliary.aux_tool.FileTool import FileTool
 
 
 def bar(current, total, width):

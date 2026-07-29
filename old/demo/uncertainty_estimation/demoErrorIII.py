@@ -1,5 +1,5 @@
 import sys
-sys.path.append('./')
+sys.path.append('/')
 import copy
 import itertools
 from datetime import date
@@ -7,11 +7,11 @@ from datetime import date
 import matplotlib.pyplot as plt
 import numpy as np
 
-from pysrc.auxiliary.aux_tool.FileTool import FileTool
-from pysrc.auxiliary.aux_tool.TimeTool import TimeTool
-import pysrc.auxiliary.preference.EnumClasses as Enums
-from pysrc.auxiliary.load_file.LoadL2LowDeg import load_low_degs
-from pysrc.auxiliary.load_file.LoadL2SH import load_SHC
+from old.pysrc.auxiliary.aux_tool.FileTool import FileTool
+from old.pysrc.auxiliary.aux_tool.TimeTool import TimeTool
+import old.pysrc.auxiliary.preference.EnumClasses as Enums
+from old.pysrc.auxiliary.load_file.LoadL2LowDeg import load_low_degs
+from old.pysrc.auxiliary.load_file.LoadL2SH import load_SHC
 
 
 def demo_single_postprocessing(params, low_degs=None, shc_gsm=None, shc_gad=None, shc_gaa=None, shc_gia=None,
