@@ -8,7 +8,6 @@ import os
 import pathlib
 import ssl
 
-import wget
 from sagea.utils.FileTool import FileTool
 
 
@@ -21,6 +20,8 @@ def bar(current, total, width):
 
 
 def download_ddk_data(loc_path_temp, local_path_unzip):
+    import wget
+
     """download and unzip ddk data from https://zenodo.org/records/15679042."""
 
     """prepare"""

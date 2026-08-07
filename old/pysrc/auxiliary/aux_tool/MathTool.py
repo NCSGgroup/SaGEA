@@ -163,7 +163,7 @@ class MathTool:
         """
         :param c: 2- or 3-d array clm or cqlm
         :param s: 2- or 3-d array slm or sqlm
-        return: 2d-array like /s|c\, for example,
+        return: 2d-array like /s|c\\, for example,
         [[0,   ...,   0, c00,   0,  ...,    0],
          [0,   ..., s11, c10, c11,  ...,    0],
          [0,   ..., s21, c20, c21,  ...,    0],

@@ -4,12 +4,7 @@
 # @Time    : 2026/7/18 10:58 
 # @File    : _snx_reader.py
 
-import pathlib
-
-import h5py
 import numpy as np
-import re
-
 
 def parse_estimate_block(lines):
     start = None

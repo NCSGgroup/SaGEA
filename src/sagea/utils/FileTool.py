@@ -2,9 +2,6 @@ from pathlib import Path
 import gzip
 import zipfile
 
-import h5py
-
-
 class FileTool:
     @staticmethod
     def get_project_dir(sub=None):
@@ -65,6 +62,8 @@ class FileTool:
 
     @staticmethod
     def get_hdf5_structure(filepath):
+        import h5py
+
         def append_structure(fdata, flevel=0, texts=None):
             if texts is None:
                 texts = []

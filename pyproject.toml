@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "sagea"
-version = "0.3.0"
+version = "0.3.2"
 description = "satellite gravity post-processing and error assessment"
 readme = "README.md"
 requires-python = ">=3.9"
@@ -25,27 +25,24 @@ classifiers = [
     "Topic :: Scientific/Engineering :: GIS",
 ]
 dependencies = [
-    "numpy>=2.0.2",
-    "scipy>=1.13.1",
-    "h5py>=3.14.0",
-    "pandas>=2.3.0",
-    "tqdm>=4.67.1",
-    "netCDF4>=1.7.2",
-    "geopandas>=1.0.1",
-    "shapely>=2.0.7",
-    "pyproj>=3.6.1",
-    "rasterio>=1.4.3",
-    "wget>=3.2",
-    "cartopy>=0.25.0",
+    "scipy>=1.17.0",
+    "numpy>=2.4.3",
+    "cartopy>=0.25.0; sys_platform != 'emscripten'",
+    "geopandas>=1.1.4; sys_platform != 'emscripten'",
+    "matplotlib>=3.11.1; sys_platform != 'emscripten'",
+    "netcdf4>=1.7.4; sys_platform != 'emscripten'",
+    "rasterio>=1.5.0; sys_platform != 'emscripten'",
+    "Shapely>=2.1.2; sys_platform != 'emscripten'",
+    "h5py>=3.16.0; sys_platform != 'emscripten'",
+    "wget>=3.2; sys_platform != 'emscripten'",
+    "affine>=2.4.0; sys_platform != 'emscripten'",
 ]
 
 # Optional Dependencies
-# Usage: pip install sagea[plot]
+# Usage: pip install sagea[full]
 [project.optional-dependencies]
-plot = [
-    "matplotlib>=3.5.0",
-    "cartopy>=0.23.0",
-]
+full = []
+
 
 [project.urls]
 "Homepage" = "https://github.com/NCSGgroup/SaGEA"
