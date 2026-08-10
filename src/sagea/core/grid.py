@@ -473,10 +473,11 @@ class GRD:
                 except Exception:
                     plot_z, plot_lon = z, lon
 
+            plot_lon2d, plot_lat2d = np.meshgrid(plot_lon, lat)
             if shared_colorbar:
                 mesh = ax.pcolormesh(
-                    plot_lon,
-                    lat,
+                    plot_lon2d,
+                    plot_lat2d,
                     plot_z,
                     transform=transform,
                     cmap=cmap,
@@ -487,8 +488,8 @@ class GRD:
                 )
             else:
                 mesh = ax.pcolormesh(
-                    plot_lon,
-                    lat,
+                    plot_lon2d,
+                    plot_lat2d,
                     plot_z,
                     transform=transform,
                     cmap=cmap,
@@ -559,8 +560,6 @@ class GRD:
 
         if title is not None:
             fig.suptitle(title, fontsize=13)
-
-        fig.tight_layout()
 
         if savepath is not None:
             fig.savefig(savepath, dpi=dpi, bbox_inches="tight")
