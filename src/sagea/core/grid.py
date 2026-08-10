@@ -262,7 +262,7 @@ class GRD:
             cmap="RdBu_r",
             figsize=None,
             title=None,
-            titles=None,
+            subtitles=None,
             cbar_label=None,
             cbar=True,
             coastline=True,
@@ -305,7 +305,7 @@ class GRD:
         title : str or None
             Figure suptitle.
 
-        titles : sequence of str or None
+        subtitles : sequence of str or None
             Titles for each subplot. Length should match selected indices.
 
         cbar_label : str or None
@@ -361,7 +361,6 @@ class GRD:
         """
 
         import math
-        import numpy as np
         import matplotlib.pyplot as plt
 
         try:
@@ -519,8 +518,8 @@ class GRD:
                 gl.top_labels = False
                 gl.right_labels = False
 
-            if titles is not None:
-                ax.set_title(str(titles[k]), fontsize=10)
+            if subtitles is not None:
+                ax.set_title(str(subtitles[k]), fontsize=10)
             elif self.dates_series is not None and idx < len(self.dates_series):
                 ax.set_title(str(self.dates_series[idx]), fontsize=10)
             else:
@@ -561,7 +560,7 @@ class GRD:
         if title is not None:
             fig.suptitle(title, fontsize=13)
 
-        # fig.tight_layout()
+        fig.tight_layout()
 
         if savepath is not None:
             fig.savefig(savepath, dpi=dpi, bbox_inches="tight")

@@ -36,6 +36,10 @@ from sagea.core._shc_correction_wrapper import (
     _SHCCorrectionAccessor,
     SHCCorrectionAccessorDescriptor,
 )
+from sagea.core._shc_plot_wrapper import (
+    _SHCPlotAccessor,
+    SHCPlotAccessorDescriptor,
+)
 
 from sagea.constants.constant import PhysicalDimension
 from sagea.utils import MathTool
@@ -81,6 +85,7 @@ class SHC(metaclass=_SHCMeta):
         filter: ClassVar[_SHCFilterAccessor]
         correction: ClassVar[_SHCCorrectionAccessor]
         synthesize: ClassVar[_SHCSynthesizeAccessor]
+        plot: ClassVar[_SHCPlotAccessor]
 
     else:
         generate = SHCGenerateAccessorDescriptor()
@@ -88,6 +93,7 @@ class SHC(metaclass=_SHCMeta):
         filter = SHCFilterAccessorDescriptor()
         correction = SHCCorrectionAccessorDescriptor()
         synthesize = SHCSynthesizeAccessorDescriptor()
+        plot = SHCPlotAccessorDescriptor()
 
     normalization: str = "4pi"
     dates: Sequence[dt.date] | None = None
@@ -702,7 +708,8 @@ class SHC(metaclass=_SHCMeta):
                 if str(item.value) == field_type:
                     return item
 
-        raise ValueError(f"Invalid PhysicalDimension: {field_type}")
+        raise ValueError(f"Invalid PhysicalDimension: '{field_type}'. "
+                         f"Follows are supported: {list(PhysicalDimension.__members__)}")
 
     @staticmethod
     def _load_love_number(
