@@ -9,6 +9,7 @@ from __future__ import annotations
 import warnings
 from typing import Callable, Sequence, TYPE_CHECKING
 
+import matplotlib.pyplot as plt
 import numpy as np
 
 from sagea.core._namespace_accessor import (
@@ -295,37 +296,41 @@ class _SHCPlotAccessor(BaseNamespaceAccessor):
 
     @shc_plot_method(
         kind="instance",
-        summary="2D plot of the spherical harmonic spectrum",
-        order=200,
+        summary="1D plot of the degree-wise signal amplitudes, including RMS, RSS and Cumulative RSS.",
+        order=201,
     )
-    def triangle(
+    def degree_amplitudes(
             self,
+            kind="rms",
+            plot_together=True,
             vmin=None,
             vmax=None,
-            cbar=True,
-            cbar_label=None,
             index=None,
             figsize=None,
             title=None,
             subtitles=None,
-            cmap="RdBu_r",
-            log10_absolute=False,
-            max_plots=24,
+            max_plots=6,
             ncols=None,
             ignore_degrees=None,
             savepath=None,
             dpi=300,
             show=True,
-            **matshow_kwargs,
+            log10=True,
+            xlabel=None,
+            ylabel=None,
+            grid=True,
+            **plot_kwargs,
     ):
         """
-        2D plot of the spherical harmonic spectrum.
+        1D plot of the degree-wise signal amplitudes, optional kind in (rms, rss, cumulative rss).
         """
 
         import math
         import matplotlib.pyplot as plt
 
         shc = self._shc
+        assert kind in ["rms", "rss",
+                        "cumulative rss"], f"unsupported kind {kind}, use following : 'rms', 'rss', 'cumulative rss'"
 
         # ----------------------------
         # 1. Select indices
@@ -344,8 +349,8 @@ class _SHCPlotAccessor(BaseNamespaceAccessor):
 
         if len(indices) > max_plots:
             warnings.warn(
-                f"Too many grids to plot: {len(indices)}. "
-                f"Show only the first {max_plots} indices/grids."
+                f"Too many to plot: {len(indices)}. "
+                f"Show only the first {max_plots} indices."
             )
             indices = indices[:max_plots]
 
@@ -353,22 +358,20 @@ class _SHCPlotAccessor(BaseNamespaceAccessor):
             if idx < 0 or idx >= n_total:
                 raise IndexError(f"Grid index out of range: {idx}")
 
-        data = shc.value[indices]
+        if kind == "rms":
+            degree_amp = shc.degree_rms
+        elif kind == "rss":
+            degree_amp = shc.degree_rss
+        elif kind == "cumulative rss":
+            degree_amp = shc.cumulative_degree_rss
+        else:
+            assert False
+
+        degrees = np.arange(0, shc.lmax + 1, 1).astype(float)
         nplot = len(indices)
 
         # ----------------------------
-        # 2. Shared colorbar logic
-        # ----------------------------
-        shared_colorbar = not (vmin is None and vmax is None)
-
-        if shared_colorbar:
-            if vmin is None:
-                vmin = np.nanmin(data)
-            if vmax is None:
-                vmax = np.nanmax(data)
-
-        # ----------------------------
-        # 3. Layout
+        # 2. Layout
         # ----------------------------
         if ncols is None:
             if nplot == 1:
@@ -378,14 +381,17 @@ class _SHCPlotAccessor(BaseNamespaceAccessor):
             else:
                 ncols = 3
 
-        ncols = int(ncols)
-        nrows = math.ceil(nplot / ncols)
+        if plot_together:
+            nrows, ncols = 1, 1
+        else:
+            ncols = int(ncols)
+            nrows = math.ceil(nplot / ncols)
 
         if figsize is None:
-            figsize = (4.5 * ncols, 3.4 * nrows)
+            figsize = (5.5 * ncols, 3.4 * nrows)
 
         # ----------------------------
-        # 5. Create figure
+        # 3. Create figure
         # ----------------------------
         fig, axes = plt.subplots(
             nrows=nrows,
@@ -395,92 +401,45 @@ class _SHCPlotAccessor(BaseNamespaceAccessor):
         )
 
         axes_flat = axes.ravel()
-        last_mappable = None
 
         # ----------------------------
-        # 6. Plot each panel
+        # 4. Plot each panel
         # ----------------------------
-
-        cqlm, sqlm = shc.cs2d
 
         if ignore_degrees is not None:
             for degree in ignore_degrees:
-                cqlm[:, degree, :], sqlm[:, degree, :] = np.nan, np.nan
+                degree_amp[:, degree] = np.nan
+                degrees[degree] = np.nan
+
+        if subtitles is None:
+            subtitles = [f"Index {idx}" for idx in indices]
+        assert len(subtitles) == len(indices)
 
         for k, idx in enumerate(indices):
+            ax = axes_flat[0] if plot_together else axes_flat[k]
 
-            plot_mat = np.full((shc.lmax + 1, 2 * shc.lmax + 1), np.nan)
-            for l in range(shc.lmax + 1):
-                for m in range(l + 1):
-                    plot_mat[l, shc.lmax + m] = np.log10(np.abs(cqlm[idx, l, m])) if log10_absolute else cqlm[idx, l, m]
-                    if m > 0:
-                        plot_mat[l, shc.lmax - m] = np.log10(np.abs(sqlm[idx, l, m])) if log10_absolute else sqlm[
-                            idx, l, m]
+            ax.plot(degrees, degree_amp[idx], label=subtitles[k], **plot_kwargs)
 
-            ax = axes_flat[k]
+            if log10:
+                ax.set_yscale("log")
 
-            degrees, orders = np.arange(0, shc.lmax + 1, 1), np.arange(-shc.lmax, shc.lmax + 1, 1)
-            orders2d, degrees2d = np.meshgrid(orders, degrees)
-            if shared_colorbar:
-                mesh = ax.pcolormesh(
-                    orders2d, degrees2d, plot_mat,
-                    cmap=cmap,
-                    vmin=vmin,
-                    vmax=vmax,
-                    **matshow_kwargs,
-                )
-            else:
-                mesh = ax.pcolormesh(
-                    orders2d, degrees2d, plot_mat,
-                    cmap=cmap,
-                    **matshow_kwargs,
-                )
-            ax.set_xlabel("order")
-            ax.set_ylabel("degree")
+            ax.legend()
+            ax.set_xlabel(xlabel)
+            ax.set_ylabel(ylabel)
 
-            last_mappable = mesh
-
-            if subtitles is not None:
-                ax.set_title(str(subtitles[k]), fontsize=10)
-            # elif shc.dates_series is not None and idx < len(shc.dates_series):
-            #     ax.set_title(str(shc.dates_series[idx]), fontsize=10)
-            else:
-                ax.set_title(f"Index {idx}", fontsize=10)
-
-            if cbar and not shared_colorbar:
-                cb = fig.colorbar(
-                    mesh,
-                    ax=ax,
-                    orientation="vertical",
-                    shrink=0.75,
-                    pad=0.03,
-                )
-                if cbar_label is not None:
-                    cb.set_label(cbar_label)
+            if grid:
+                ax.grid(ls=":", which="both")
 
         # ----------------------------
-        # 7. Hide unused axes
+        # 5. Hide unused axes
         # ----------------------------
         for k in range(nplot, len(axes_flat)):
             axes_flat[k].set_visible(False)
 
-        # ----------------------------
-        # 8. Shared colorbar
-        # ----------------------------
-        if cbar and shared_colorbar and last_mappable is not None:
-            used_axes = axes_flat[:nplot]
-            cb = fig.colorbar(
-                last_mappable,
-                ax=used_axes,
-                orientation="vertical",
-                shrink=0.85,
-                pad=0.03,
-            )
-            if cbar_label is not None:
-                cb.set_label(cbar_label)
-
         if title is not None:
             fig.suptitle(title, fontsize=13)
+
+        fig.tight_layout()
 
         if savepath is not None:
             fig.savefig(savepath, dpi=dpi, bbox_inches="tight")
@@ -496,3 +455,10 @@ class SHCPlotAccessorDescriptor(
 ):
     def __init__(self) -> None:
         super().__init__(_SHCPlotAccessor)
+
+
+if __name__ == '__main__':
+    x = np.arange(10)
+    y = x ** 2
+    x = plt.plot(x, y)
+    plt.show()
